@@ -4,16 +4,17 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ProductCard } from "@/components/ProductCard";
+import { useCatalog } from "@/lib/catalog";
 import {
-  allBrands,
   allSizes,
+  brandsOf,
   categories,
-  products,
   type Category,
   type Gender,
 } from "@/lib/products";
 
 export function ShopClient() {
+  const { products } = useCatalog();
   const params = useSearchParams();
   const drop = params.get("drop");
   const gender = params.get("gender") as Gender | null;
@@ -30,7 +31,7 @@ export function ShopClient() {
       if (size && !p.sizes.includes(Number(size))) return false;
       return true;
     });
-  }, [drop, gender, category, brand, size]);
+  }, [drop, gender, category, brand, size, products]);
 
   function href(next: Record<string, string | null>) {
     const sp = new URLSearchParams(params.toString());
@@ -72,7 +73,7 @@ export function ShopClient() {
             ))}
           </FilterGroup>
           <FilterGroup title="Marque">
-            {allBrands.map((b) => (
+            {brandsOf(products).map((b) => (
               <Chip
                 key={b}
                 href={href({ brand: brand === b ? null : b })}

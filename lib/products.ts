@@ -23,7 +23,7 @@ export type Product = {
 const img = (id: string) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1200&q=80`;
 
-export const products: Product[] = [
+export const fallbackProducts: Product[] = [
   {
     id: "air-max-pulse",
     name: "Nike Air Max Pulse",
@@ -301,14 +301,10 @@ export const categories: { slug: Category; label: string; image: string }[] = [
   },
 ];
 
-export function getProduct(id: string) {
-  return products.find((p) => p.id === id);
-}
-
-export function relatedProducts(id: string, limit = 4) {
-  const current = getProduct(id);
-  if (!current) return products.slice(0, limit);
-  return products
+export function relatedProducts(list: Product[], id: string, limit = 4) {
+  const current = list.find((p) => p.id === id);
+  if (!current) return list.slice(0, limit);
+  return list
     .filter((p) => p.id !== id)
     .sort((a, b) => {
       const score = (p: Product) =>
@@ -320,4 +316,7 @@ export function relatedProducts(id: string, limit = 4) {
 }
 
 export const allSizes = [36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46];
-export const allBrands = [...new Set(products.map((p) => p.brand))];
+
+export function brandsOf(list: Product[]) {
+  return [...new Set(list.map((p) => p.brand))];
+}

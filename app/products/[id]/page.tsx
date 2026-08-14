@@ -3,7 +3,8 @@
 import { use, useState } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getProduct, relatedProducts } from "@/lib/products";
+import { relatedProducts } from "@/lib/products";
+import { useCatalog, useProduct } from "@/lib/catalog";
 import { formatTnd } from "@/lib/format";
 import { useCart } from "@/lib/cart";
 import { useToast } from "@/components/Toast";
@@ -15,22 +16,36 @@ export default function ProductPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const found = getProduct(id);
+  const { products, ready } = useCatalog();
+  const { product } = useProduct(id);
   const cart = useCart();
   const toast = useToast();
-  const [color, setColor] = useState(found?.colors[0].name ?? "");
+  const [color, setColor] = useState<string | null>(null);
   const [size, setSize] = useState<number | null>(null);
   const [photo, setPhoto] = useState(0);
 
-  if (!found) notFound();
-  const product = found;
+  if (!ready) {
+    return <p className="px-6 py-20 text-center text-sm text-[#666]">Chargement…</p>;
+  }
+  if (!product) notFound();
+
+  const selectedColor = color ?? product.colors[0]?.name ?? "";
+
+  const snapshot = {
+    productId: product.id,
+    name: product.name,
+    image: product.images[0],
+    price: Number(product.price),
+    size: size ?? 0,
+    color: selectedColor,
+  };
 
   function add() {
     if (!size) {
       toast("Choisis une pointure.");
       return;
     }
-    cart.add({ productId: product.id, size, color });
+    cart.add({ ...snapshot, size });
     toast("Ajouté au panier.");
   }
 
@@ -81,7 +96,7 @@ export default function ProductPage({
                   title={c.name}
                   onClick={() => setColor(c.name)}
                   className={`h-11 w-11 rounded-full border-2 ${
-                    color === c.name ? "border-[#1A1A1A]" : "border-transparent"
+                    selectedColor === c.name ? "border-[#1A1A1A]" : "border-transparent"
                   }`}
                   style={{ background: c.hex }}
                 />
@@ -127,7 +142,7 @@ export default function ProductPage({
                   toast("Choisis une pointure.");
                   return;
                 }
-                cart.add({ productId: product.id, size, color });
+                cart.add({ ...snapshot, size });
               }}
               className="flex h-12 w-full items-center justify-center rounded-lg bg-[#5B6AF6] text-sm font-semibold text-white"
             >
@@ -150,7 +165,7 @@ export default function ProductPage({
       <section className="mt-16">
         <h2 className="mb-6 text-3xl font-black">TU POURRAIS AUSSI AIMER</h2>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {relatedProducts(product.id).map((p) => (
+          {relatedProducts(products, product.id).map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
         </div>

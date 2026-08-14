@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useCart } from "@/lib/cart";
-import { getProduct } from "@/lib/products";
 import { formatTnd } from "@/lib/format";
 
 export default function CartPage() {
@@ -39,8 +38,6 @@ export default function CartPage() {
               </li>
             )}
             {lines.map((line) => {
-              const p = getProduct(line.productId);
-              if (!p) return null;
               return (
                 <li
                   key={`${line.productId}-${line.size}-${line.color}`}
@@ -48,20 +45,20 @@ export default function CartPage() {
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={p.images[0]}
-                    alt={p.name}
+                    src={line.image}
+                    alt={line.name}
                     className="h-28 w-28 rounded-xl object-cover"
                   />
                   <div className="flex flex-1 flex-col">
                     <div className="flex justify-between gap-3">
                       <div>
-                        <p className="font-bold">{p.name}</p>
+                        <p className="font-bold">{line.name}</p>
                         <p className="text-sm text-[#666]">
                           {line.color} · EU {line.size}
                         </p>
                       </div>
                       <p className="font-bold text-[#5B6AF6]">
-                        {formatTnd(p.price * line.qty)}
+                        {formatTnd(Number(line.price) * line.qty)}
                       </p>
                     </div>
                     <div className="mt-auto flex items-center justify-between pt-3">
