@@ -2,12 +2,16 @@
 
 import { use, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { getOrder } from "@/lib/orders";
+import { getOrder, subscribeOrders } from "@/lib/orders";
 import { formatTnd } from "@/lib/format";
 import { paymentMethods } from "@/lib/tunisia";
 
-function subscribe() {
-  return () => {};
+function useClientReady() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 }
 
 export default function OrderPage({
@@ -16,19 +20,25 @@ export default function OrderPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const ready = useClientReady();
   const order = useSyncExternalStore(
-    subscribe,
+    subscribeOrders,
     () => getOrder(id) ?? null,
     () => null,
   );
+
+  if (!ready) {
+    return (
+      <p className="px-6 py-20 text-center text-sm text-[#666]">Chargement…</p>
+    );
+  }
 
   if (!order) {
     return (
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
         <p className="text-xl font-bold">Commande introuvable</p>
         <p className="mt-2 text-sm text-[#666]">
-          Elle est enregistrée uniquement sur cet appareil. Si tu viens de
-          commander, recharge la page.
+          Elle est enregistrée uniquement sur cet appareil.
         </p>
         <Link href="/shop" className="mt-4 inline-block text-[#5B6AF6] underline">
           Retour boutique
