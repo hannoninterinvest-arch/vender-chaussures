@@ -50,6 +50,44 @@ Clé par défaut (`SELLER_KEY` dans `backend/.env`) : `kicks-vendeur`
 
 Les tables sont créées au démarrage (`synchronize: true`) et le catalogue est seedé s’il est vide.
 
+## Héberger tout l’app (front + back)
+
+**Vercel n’exécute pas un Dockerfile.** Un conteneur Docker ne tourne pas sur Vercel. Deux chemins possibles :
+
+### A — Tout sur Vercel (recommandé pour le front, possible pour le back)
+
+Deux **projets** Vercel, **le même** dépôt GitHub `vender-chaussures` :
+
+| Projet | Root Directory | Framework | Rôle |
+| --- | --- | --- | --- |
+| boutique (front) | `.` (racine) | Next.js | site, panier, `/vendeur` |
+| api (back) | `backend` | NestJS | `/api`, Neon, Cloudinary |
+
+1. [vercel.com/new](https://vercel.com/new) → importe `vender-chaussures`.
+2. **Projet 1 (front)** : Root Directory vide / `.` → Deploy. Variable :
+   - `NEXT_PUBLIC_API_URL` = `https://TON-API.vercel.app/api` (tu la mets après le projet 2).
+3. **Add New Project** → **le même repo**.
+4. **Projet 2 (back)** : Root Directory = `backend`. Variables : `DATABASE_URL`, `SELLER_KEY`, `FRONTEND_URL=*`, Cloudinary (comme Render).
+5. Test : `https://TON-API.vercel.app/api/health`
+6. Retour au projet front → mets `NEXT_PUBLIC_API_URL` → Redeploy.
+
+Sur Vercel l’API est une **fonction** (pas un serveur 24/7). Les photos trop lourdes (> ~4,5 Mo) peuvent échouer. Pour un shop, ça suffit souvent.
+
+### B — Docker (PC ou Render, pas Vercel)
+
+Fichiers : `backend/Dockerfile` + `docker-compose.yml` (API seulement).
+
+```bash
+cp backend/.env.example backend/.env   # DATABASE_URL + Cloudinary
+docker compose up --build
+```
+
+API : `http://localhost:3001/api/health`
+
+Sur Render tu peux aussi choisir **Docker** au lieu de Node, avec Dockerfile Path = `backend/Dockerfile`.
+
+Le front Next.js, lui, va sur Vercel (option A, projet 1), pas dans Docker.
+
 ## Déployer uniquement le back sur Render
 
 Oui : le front Next.js reste en local (ou plus tard sur Vercel). Render ne lance que le dossier `backend/`.
