@@ -35,7 +35,7 @@ export default function SellerHomePage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-black">Tableau de bord</h1>
+      <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase">Tableau de bord</h1>
       <p className="mt-1 text-sm text-[#666]">
         Vue d’ensemble des ventes livrées. Marque une commande « livrée » pour qu’elle
         compte dans les bénéfices.
@@ -43,16 +43,16 @@ export default function SellerHomePage() {
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((c) => (
-          <div key={c.label} className="rounded-[20px] bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+          <div key={c.label} className="rounded-[4px] border border-[#C5A059]/35 bg-white p-5">
             <p className="text-sm text-[#666]">{c.label}</p>
-            <p className="mt-2 text-3xl font-black text-[#5B6AF6]">{c.value}</p>
+            <p className="mt-2 text-3xl font-black text-[#C5A059]">{c.value}</p>
             <p className="mt-1 text-xs text-[#888]">{c.hint}</p>
           </div>
         ))}
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <div className="rounded-[20px] bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+        <div className="rounded-[4px] border border-[#C5A059]/35 bg-white p-6">
           <h2 className="text-lg font-bold">Meilleur produit</h2>
           {stats.bestProduct ? (
             <div className="mt-4 flex gap-4">
@@ -67,7 +67,7 @@ export default function SellerHomePage() {
                 <p className="mt-1 text-sm text-[#666]">
                   {stats.bestProduct.qty} paires vendues (livrées)
                 </p>
-                <p className="mt-2 font-bold text-[#FF8A00]">
+                <p className="mt-2 font-bold text-[#C5A059]">
                   {formatTnd(stats.bestProduct.profit)} de bénéfice
                 </p>
               </div>
@@ -80,7 +80,7 @@ export default function SellerHomePage() {
           )}
         </div>
 
-        <div className="rounded-[20px] bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+        <div className="rounded-[4px] border border-[#C5A059]/35 bg-white p-6">
           <h2 className="text-lg font-bold">Top ventes</h2>
           <ul className="mt-4 space-y-3">
             {stats.topProducts.map((p, i) => (
@@ -102,10 +102,10 @@ export default function SellerHomePage() {
       </div>
 
       <div className="mt-8 flex flex-wrap gap-3">
-        <Link href="/vendeur/produits" className="rounded-lg bg-[#1A1A1A] px-4 py-3 text-sm font-bold text-white">
+        <Link href="/vendeur/produits" className="gold-btn rounded-sm px-4 py-3 text-xs uppercase">
           Ajouter un produit
         </Link>
-        <Link href="/vendeur/commandes" className="rounded-lg bg-white px-4 py-3 text-sm font-bold">
+        <Link href="/vendeur/commandes" className="rounded-sm border border-[#C5A059]/50 bg-white px-4 py-3 text-sm font-bold">
           Voir les commandes
         </Link>
       </div>

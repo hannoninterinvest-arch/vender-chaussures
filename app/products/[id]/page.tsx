@@ -25,7 +25,7 @@ export default function ProductPage({
   const [photo, setPhoto] = useState(0);
 
   if (!ready) {
-    return <p className="px-6 py-20 text-center text-sm text-[#666]">Chargement…</p>;
+    return <p className="px-6 py-20 text-center text-sm text-[#EDE8DE]/60">Chargement…</p>;
   }
   if (!product) notFound();
 
@@ -51,8 +51,11 @@ export default function ProductPage({
 
   return (
     <div className="mx-auto max-w-[1280px] px-4 py-10 md:px-6">
-      <p className="mb-6 text-sm text-[#666]">
-        <Link href="/shop">Boutique</Link> / {product.brand} / {product.name}
+      <p className="mb-6 text-[11px] tracking-[0.16em] uppercase text-[#EDE8DE]/55">
+        <Link href="/shop" className="hover:text-[#C5A059]">
+          Boutique
+        </Link>{" "}
+        / {product.brand} / {product.name}
       </p>
       <div className="grid gap-10 lg:grid-cols-2">
         <div className="space-y-3">
@@ -60,7 +63,7 @@ export default function ProductPage({
           <img
             src={product.images[photo]}
             alt={product.name}
-            className="aspect-square w-full rounded-[16px] object-cover"
+            className="gold-frame aspect-square w-full rounded-[4px] object-cover"
           />
           <div className="grid grid-cols-5 gap-3">
             {product.images.map((src, i) => (
@@ -68,7 +71,9 @@ export default function ProductPage({
                 key={src}
                 type="button"
                 onClick={() => setPhoto(i)}
-                className={`overflow-hidden rounded-xl ${photo === i ? "ring-2 ring-[#5B6AF6]" : ""}`}
+                className={`overflow-hidden rounded-sm ${
+                  photo === i ? "gold-frame" : "opacity-70"
+                }`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={src} alt="" className="aspect-square w-full object-cover" />
@@ -79,15 +84,17 @@ export default function ProductPage({
 
         <div>
           {product.isNew && (
-            <span className="inline-block rounded-md bg-[#5B6AF6] px-2.5 py-1 text-[11px] font-bold uppercase text-white">
+            <span className="inline-block rounded-sm bg-[#C5A059] px-2.5 py-1 text-[10px] font-bold tracking-[0.16em] uppercase text-[#1A1A1B]">
               New release
             </span>
           )}
-          <h1 className="mt-3 text-3xl font-black md:text-4xl">{product.name}</h1>
-          <p className="mt-2 text-2xl font-bold text-[#5B6AF6]">{formatTnd(product.price)}</p>
+          <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase md:text-4xl">
+            {product.name}
+          </h1>
+          <p className="mt-3 text-2xl font-semibold text-[#C5A059]">{formatTnd(product.price)}</p>
 
           <div className="mt-8">
-            <p className="text-sm font-bold">COULEUR</p>
+            <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">Couleur</p>
             <div className="mt-3 flex gap-3">
               {product.colors.map((c) => (
                 <button
@@ -96,7 +103,7 @@ export default function ProductPage({
                   title={c.name}
                   onClick={() => setColor(c.name)}
                   className={`h-11 w-11 rounded-full border-2 ${
-                    selectedColor === c.name ? "border-[#1A1A1A]" : "border-transparent"
+                    selectedColor === c.name ? "border-[#C5A059]" : "border-transparent"
                   }`}
                   style={{ background: c.hex }}
                 />
@@ -105,19 +112,19 @@ export default function ProductPage({
           </div>
 
           <div className="mt-6">
-            <div className="flex justify-between text-sm font-bold">
-              <span>POINTURE EU</span>
-            </div>
+            <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">
+              Pointure EU
+            </p>
             <div className="mt-3 flex flex-wrap gap-2">
               {product.sizes.map((s) => (
                 <button
                   key={s}
                   type="button"
                   onClick={() => setSize(s)}
-                  className={`h-12 w-12 rounded-lg text-sm font-medium ${
+                  className={`h-12 w-12 rounded-sm text-sm font-medium ${
                     size === s
-                      ? "bg-[#1A1A1A] text-white"
-                      : "bg-white text-[#1A1A1A]"
+                      ? "bg-[#C5A059] text-[#1A1A1B]"
+                      : "border border-[#C5A059]/35 text-[#EDE8DE]"
                   }`}
                 >
                   {s}
@@ -127,12 +134,8 @@ export default function ProductPage({
           </div>
 
           <div className="mt-8 space-y-3">
-            <button
-              type="button"
-              onClick={add}
-              className="h-12 w-full rounded-lg bg-[#1A1A1A] text-sm font-semibold text-white"
-            >
-              AJOUTER AU PANIER
+            <button type="button" onClick={add} className="gold-btn h-12 w-full rounded-sm text-xs uppercase">
+              Ajouter au panier
             </button>
             <Link
               href="/checkout"
@@ -144,16 +147,18 @@ export default function ProductPage({
                 }
                 cart.add({ ...snapshot, size });
               }}
-              className="flex h-12 w-full items-center justify-center rounded-lg bg-[#5B6AF6] text-sm font-semibold text-white"
+              className="flex h-12 w-full items-center justify-center rounded-sm border border-[#C5A059] text-xs font-semibold tracking-[0.08em] uppercase text-[#C5A059] hover:bg-[#C5A059]/10"
             >
-              ACHETER MAINTENANT
+              Acheter maintenant
             </Link>
           </div>
 
           <div className="mt-10">
-            <h2 className="text-lg font-bold">À PROPOS DU PRODUIT</h2>
-            <p className="mt-3 text-sm leading-relaxed text-[#666]">{product.description}</p>
-            <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-[#666]">
+            <h2 className="font-[family-name:var(--font-display)] text-lg tracking-[0.14em] uppercase">
+              À propos du produit
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-[#EDE8DE]/70">{product.description}</p>
+            <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-[#EDE8DE]/65">
               <li>Commande sans compte</li>
               <li>Paiement à la livraison en Tunisie</li>
               <li>Échange 7 jours si non portées</li>
@@ -163,7 +168,9 @@ export default function ProductPage({
       </div>
 
       <section className="mt-16">
-        <h2 className="mb-6 text-3xl font-black">TU POURRAIS AUSSI AIMER</h2>
+        <h2 className="mb-6 font-[family-name:var(--font-display)] text-3xl tracking-[0.12em] uppercase">
+          Tu pourrais aussi aimer
+        </h2>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {relatedProducts(products, product.id).map((p) => (
             <ProductCard key={p.id} product={p} />

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { fetchOrder } from "@/lib/api";
 import { formatTnd } from "@/lib/format";
 import { paymentMethods } from "@/lib/tunisia";
+import { brand } from "@/lib/brand";
 
 type OrderView = {
   id: string;
@@ -55,19 +56,19 @@ export default function OrderPage({
   }, [id]);
 
   if (!ready) {
-    return (
-      <p className="px-6 py-20 text-center text-sm text-[#666]">Chargement…</p>
-    );
+    return <p className="px-6 py-20 text-center text-sm text-[#EDE8DE]/60">Chargement…</p>;
   }
 
   if (!order) {
     return (
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <p className="text-xl font-bold">Commande introuvable</p>
-        <p className="mt-2 text-sm text-[#666]">
-          Vérifie le numéro ou contacte-nous par téléphone.
+        <p className="font-[family-name:var(--font-display)] text-3xl tracking-[0.12em] uppercase">
+          Commande introuvable
         </p>
-        <Link href="/shop" className="mt-4 inline-block text-[#5B6AF6] underline">
+        <p className="mt-2 text-sm text-[#EDE8DE]/65">
+          Vérifie le numéro ou contacte-nous au {brand.phone}.
+        </p>
+        <Link href="/shop" className="gold-btn mt-6 inline-flex rounded-sm px-6 py-3 text-xs uppercase">
           Retour boutique
         </Link>
       </div>
@@ -78,15 +79,19 @@ export default function OrderPage({
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
-      <p className="text-sm font-semibold text-[#5B6AF6]">Commande confirmée</p>
-      <h1 className="mt-2 text-3xl font-black">{order.id}</h1>
-      <p className="mt-2 text-sm text-[#666]">
+      <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-[#C5A059]">
+        Commande confirmée
+      </p>
+      <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase">
+        {order.id}
+      </h1>
+      <p className="mt-2 text-sm text-[#EDE8DE]/65">
         On t’appelle au {order.customer.phone} pour confirmer avant expédition.
       </p>
 
-      <div className="mt-8 rounded-2xl bg-white p-6">
-        <h2 className="font-bold">Livraison</h2>
-        <p className="mt-2 text-sm leading-relaxed text-[#444]">
+      <div className="gold-frame mt-8 rounded-[4px] bg-[#141414] p-6">
+        <h2 className="font-[family-name:var(--font-display)] tracking-[0.14em] uppercase">Livraison</h2>
+        <p className="mt-2 text-sm leading-relaxed text-[#EDE8DE]/80">
           {order.customer.name}
           <br />
           {order.customer.address}, {order.customer.city}
@@ -94,29 +99,26 @@ export default function OrderPage({
           {order.customer.gouvernorat}
         </p>
         <p className="mt-4 text-sm">
-          Paiement : <strong>{pay}</strong>
+          Paiement : <strong className="text-[#C5A059]">{pay}</strong>
           {order.paymentPhone ? ` · ${order.paymentPhone}` : ""}
         </p>
-        <ul className="mt-6 space-y-3 border-t border-[#EEE] pt-4">
+        <ul className="mt-6 space-y-3 border-t border-[#C5A059]/25 pt-4">
           {order.items.map((item) => (
             <li key={`${item.productId}-${item.size}`} className="flex justify-between text-sm">
               <span>
                 {item.name} · {item.color} · {item.size} × {item.qty}
               </span>
-              <span>{formatTnd(Number(item.price) * item.qty)}</span>
+              <span className="text-[#C5A059]">{formatTnd(Number(item.price) * item.qty)}</span>
             </li>
           ))}
         </ul>
         <div className="mt-4 flex justify-between font-bold">
           <span>Total</span>
-          <span>{formatTnd(Number(order.total))}</span>
+          <span className="text-[#C5A059]">{formatTnd(Number(order.total))}</span>
         </div>
       </div>
 
-      <Link
-        href="/shop"
-        className="mt-8 inline-flex rounded-lg bg-[#1A1A1A] px-5 py-3 text-sm font-semibold text-white"
-      >
+      <Link href="/shop" className="gold-btn mt-8 inline-flex rounded-sm px-6 py-3 text-xs uppercase">
         Continuer les achats
       </Link>
     </div>

@@ -1,37 +1,43 @@
 import Link from "next/link";
+import { LogoMark } from "@/components/Logo";
+import { brand } from "@/lib/brand";
 
 export function Hero() {
   return (
-    <section className="mx-auto max-w-[1280px] px-4 pb-6 pt-6 md:px-6">
-      <h1 className="mb-6 font-black leading-[0.9] tracking-tight">
-        <span className="block text-[56px] text-[#1A1A1A] sm:text-[80px] md:text-[108px]">
-          DO IT
-        </span>
-        <span className="block text-[56px] text-[#5B6AF6] sm:text-[80px] md:text-[108px]">
-          RIGHT
-        </span>
-      </h1>
+    <section className="mx-auto max-w-[1280px] px-4 pb-6 pt-8 md:px-6">
+      <div className="mb-8 flex flex-col items-start gap-4">
+        <div className="flex items-center gap-3 text-[#C5A059]">
+          <LogoMark className="h-8 w-6" />
+          <span className="text-[11px] tracking-[0.32em] uppercase">{brand.byline}</span>
+        </div>
+        <h1 className="font-[family-name:var(--font-display)] leading-[0.92] tracking-[0.12em]">
+          <span className="block text-[42px] text-[#EDE8DE] sm:text-[64px] md:text-[84px]">
+            L&apos;EXCELLENCE
+          </span>
+          <span className="block text-[42px] text-[#C5A059] sm:text-[64px] md:text-[84px]">
+            À CHAQUE PAS
+          </span>
+        </h1>
+      </div>
 
-      <div className="relative overflow-hidden rounded-[28px] bg-[#1A1A1A]">
+      <div className="gold-frame relative overflow-hidden rounded-[4px] bg-[#1A1A1B]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1600&q=80"
-          alt="Nike Air Max"
-          className="h-[420px] w-full object-cover opacity-90 md:h-[520px]"
+          src="https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=1600&q=80"
+          alt="Collection ELVARO"
+          className="h-[420px] w-full object-cover opacity-80 md:h-[540px]"
         />
-        <p className="absolute left-4 top-1/2 hidden -translate-y-1/2 -rotate-90 text-xs font-medium tracking-[0.2em] text-white/80 md:block">
-          Produit Nike de l&apos;année
-        </p>
-        <div className="absolute bottom-8 left-6 right-6 md:left-16 md:right-auto">
-          <p className="text-4xl font-black text-white md:text-5xl">NIKE AIR MAX</p>
-          <p className="mt-2 max-w-md text-sm text-white/80">
-            La nouvelle Air Max, pensée pour le confort de tous.
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+        <div className="absolute bottom-8 left-6 right-6 md:left-12">
+          <p className="text-[11px] tracking-[0.28em] uppercase text-[#C5A059]">Collection</p>
+          <p className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.14em] text-[#EDE8DE] md:text-5xl">
+            CUIR PREMIUM
           </p>
-          <Link
-            href="/shop?drop=new"
-            className="mt-5 inline-flex rounded-lg bg-[#5B6AF6] px-8 py-3 text-sm font-semibold text-white transition hover:bg-[#4a58e0]"
-          >
-            SHOP NOW
+          <p className="mt-2 max-w-md text-sm text-[#EDE8DE]/75">
+            Fabrication tunisienne, confort et design intemporel — commande sans compte.
+          </p>
+          <Link href="/shop?drop=new" className="gold-btn mt-5 inline-flex rounded-sm px-8 py-3 text-xs uppercase">
+            Découvrir
           </Link>
         </div>
       </div>

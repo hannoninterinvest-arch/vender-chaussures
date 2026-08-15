@@ -182,7 +182,7 @@ export function parseProductCsv(text: string): { products: CsvProduct[]; errors:
       const costRaw = get("cost").replace(",", ".");
       products.push({
         name,
-        brand: get("brand") || "KICKS",
+        brand: get("brand") || "ELVARO",
         price,
         cost: Number.isFinite(Number(costRaw)) ? Number(costRaw) : 0,
         description: get("description") || name,

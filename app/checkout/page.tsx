@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart";
 import { formatTnd } from "@/lib/format";
@@ -13,6 +14,7 @@ import {
 } from "@/lib/tunisia";
 import { createOrder } from "@/lib/api";
 import { useToast } from "@/components/Toast";
+import { brand } from "@/lib/brand";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -58,24 +60,31 @@ export default function CheckoutPage() {
   if (lines.length === 0) {
     return (
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <p className="text-xl font-bold">Ton panier est vide.</p>
-        <a href="/shop" className="mt-4 inline-block text-[#5B6AF6] underline">
+        <p className="font-[family-name:var(--font-display)] text-3xl tracking-[0.12em] uppercase">
+          Ton panier est vide.
+        </p>
+        <Link href="/shop" className="gold-btn mt-6 inline-flex rounded-sm px-6 py-3 text-xs uppercase">
           Continuer les achats
-        </a>
+        </Link>
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-[1100px] px-4 py-10 md:px-6">
-      <h1 className="text-3xl font-black">Checkout invité</h1>
-      <p className="mt-1 text-sm text-[#666]">
-        Pas de mot de passe. On te contacte au téléphone pour confirmer.
+      <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-[#C5A059]">Paiement</p>
+      <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.12em] uppercase">
+        Checkout invité
+      </h1>
+      <p className="mt-2 text-sm text-[#EDE8DE]/65">
+        Pas de mot de passe. On te contacte au {brand.phone} pour confirmer.
       </p>
 
       <form onSubmit={onSubmit} className="mt-8 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-        <div className="space-y-6 rounded-2xl bg-white p-6">
-          <h2 className="text-lg font-bold">Livraison</h2>
+        <div className="gold-frame space-y-6 rounded-[4px] bg-[#141414] p-6">
+          <h2 className="font-[family-name:var(--font-display)] text-lg tracking-[0.14em] uppercase">
+            Livraison
+          </h2>
           <Field name="name" label="Nom complet" required />
           <Field
             name="phone"
@@ -85,11 +94,13 @@ export default function CheckoutPage() {
             placeholder="ex. 20 123 456"
           />
           <div>
-            <label className="text-sm font-medium">Gouvernorat</label>
+            <label className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#C5A059]">
+              Gouvernorat
+            </label>
             <select
               value={gouvernorat}
               onChange={(e) => setGouvernorat(e.target.value as Gouvernorat)}
-              className="mt-1 w-full rounded-lg border border-[#E5E5E5] bg-white px-3 py-3 outline-none focus:border-[#5B6AF6]"
+              className="mt-1.5 w-full rounded-sm border border-[#C5A059]/35 bg-[#0A0A0A] px-3 py-3 text-sm outline-none focus:border-[#C5A059]"
             >
               {gouvernorats.map((g) => (
                 <option key={g}>{g}</option>
@@ -100,13 +111,17 @@ export default function CheckoutPage() {
           <Field name="address" label="Adresse" required placeholder="Rue, immeuble, étage…" />
           <Field name="notes" label="Note pour le livreur (optionnel)" />
 
-          <h2 className="pt-2 text-lg font-bold">Paiement</h2>
+          <h2 className="pt-2 font-[family-name:var(--font-display)] text-lg tracking-[0.14em] uppercase">
+            Paiement
+          </h2>
           <div className="space-y-2">
             {paymentMethods.map((m) => (
               <label
                 key={m.id}
-                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 ${
-                  payment === m.id ? "border-[#5B6AF6] bg-[#5B6AF6]/5" : "border-[#EEE]"
+                className={`flex cursor-pointer items-start gap-3 rounded-sm border p-4 ${
+                  payment === m.id
+                    ? "border-[#C5A059] bg-[#C5A059]/10"
+                    : "border-[#C5A059]/25"
                 }`}
               >
                 <input
@@ -114,16 +129,17 @@ export default function CheckoutPage() {
                   name="payment"
                   checked={payment === m.id}
                   onChange={() => setPayment(m.id)}
+                  className="mt-1 accent-[#C5A059]"
                 />
                 <span>
                   <span className="block font-semibold">{m.label}</span>
-                  <span className="text-sm text-[#666]">{m.hint}</span>
+                  <span className="text-sm text-[#EDE8DE]/65">{m.hint}</span>
                 </span>
               </label>
             ))}
             {payment !== "cod" && (
               <label className="block pt-2">
-                <span className="text-sm font-medium">
+                <span className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#C5A059]">
                   {paymentMethods.find((m) => m.id === payment)?.walletLabel}
                 </span>
                 <input
@@ -132,53 +148,53 @@ export default function CheckoutPage() {
                   value={paymentPhone}
                   onChange={(e) => setPaymentPhone(e.target.value)}
                   placeholder="ex. 20 123 456"
-                  className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-3 outline-none focus:border-[#5B6AF6]"
+                  className="mt-1.5 w-full rounded-sm border border-[#C5A059]/35 bg-[#0A0A0A] px-3 py-3 text-sm outline-none focus:border-[#C5A059]"
                 />
               </label>
             )}
           </div>
         </div>
 
-        <aside className="h-fit rounded-2xl bg-white p-6">
-          <h2 className="text-lg font-bold">Ta commande</h2>
+        <aside className="gold-frame h-fit rounded-[4px] bg-[#141414] p-6">
+          <h2 className="font-[family-name:var(--font-display)] text-lg tracking-[0.14em] uppercase">
+            Ta commande
+          </h2>
           <ul className="mt-4 space-y-3">
-            {lines.map((l) => {
-              return (
-                <li key={`${l.productId}-${l.size}-${l.color}`} className="flex gap-3 text-sm">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={l.image} alt="" className="h-14 w-14 rounded-lg object-cover" />
-                  <div className="flex-1">
-                    <p className="font-medium">{l.name}</p>
-                    <p className="text-[#666]">
-                      {l.color} · {l.size} · x{l.qty}
-                    </p>
-                  </div>
-                  <span>{formatTnd(Number(l.price) * l.qty)}</span>
-                </li>
-              );
-            })}
+            {lines.map((l) => (
+              <li key={`${l.productId}-${l.size}-${l.color}`} className="flex gap-3 text-sm">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={l.image} alt="" className="h-14 w-14 rounded-sm object-cover" />
+                <div className="flex-1">
+                  <p className="font-medium">{l.name}</p>
+                  <p className="text-[#EDE8DE]/60">
+                    {l.color} · {l.size} · x{l.qty}
+                  </p>
+                </div>
+                <span className="text-[#C5A059]">{formatTnd(Number(l.price) * l.qty)}</span>
+              </li>
+            ))}
           </ul>
-          <div className="mt-4 space-y-1 border-t border-[#EEE] pt-4 text-sm">
-            <div className="flex justify-between">
+          <div className="gold-line my-4" />
+          <div className="space-y-1 text-sm">
+            <div className="flex justify-between text-[#EDE8DE]/70">
               <span>Sous-total</span>
               <span>{formatTnd(subtotal)}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between text-[#EDE8DE]/70">
               <span>Livraison ({gouvernorat})</span>
               <span>{formatTnd(fee)}</span>
             </div>
             <div className="flex justify-between pt-2 text-lg font-bold">
               <span>Total</span>
-              <span>{formatTnd(total)}</span>
+              <span className="text-[#C5A059]">{formatTnd(total)}</span>
             </div>
           </div>
-          <button
-            type="submit"
-            disabled={busy}
-            className="mt-6 h-12 w-full rounded-lg bg-[#5B6AF6] text-sm font-semibold text-white disabled:opacity-60"
-          >
-            {busy ? "Envoi…" : "CONFIRMER LA COMMANDE"}
+          <button type="submit" disabled={busy} className="gold-btn mt-6 h-12 w-full rounded-sm text-xs uppercase disabled:opacity-60">
+            {busy ? "Envoi…" : "Confirmer la commande"}
           </button>
+          <p className="mt-3 text-center text-[11px] tracking-[0.14em] uppercase text-[#EDE8DE]/45">
+            {brand.slogan}
+          </p>
         </aside>
       </form>
     </div>
@@ -200,13 +216,13 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-sm font-medium">{label}</span>
+      <span className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#C5A059]">{label}</span>
       <input
         name={name}
         type={type}
         required={required}
         placeholder={placeholder}
-        className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-3 outline-none focus:border-[#5B6AF6]"
+        className="mt-1.5 w-full rounded-sm border border-[#C5A059]/35 bg-[#0A0A0A] px-3 py-3 text-sm outline-none placeholder:text-[#EDE8DE]/35 focus:border-[#C5A059]"
       />
     </label>
   );

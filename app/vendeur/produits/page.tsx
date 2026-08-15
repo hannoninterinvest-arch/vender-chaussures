@@ -25,7 +25,7 @@ const emptyForm = {
   colorName: "Noir",
   colorHex: "#171717",
   extraColorName: "",
-  extraColorHex: "#5B6AF6",
+  extraColorHex: "#C5A059",
   sizes: [40, 41, 42, 43, 44] as number[],
   images: ["", "", "", "", ""] as string[],
 };
@@ -84,7 +84,7 @@ export default function SellerProductsPage() {
       colorName: p.colors[0]?.name || "Noir",
       colorHex: p.colors[0]?.hex || "#171717",
       extraColorName: p.colors[1]?.name || "",
-      extraColorHex: p.colors[1]?.hex || "#5B6AF6",
+      extraColorHex: p.colors[1]?.hex || "#C5A059",
       sizes: p.sizes,
       images: [0, 1, 2, 3, 4].map((i) => p.images[i] || ""),
     });
@@ -94,7 +94,7 @@ export default function SellerProductsPage() {
   const colors = useMemo(() => {
     const list = [{ name: form.colorName.trim() || "Noir", hex: form.colorHex || "#171717" }];
     if (form.extraColorName.trim()) {
-      list.push({ name: form.extraColorName.trim(), hex: form.extraColorHex || "#5B6AF6" });
+      list.push({ name: form.extraColorName.trim(), hex: form.extraColorHex || "#C5A059" });
     }
     return list;
   }, [form]);
@@ -185,13 +185,13 @@ export default function SellerProductsPage() {
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr]">
-      <form onSubmit={onSubmit} className="space-y-4 rounded-[20px] bg-white p-6">
-        <h1 className="text-2xl font-black">
+      <form onSubmit={onSubmit} className="space-y-4 rounded-[4px] border border-[#C5A059]/35 bg-white p-6">
+        <h1 className="font-[family-name:var(--font-display)] text-2xl tracking-[0.08em] uppercase">
           {editing ? "Modifier le produit" : "Nouveau produit"}
         </h1>
         <p className="text-sm text-[#666]">
           Pour plusieurs paires d’un coup, utilise{" "}
-          <Link href="/vendeur/import" className="font-bold text-[#5B6AF6]">
+          <Link href="/vendeur/import" className="font-bold text-[#C5A059]">
             Import CSV
           </Link>{" "}
           (liens photos dans le fichier).
@@ -219,7 +219,7 @@ export default function SellerProductsPage() {
             required
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
-            className="mt-1 min-h-24 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#5B6AF6]"
+            className="mt-1 min-h-24 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#C5A059]"
           />
         </label>
         <div className="grid grid-cols-2 gap-3">
@@ -348,7 +348,7 @@ export default function SellerProductsPage() {
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-[#5B6AF6] px-5 py-3 font-bold text-white disabled:opacity-60"
+            className="gold-btn rounded-sm px-5 py-3 text-xs uppercase disabled:opacity-60"
           >
             {editing ? "Enregistrer" : "Ajouter à la boutique"}
           </button>
@@ -371,7 +371,7 @@ export default function SellerProductsPage() {
         <h2 className="text-xl font-black">{products.length} produits</h2>
         <ul className="mt-4 space-y-3">
           {products.map((p) => (
-            <li key={p.id} className="flex gap-3 rounded-[16px] bg-white p-3">
+            <li key={p.id} className="flex gap-3 rounded-[4px] border border-[#C5A059]/30 bg-white p-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.images[0]} alt="" className="h-20 w-20 rounded-xl object-cover bg-[#EEE]" />
               <div className="min-w-0 flex-1">
@@ -380,7 +380,7 @@ export default function SellerProductsPage() {
                   {p.brand} · {formatTnd(p.price)} · achat {formatTnd(p.cost || 0)}
                 </p>
                 <div className="mt-2 flex gap-3 text-sm">
-                  <button type="button" className="font-medium text-[#5B6AF6]" onClick={() => startEdit(p)}>
+                  <button type="button" className="font-medium text-[#C5A059]" onClick={() => startEdit(p)}>
                     Modifier
                   </button>
                   {admin && (
@@ -419,7 +419,7 @@ function Field({
         required={required}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#5B6AF6]"
+        className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#C5A059]"
       />
     </label>
   );

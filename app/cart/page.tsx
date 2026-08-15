@@ -9,9 +9,9 @@ export default function CartPage() {
 
   return (
     <div className="mx-auto max-w-[1280px] px-4 py-10 md:px-6">
-      <div className="mb-8 rounded-2xl bg-white px-5 py-4">
-        <p className="font-bold">Commande sans compte</p>
-        <p className="text-sm text-[#666]">
+      <div className="gold-frame mb-8 rounded-[4px] bg-[#141414] px-5 py-4">
+        <p className="font-bold tracking-wide">Commande sans compte</p>
+        <p className="text-sm text-[#EDE8DE]/65">
           Pas d’inscription. Nom, téléphone et adresse suffisent — paiement à la
           livraison partout en Tunisie.
         </p>
@@ -19,19 +19,19 @@ export default function CartPage() {
 
       <div className="grid gap-8 lg:grid-cols-[1.6fr_1fr]">
         <div>
-          <h1 className="text-3xl font-black">Ton sac</h1>
-          <p className="mt-1 text-sm text-[#666]">
+          <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase">Ton sac</h1>
+          <p className="mt-1 text-sm text-[#EDE8DE]/65">
             {count} article{count > 1 ? "s" : ""} — les articles ne sont pas
             réservés tant que tu n’as pas validé.
           </p>
 
           <ul className="mt-6 space-y-4">
             {lines.length === 0 && (
-              <li className="rounded-2xl bg-white p-10 text-center">
+              <li className="gold-frame rounded-[4px] bg-[#141414] p-10 text-center">
                 <p className="font-medium">Ton panier est vide.</p>
                 <Link
                   href="/shop"
-                  className="mt-4 inline-flex rounded-lg bg-[#5B6AF6] px-5 py-2.5 text-sm font-semibold text-white"
+                  className="gold-btn mt-4 inline-flex rounded-sm px-5 py-2.5 text-xs uppercase"
                 >
                   Voir les paires
                 </Link>
@@ -41,7 +41,7 @@ export default function CartPage() {
               return (
                 <li
                   key={`${line.productId}-${line.size}-${line.color}`}
-                  className="flex gap-4 rounded-2xl bg-white p-4"
+                  className="gold-frame flex gap-4 rounded-[4px] bg-[#141414] p-4"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -53,16 +53,16 @@ export default function CartPage() {
                     <div className="flex justify-between gap-3">
                       <div>
                         <p className="font-bold">{line.name}</p>
-                        <p className="text-sm text-[#666]">
+                        <p className="text-sm text-[#EDE8DE]/65">
                           {line.color} · EU {line.size}
                         </p>
                       </div>
-                      <p className="font-bold text-[#5B6AF6]">
+                      <p className="font-bold text-[#C5A059]">
                         {formatTnd(Number(line.price) * line.qty)}
                       </p>
                     </div>
                     <div className="mt-auto flex items-center justify-between pt-3">
-                      <div className="flex items-center rounded-lg bg-[#F5F5F5]">
+                      <div className="flex items-center rounded-sm border border-[#C5A059]/30">
                         <button
                           type="button"
                           className="px-3 py-1.5"
@@ -83,7 +83,7 @@ export default function CartPage() {
                       </div>
                       <button
                         type="button"
-                        className="text-sm text-[#666] underline"
+                        className="text-sm text-[#EDE8DE]/60 underline"
                         onClick={() => remove(line)}
                       >
                         Retirer
@@ -96,25 +96,25 @@ export default function CartPage() {
           </ul>
         </div>
 
-        <aside className="h-fit rounded-2xl bg-white p-6">
+        <aside className="gold-frame h-fit rounded-[4px] bg-[#141414] p-6">
           <h2 className="text-xl font-bold">Récapitulatif</h2>
           <div className="mt-4 space-y-2 text-sm">
             <Row label="Sous-total" value={formatTnd(subtotal)} />
             <Row label="Livraison" value="Calculée à l’étape suivante" />
           </div>
-          <div className="mt-4 flex justify-between border-t border-[#EEE] pt-4 text-lg font-bold">
+          <div className="mt-4 flex justify-between border-t border-[#C5A059]/30 pt-4 text-lg font-bold">
             <span>Total</span>
             <span>{formatTnd(subtotal)}</span>
           </div>
           <Link
             href="/checkout"
-            className={`mt-6 flex h-12 items-center justify-center rounded-lg bg-[#1A1A1A] text-sm font-semibold text-white ${
+            className={`gold-btn mt-6 flex h-12 items-center justify-center rounded-sm text-xs uppercase ${
               lines.length === 0 ? "pointer-events-none opacity-40" : ""
             }`}
           >
             COMMANDER
           </Link>
-          <p className="mt-3 text-center text-xs text-[#888]">
+          <p className="mt-3 text-center text-xs text-[#EDE8DE]/50">
             Aucun login requis
           </p>
         </aside>
@@ -125,7 +125,7 @@ export default function CartPage() {
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between text-[#444]">
+    <div className="flex justify-between text-[#EDE8DE]/70">
       <span>{label}</span>
       <span>{value}</span>
     </div>

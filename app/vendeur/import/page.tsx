@@ -65,14 +65,14 @@ export default function SellerImportPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="text-3xl font-black">Import CSV</h1>
+      <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase">Import CSV</h1>
       <p className="mt-2 text-sm text-[#666]">
         Ajoute plusieurs paires d’un coup. Chaque ligne = un produit. Les photos sont des{" "}
         <strong>liens HTTPS</strong> (Cloudinary, Unsplash, etc.), jusqu’à 5 par produit, séparés par{" "}
         <code>|</code>.
       </p>
 
-      <div className="mt-6 space-y-3 rounded-[20px] bg-white p-6 text-sm">
+      <div className="mt-6 space-y-3 rounded-[4px] border border-[#C5A059]/35 bg-white p-6 text-sm">
         <p className="font-bold">Colonnes (Excel : séparateur point-virgule)</p>
         <p>
           <code>nom;marque;prix;achat;description;genre;categorie;nouveau;couleurs;pointures;images</code>
@@ -103,7 +103,7 @@ export default function SellerImportPage() {
         </button>
       </div>
 
-      <label className="mt-6 flex cursor-pointer flex-col items-center justify-center rounded-[20px] border-2 border-dashed border-[#DDD] bg-white px-6 py-12 text-center">
+      <label className="mt-6 flex cursor-pointer flex-col items-center justify-center rounded-[4px] border-2 border-dashed border-[#C5A059]/50 bg-white px-6 py-12 text-center">
         <p className="text-lg font-black">{busy ? "Import en cours…" : "Choisir un fichier .csv"}</p>
         <p className="mt-1 text-sm text-[#666]">UTF-8, jusqu’à 200 produits</p>
         <input
@@ -134,7 +134,7 @@ export default function SellerImportPage() {
       )}
 
       {result && (
-        <div className="mt-6 rounded-[20px] bg-white p-5 text-sm">
+        <div className="mt-6 rounded-[4px] border border-[#C5A059]/35 bg-white p-5 text-sm">
           <p className="font-bold">{result.created} produit(s) ajouté(s) à la boutique.</p>
           {result.errors.length > 0 && (
             <ul className="mt-3 space-y-1 text-red-600">
@@ -145,7 +145,7 @@ export default function SellerImportPage() {
               ))}
             </ul>
           )}
-          <Link href="/vendeur/produits" className="mt-4 inline-block font-bold text-[#5B6AF6]">
+          <Link href="/vendeur/produits" className="mt-4 inline-block font-bold text-[#C5A059]">
             Voir les produits
           </Link>
         </div>

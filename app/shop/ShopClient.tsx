@@ -51,8 +51,8 @@ export function ShopClient() {
   return (
     <div className="mx-auto flex max-w-[1280px] flex-col gap-8 px-4 py-10 md:flex-row md:px-6">
       <aside className="w-full shrink-0 md:w-56">
-        <h1 className="text-3xl font-black">{title}</h1>
-        <p className="mt-1 text-sm text-[#666]">{filtered.length} paires</p>
+        <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase">{title}</h1>
+        <p className="mt-1 text-sm text-[#EDE8DE]/60">{filtered.length} paires</p>
 
         <div className="mt-8 space-y-6">
           <FilterGroup title="Catégorie">
@@ -91,7 +91,7 @@ export function ShopClient() {
             </div>
           </FilterGroup>
           {(drop || gender || category || brand || size) && (
-            <Link href="/shop" className="text-sm font-medium text-[#5B6AF6] underline">
+            <Link href="/shop" className="text-sm font-medium text-[#C5A059] underline">
               Réinitialiser
             </Link>
           )}
@@ -103,7 +103,7 @@ export function ShopClient() {
           <ProductCard key={p.id} product={p} />
         ))}
         {filtered.length === 0 && (
-          <p className="col-span-full py-20 text-center text-[#666]">
+          <p className="col-span-full py-20 text-center text-[#EDE8DE]/60">
             Aucun produit pour ces filtres.
           </p>
         )}
@@ -140,7 +140,7 @@ function Chip({
     <Link
       href={href}
       className={`rounded-lg px-3 py-1.5 text-sm ${
-        active ? "bg-[#1A1A1A] text-white" : "bg-white text-[#1A1A1A]"
+        active ? "bg-[#C5A059] text-[#1A1A1B]" : "border border-[#C5A059]/40 text-[#EDE8DE]"
       }`}
     >
       {children}

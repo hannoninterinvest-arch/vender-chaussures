@@ -61,7 +61,7 @@ export default function SellerOrdersPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-black">Commandes</h1>
+      <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase">Commandes</h1>
       <p className="mt-1 text-sm text-[#666]">
         Passe une commande en « Livrée » quand le client a reçu ses chaussures. Seules les
         livrées comptent dans les bénéfices.
@@ -74,7 +74,7 @@ export default function SellerOrdersPage() {
             type="button"
             onClick={() => setFilter(f.id)}
             className={`rounded-full px-4 py-2 text-sm font-medium ${
-              filter === f.id ? "bg-[#1A1A1A] text-white" : "bg-white"
+              filter === f.id ? "bg-[#C5A059] text-[#1A1A1B]" : "bg-white"
             }`}
           >
             {f.label}
@@ -84,7 +84,7 @@ export default function SellerOrdersPage() {
 
       <ul className="mt-6 space-y-3">
         {visible.map((o) => (
-          <li key={o.id} className="rounded-[20px] bg-white p-5">
+          <li key={o.id} className="rounded-[4px] border border-[#C5A059]/30 bg-white p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="font-black">{o.id}</p>
@@ -117,7 +117,7 @@ export default function SellerOrdersPage() {
               {o.status !== "livree" && o.status !== "annulee" && (
                 <button
                   type="button"
-                  className="rounded-lg bg-[#5B6AF6] px-3 py-2 text-sm font-bold text-white"
+                  className="gold-btn rounded-sm px-3 py-2 text-xs uppercase"
                   onClick={() => setStatus(o.id, "livree")}
                 >
                   Marquer livrée
@@ -158,7 +158,7 @@ export default function SellerOrdersPage() {
           </li>
         ))}
         {visible.length === 0 && (
-          <li className="rounded-[20px] bg-white p-10 text-center text-sm text-[#666]">
+          <li className="rounded-[4px] border border-[#C5A059]/30 bg-white p-10 text-center text-sm text-[#666]">
             Aucune commande dans ce filtre.
           </li>
         )}
