@@ -5,12 +5,13 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
-  const origins = (process.env.FRONTEND_URL ?? 'http://localhost:3000')
+  const origins = (process.env.FRONTEND_URL ?? '*')
     .split(',')
     .map((origin) => origin.trim().replace(/\/$/, ''))
     .filter(Boolean);
+  const allowAll = origins.includes('*');
   app.enableCors({
-    origin: origins.length === 1 ? origins[0] : origins,
+    origin: allowAll ? '*' : origins.length === 1 ? origins[0] : origins,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'x-seller-key', 'Accept'],
   });

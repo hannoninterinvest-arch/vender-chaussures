@@ -73,12 +73,11 @@ Sur Render : **Environment** → **Add Environment Variable**, une ligne par nom
 
 C’est la **même** base que `backend/.env` en local. Une seule Neon pour local + Render.
 
-### `FRONTEND_URL`
+### `FRONTEND_URL` (CORS)
 
-- Tant que le site tourne sur ton PC : `http://localhost:3000`
-- Plus tard, URL Vercel du front, sans slash final. Plusieurs origines : `https://ton-front.vercel.app,http://localhost:3000`
+Par défaut l’API autorise **toutes** les origines (`*`) : front local, Render, Vercel.
 
-Sans ça, le navigateur bloque les appels (CORS).
+Sur Render tu peux mettre `FRONTEND_URL=*` (ou omettre la variable). Pour restreindre plus tard : `https://ton-front.vercel.app`.
 
 ### `SELLER_KEY`
 
