@@ -8,7 +8,7 @@ npm install
 npm run start:dev
 ```
 
-Écoute `http://localhost:3001/api`.
+Écoute `http://localhost:3001/api`. CORS ouvert (`FRONTEND_URL=*`) par défaut.
 
 ## Render (API seule)
 
