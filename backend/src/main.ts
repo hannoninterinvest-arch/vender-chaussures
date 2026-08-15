@@ -4,6 +4,26 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.use((req: { url?: string }, _res: unknown, next: () => void) => {
+    const url = req.url ?? '';
+    if (url.startsWith('/api/') || url === '/api') {
+      next();
+      return;
+    }
+    const path = url.split('?')[0];
+    if (
+      path === '/health' ||
+      path.startsWith('/auth') ||
+      path.startsWith('/seller') ||
+      path.startsWith('/staff') ||
+      path.startsWith('/products') ||
+      path.startsWith('/categories') ||
+      path.startsWith('/orders')
+    ) {
+      req.url = `/api${url}`;
+    }
+    next();
+  });
   app.setGlobalPrefix('api');
   const origins = (process.env.FRONTEND_URL ?? '*')
     .split(',')

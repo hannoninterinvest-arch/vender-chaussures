@@ -1,9 +1,16 @@
-const API =
-  process.env.NEXT_PUBLIC_API_URL ??
-  "https://vender-chaussures-api.onrender.com/api";
+function normalizeApiBase(raw: string) {
+  const trimmed = raw.trim().replace(/\/+$/, "");
+  if (trimmed.endsWith("/api")) return trimmed;
+  return `${trimmed}/api`;
+}
+
+const API = normalizeApiBase(
+  process.env.NEXT_PUBLIC_API_URL ?? "https://vender-chaussures.onrender.com/api",
+);
 
 export function apiUrl(path: string) {
-  return `${API}${path.startsWith("/") ? path : `/${path}`}`;
+  const suffix = path.startsWith("/") ? path : `/${path}`;
+  return `${API}${suffix}`;
 }
 
 export async function fetchProducts() {
