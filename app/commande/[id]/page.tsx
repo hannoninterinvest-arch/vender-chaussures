@@ -1,18 +1,32 @@
 "use client";
 
-import { use, useSyncExternalStore } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { getOrder, subscribeOrders } from "@/lib/orders";
+import { fetchOrder } from "@/lib/api";
 import { formatTnd } from "@/lib/format";
 import { paymentMethods } from "@/lib/tunisia";
 
-function useClientReady() {
-  return useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
-}
+type OrderView = {
+  id: string;
+  total: number;
+  payment: string;
+  paymentPhone?: string;
+  customer: {
+    name: string;
+    phone: string;
+    gouvernorat: string;
+    city: string;
+    address: string;
+  };
+  items: {
+    productId: string;
+    name: string;
+    size: number;
+    color: string;
+    qty: number;
+    price: number;
+  }[];
+};
 
 export default function OrderPage({
   params,
@@ -20,12 +34,25 @@ export default function OrderPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const ready = useClientReady();
-  const order = useSyncExternalStore(
-    subscribeOrders,
-    () => getOrder(id) ?? null,
-    () => null,
-  );
+  const [order, setOrder] = useState<OrderView | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchOrder(id)
+      .then((row) => {
+        if (!cancelled) setOrder(row);
+      })
+      .catch(() => {
+        if (!cancelled) setOrder(null);
+      })
+      .finally(() => {
+        if (!cancelled) setReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
   if (!ready) {
     return (
@@ -38,7 +65,7 @@ export default function OrderPage({
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
         <p className="text-xl font-bold">Commande introuvable</p>
         <p className="mt-2 text-sm text-[#666]">
-          Elle est enregistrée uniquement sur cet appareil.
+          Vérifie le numéro ou contacte-nous par téléphone.
         </p>
         <Link href="/shop" className="mt-4 inline-block text-[#5B6AF6] underline">
           Retour boutique
@@ -68,6 +95,7 @@ export default function OrderPage({
         </p>
         <p className="mt-4 text-sm">
           Paiement : <strong>{pay}</strong>
+          {order.paymentPhone ? ` · ${order.paymentPhone}` : ""}
         </p>
         <ul className="mt-6 space-y-3 border-t border-[#EEE] pt-4">
           {order.items.map((item) => (
@@ -75,13 +103,13 @@ export default function OrderPage({
               <span>
                 {item.name} · {item.color} · {item.size} × {item.qty}
               </span>
-              <span>{formatTnd(item.price * item.qty)}</span>
+              <span>{formatTnd(Number(item.price) * item.qty)}</span>
             </li>
           ))}
         </ul>
         <div className="mt-4 flex justify-between font-bold">
           <span>Total</span>
-          <span>{formatTnd(order.total)}</span>
+          <span>{formatTnd(Number(order.total))}</span>
         </div>
       </div>
 

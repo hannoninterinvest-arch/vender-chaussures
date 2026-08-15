@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useMemo, useSyncExternalStore } from "react";
-import { getProduct } from "./products";
 
 export type CartLine = {
   productId: string;
+  name: string;
+  image: string;
+  price: number;
   size: number;
   color: string;
   qty: number;
@@ -15,14 +17,17 @@ type CartContextValue = {
   count: number;
   subtotal: number;
   add: (line: Omit<CartLine, "qty"> & { qty?: number }) => void;
-  setQty: (line: Omit<CartLine, "qty">, qty: number) => void;
-  remove: (line: Omit<CartLine, "qty">) => void;
+  setQty: (line: Pick<CartLine, "productId" | "size" | "color">, qty: number) => void;
+  remove: (line: Pick<CartLine, "productId" | "size" | "color">) => void;
   clear: () => void;
 };
 
 const KEY = "kicks-cart";
 
-function same(a: Omit<CartLine, "qty">, b: Omit<CartLine, "qty">) {
+function same(
+  a: Pick<CartLine, "productId" | "size" | "color">,
+  b: Pick<CartLine, "productId" | "size" | "color">,
+) {
   return (
     a.productId === b.productId && a.size === b.size && a.color === b.color
   );
@@ -62,11 +67,11 @@ function getSnapshot() {
   return lines;
 }
 
+const EMPTY: CartLine[] = [];
+
 function getServerSnapshot(): CartLine[] {
   return EMPTY;
 }
-
-const EMPTY: CartLine[] = [];
 
 export function useCart(): CartContextValue {
   const current = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
@@ -82,18 +87,24 @@ export function useCart(): CartContextValue {
     persist();
   }, []);
 
-  const setQty = useCallback((line: Omit<CartLine, "qty">, qty: number) => {
-    lines =
-      qty <= 0
-        ? lines.filter((l) => !same(l, line))
-        : lines.map((l) => (same(l, line) ? { ...l, qty } : l));
-    persist();
-  }, []);
+  const setQty = useCallback(
+    (line: Pick<CartLine, "productId" | "size" | "color">, qty: number) => {
+      lines =
+        qty <= 0
+          ? lines.filter((l) => !same(l, line))
+          : lines.map((l) => (same(l, line) ? { ...l, qty } : l));
+      persist();
+    },
+    [],
+  );
 
-  const remove = useCallback((line: Omit<CartLine, "qty">) => {
-    lines = lines.filter((l) => !same(l, line));
-    persist();
-  }, []);
+  const remove = useCallback(
+    (line: Pick<CartLine, "productId" | "size" | "color">) => {
+      lines = lines.filter((l) => !same(l, line));
+      persist();
+    },
+    [],
+  );
 
   const clear = useCallback(() => {
     lines = [];
@@ -102,10 +113,7 @@ export function useCart(): CartContextValue {
 
   return useMemo(() => {
     const count = current.reduce((s, l) => s + l.qty, 0);
-    const subtotal = current.reduce((s, l) => {
-      const p = getProduct(l.productId);
-      return s + (p ? p.price * l.qty : 0);
-    }, 0);
+    const subtotal = current.reduce((s, l) => s + Number(l.price || 0) * l.qty, 0);
     return { lines: current, count, subtotal, add, setQty, remove, clear };
   }, [current, add, setQty, remove, clear]);
 }

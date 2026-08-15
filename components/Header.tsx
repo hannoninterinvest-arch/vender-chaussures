@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useCart } from "@/lib/cart";
-import { products } from "@/lib/products";
+import { useCatalog } from "@/lib/catalog";
 import { formatTnd } from "@/lib/format";
 
 function IconSearch() {
@@ -36,6 +36,7 @@ function IconBag() {
 
 export function Header() {
   const { count } = useCart();
+  const { products } = useCatalog();
   const [open, setOpen] = useState(false);
   const [menu, setMenu] = useState(false);
   const [q, setQ] = useState("");
@@ -49,7 +50,7 @@ export function Header() {
         p.brand.toLowerCase().includes(s) ||
         p.category.toLowerCase().includes(s),
     );
-  }, [q]);
+  }, [q, products]);
 
   return (
     <header className="sticky top-0 z-50 px-3 pt-3 md:px-6">

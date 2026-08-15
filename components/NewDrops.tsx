@@ -1,8 +1,11 @@
+"use client";
+
 import Link from "next/link";
-import { products } from "@/lib/products";
+import { useCatalog } from "@/lib/catalog";
 import { ProductCard } from "./ProductCard";
 
 export function NewDrops() {
+  const { products } = useCatalog();
   const drops = products.filter((p) => p.isNew).slice(0, 4);
   return (
     <section className="mx-auto max-w-[1280px] px-4 py-16 md:px-6">

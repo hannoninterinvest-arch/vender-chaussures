@@ -3,7 +3,6 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart";
-import { getProduct } from "@/lib/products";
 import { formatTnd } from "@/lib/format";
 import {
   deliveryFee,
@@ -12,51 +11,48 @@ import {
   type Gouvernorat,
   type PaymentMethod,
 } from "@/lib/tunisia";
-import { createOrderId, saveOrder } from "@/lib/orders";
+import { createOrder } from "@/lib/api";
+import { useToast } from "@/components/Toast";
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const toast = useToast();
   const { lines, subtotal, clear } = useCart();
   const [payment, setPayment] = useState<PaymentMethod>("cod");
+  const [paymentPhone, setPaymentPhone] = useState("");
   const [gouvernorat, setGouvernorat] = useState<Gouvernorat>("Tunis");
+  const [busy, setBusy] = useState(false);
   const fee = useMemo(() => deliveryFee(gouvernorat), [gouvernorat]);
   const total = subtotal + fee;
 
-  function onSubmit(e: FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (lines.length === 0) return;
+    if (lines.length === 0 || busy) return;
     const data = new FormData(e.currentTarget);
-    const id = createOrderId();
-    saveOrder({
-      id,
-      createdAt: new Date().toISOString(),
-      items: lines.map((l) => {
-        const p = getProduct(l.productId)!;
-        return {
-          productId: l.productId,
-          name: p.name,
-          image: p.images[0],
-          size: l.size,
-          color: l.color,
-          qty: l.qty,
-          price: p.price,
-        };
-      }),
-      subtotal,
-      delivery: fee,
-      total,
-      payment,
-      customer: {
-        name: String(data.get("name")),
+    setBusy(true);
+    try {
+      const order = await createOrder({
+        customerName: String(data.get("name")),
         phone: String(data.get("phone")),
         gouvernorat,
         city: String(data.get("city")),
         address: String(data.get("address")),
         notes: String(data.get("notes") || ""),
-      },
-    });
-    clear();
-    router.push(`/commande/${id}`);
+        payment,
+        paymentPhone: payment === "cod" ? "" : paymentPhone,
+        items: lines.map((l) => ({
+          productId: l.productId,
+          size: l.size,
+          color: l.color,
+          qty: l.qty,
+        })),
+      });
+      clear();
+      router.push(`/commande/${order.id}`);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Commande impossible");
+      setBusy(false);
+    }
   }
 
   if (lines.length === 0) {
@@ -125,6 +121,21 @@ export default function CheckoutPage() {
                 </span>
               </label>
             ))}
+            {payment !== "cod" && (
+              <label className="block pt-2">
+                <span className="text-sm font-medium">
+                  {paymentMethods.find((m) => m.id === payment)?.walletLabel}
+                </span>
+                <input
+                  type="tel"
+                  required
+                  value={paymentPhone}
+                  onChange={(e) => setPaymentPhone(e.target.value)}
+                  placeholder="ex. 20 123 456"
+                  className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-3 outline-none focus:border-[#5B6AF6]"
+                />
+              </label>
+            )}
           </div>
         </div>
 
@@ -132,19 +143,17 @@ export default function CheckoutPage() {
           <h2 className="text-lg font-bold">Ta commande</h2>
           <ul className="mt-4 space-y-3">
             {lines.map((l) => {
-              const p = getProduct(l.productId);
-              if (!p) return null;
               return (
                 <li key={`${l.productId}-${l.size}-${l.color}`} className="flex gap-3 text-sm">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.images[0]} alt="" className="h-14 w-14 rounded-lg object-cover" />
+                  <img src={l.image} alt="" className="h-14 w-14 rounded-lg object-cover" />
                   <div className="flex-1">
-                    <p className="font-medium">{p.name}</p>
+                    <p className="font-medium">{l.name}</p>
                     <p className="text-[#666]">
                       {l.color} · {l.size} · x{l.qty}
                     </p>
                   </div>
-                  <span>{formatTnd(p.price * l.qty)}</span>
+                  <span>{formatTnd(Number(l.price) * l.qty)}</span>
                 </li>
               );
             })}
@@ -165,9 +174,10 @@ export default function CheckoutPage() {
           </div>
           <button
             type="submit"
-            className="mt-6 h-12 w-full rounded-lg bg-[#5B6AF6] text-sm font-semibold text-white"
+            disabled={busy}
+            className="mt-6 h-12 w-full rounded-lg bg-[#5B6AF6] text-sm font-semibold text-white disabled:opacity-60"
           >
-            CONFIRMER LA COMMANDE
+            {busy ? "Envoi…" : "CONFIRMER LA COMMANDE"}
           </button>
         </aside>
       </form>

@@ -43,6 +43,9 @@ export function Footer() {
             <li>
               <Link href="/checkout">Commander</Link>
             </li>
+            <li>
+              <Link href="/vendeur">Espace vendeur</Link>
+            </li>
           </ul>
         </div>
         <div>
