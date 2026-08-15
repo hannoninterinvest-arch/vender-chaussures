@@ -28,8 +28,11 @@ npm run dev
 
 Ouvre [http://localhost:3000](http://localhost:3000).
 
-Espace vendeur : [http://localhost:3000/vendeur](http://localhost:3000/vendeur)  
-Clé par défaut (`SELLER_KEY` dans `backend/.env`) : `kicks-vendeur`
+Espace équipe : [http://localhost:3000/vendeur](http://localhost:3000/vendeur)  
+Comptes locaux (table `users` vide au 1er lancement) :
+
+- Admin : `admin@kicks.tn` / `KicksAdmin123`
+- Vendeur : `vendeur@kicks.tn` / `Vendeur123`
 
 ## API
 
@@ -41,7 +44,9 @@ Clé par défaut (`SELLER_KEY` dans `backend/.env`) : `kicks-vendeur`
 | GET | `/api/categories` | Catégories boutique |
 | POST | `/api/orders` | Créer une commande invité |
 | GET | `/api/orders/:id` | Détail commande |
-| POST | `/api/seller/session` | Vérifier la clé vendeur |
+| POST | `/api/auth/login` | Connexion e-mail + mot de passe |
+| GET | `/api/auth/me` | Session staff (JWT) |
+| GET/POST/PATCH/DELETE | `/api/staff` | Comptes admin/vendeur (admin seulement) |
 | GET/POST/PATCH/DELETE | `/api/seller/products` | CRUD produits (clé requise) |
 | GET/POST/DELETE | `/api/seller/categories` | Catégories (clé requise) |
 | GET/PATCH | `/api/seller/orders` | Commandes + statut livraison |
@@ -67,7 +72,7 @@ Deux **projets** Vercel, **le même** dépôt GitHub `vender-chaussures` :
 2. **Projet 1 (front)** : Root Directory vide / `.` → Deploy. Variable :
    - `NEXT_PUBLIC_API_URL` = `https://TON-API.vercel.app/api` (tu la mets après le projet 2).
 3. **Add New Project** → **le même repo**.
-4. **Projet 2 (back)** : Root Directory = `backend`. Variables : `DATABASE_URL`, `SELLER_KEY`, `FRONTEND_URL=*`, Cloudinary (comme Render).
+4. **Projet 2 (back)** : Root Directory = `backend`. Variables : `DATABASE_URL`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `FRONTEND_URL=*`, Cloudinary.
 5. Test : `https://TON-API.vercel.app/api/health`
 6. Retour au projet front → mets `NEXT_PUBLIC_API_URL` → Redeploy.
 
@@ -117,11 +122,18 @@ Par défaut l’API autorise **toutes** les origines (`*`) : front local, Render
 
 Sur Render tu peux mettre `FRONTEND_URL=*` (ou omettre la variable). Pour restreindre plus tard : `https://ton-front.vercel.app`.
 
-### `SELLER_KEY`
+### `JWT_SECRET` / comptes staff
 
-Ce n’est **pas** un compte Cloudinary/Neon. C’est le mot de passe de `/vendeur`.
+Plus de clé unique. L’équipe se connecte avec **e-mail + mot de passe**.
 
-Choisis une phrase secrète (ou garde `kicks-vendeur` pour tester) et mets **la même** dans `backend/.env` (local) et sur Render. Tu la tapes dans l’espace vendeur.
+- `JWT_SECRET` : phrase longue aléatoire (Render peut la générer)
+- `ADMIN_EMAIL` / `ADMIN_PASSWORD` : premier admin, **uniquement** si la table `users` est encore vide
+- `VENDEUR_EMAIL` / `VENDEUR_PASSWORD` : premier vendeur (optionnel)
+
+Ensuite l’admin crée d’autres comptes dans `/vendeur/equipe`.
+
+- **Admin** : tout + équipe + suppression catalogue
+- **Vendeur** : commandes, produits (sans supprimer), catégories en lecture
 
 ### Cloudinary (photos produit)
 

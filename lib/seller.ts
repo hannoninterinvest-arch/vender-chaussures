@@ -1,18 +1,50 @@
 import { apiUrl } from "./api";
 
-const STORAGE = "kicks-seller-key";
+const TOKEN = "kicks-staff-token";
+const USER = "kicks-staff-user";
 
-export function getSellerKey() {
+export type StaffRole = "admin" | "vendeur";
+
+export type StaffUser = {
+  id: string;
+  email: string;
+  name: string;
+  role: StaffRole;
+  active?: boolean;
+  createdAt?: string;
+};
+
+export function getSellerToken() {
   if (typeof window === "undefined") return "";
-  return sessionStorage.getItem(STORAGE) || "";
+  return sessionStorage.getItem(TOKEN) || "";
 }
 
-export function setSellerKey(key: string) {
-  sessionStorage.setItem(STORAGE, key);
+export function getSellerUser(): StaffUser | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(USER);
+    return raw ? (JSON.parse(raw) as StaffUser) : null;
+  } catch {
+    return null;
+  }
 }
 
-export function clearSellerKey() {
-  sessionStorage.removeItem(STORAGE);
+export function isAdmin() {
+  return getSellerUser()?.role === "admin";
+}
+
+function setSession(token: string, user: StaffUser) {
+  sessionStorage.setItem(TOKEN, token);
+  sessionStorage.setItem(USER, JSON.stringify(user));
+}
+
+export function clearSellerSession() {
+  sessionStorage.removeItem(TOKEN);
+  sessionStorage.removeItem(USER);
+}
+
+function authHeaders(): HeadersInit {
+  return { Authorization: `Bearer ${getSellerToken()}` };
 }
 
 export type SellerOrder = {
@@ -100,8 +132,7 @@ export async function sellerRequest<T>(path: string, init: RequestInit = {}): Pr
     cache: "no-store",
     headers: {
       "Content-Type": "application/json",
-      "x-seller-key": getSellerKey(),
-      ...(init.headers || {}),
+      ...authHeaders(),
     },
   });
   if (!res.ok) await parseError(res);
@@ -109,15 +140,27 @@ export async function sellerRequest<T>(path: string, init: RequestInit = {}): Pr
   return res.json() as Promise<T>;
 }
 
-export async function sellerLogin(key: string) {
-  const res = await fetch(apiUrl("/seller/session"), {
+export async function sellerLogin(email: string, password: string) {
+  const res = await fetch(apiUrl("/auth/login"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ key }),
+    body: JSON.stringify({ email, password }),
   });
   if (!res.ok) await parseError(res);
-  setSellerKey(key);
-  return res.json();
+  const data = (await res.json()) as { token: string; user: StaffUser };
+  setSession(data.token, data.user);
+  return data.user;
+}
+
+export async function fetchStaffMe() {
+  const res = await fetch(apiUrl("/auth/me"), {
+    cache: "no-store",
+    headers: authHeaders(),
+  });
+  if (!res.ok) await parseError(res);
+  const user = (await res.json()) as StaffUser;
+  sessionStorage.setItem(USER, JSON.stringify(user));
+  return user;
 }
 
 export async function sellerUploadImage(file: File): Promise<{ url: string }> {
@@ -125,7 +168,7 @@ export async function sellerUploadImage(file: File): Promise<{ url: string }> {
   body.append("file", file);
   const res = await fetch(apiUrl("/seller/uploads"), {
     method: "POST",
-    headers: { "x-seller-key": getSellerKey() },
+    headers: authHeaders(),
     body,
   });
   if (!res.ok) await parseError(res);

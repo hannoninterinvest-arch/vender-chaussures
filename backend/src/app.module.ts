@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ProductsModule } from './products/products.module';
 import { OrdersModule } from './orders/orders.module';
+import { AuthModule } from './auth/auth.module';
 import { SellerModule } from './seller/seller.module';
 
 /** Neon ajoute parfois channel_binding=require, que node-pg refuse. */
@@ -31,6 +32,7 @@ function postgresUrl(raw: string) {
         ssl: { rejectUnauthorized: false },
       }),
     }),
+    AuthModule,
     ProductsModule,
     OrdersModule,
     SellerModule,

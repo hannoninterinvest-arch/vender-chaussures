@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { allSizes } from "@/lib/products";
 import { formatTnd } from "@/lib/format";
 import {
+  isAdmin,
   sellerRequest,
   sellerUploadImage,
   type SellerCategory,
@@ -36,6 +37,7 @@ export default function SellerProductsPage() {
   const [editing, setEditing] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState<number | null>(null);
+  const admin = isAdmin();
 
   async function load() {
     const [p, c] = await Promise.all([
@@ -373,9 +375,11 @@ export default function SellerProductsPage() {
                   <button type="button" className="font-medium text-[#5B6AF6]" onClick={() => startEdit(p)}>
                     Modifier
                   </button>
-                  <button type="button" className="font-medium text-red-600" onClick={() => remove(p.id)}>
-                    Supprimer
-                  </button>
+                  {admin && (
+                    <button type="button" className="font-medium text-red-600" onClick={() => remove(p.id)}>
+                      Supprimer
+                    </button>
+                  )}
                 </div>
               </div>
             </li>

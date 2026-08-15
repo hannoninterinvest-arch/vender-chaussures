@@ -10,6 +10,8 @@ npm run start:dev
 
 Écoute `http://localhost:3001/api`. CORS ouvert (`FRONTEND_URL=*`) par défaut.
 
+Connexion staff : `POST /api/auth/login` (e-mail + mot de passe). Comptes seedés si `users` est vide (voir `.env.example`).
+
 ## Vercel (API)
 
 Second projet Vercel, **Root Directory = `backend`**. Pas de Docker sur Vercel. Santé : `GET /api/health`.

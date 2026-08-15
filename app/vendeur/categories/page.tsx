@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { sellerRequest, type SellerCategory } from "@/lib/seller";
+import { isAdmin, sellerRequest, type SellerCategory } from "@/lib/seller";
 import { useToast } from "@/components/Toast";
 
 export default function SellerCategoriesPage() {
@@ -10,6 +10,7 @@ export default function SellerCategoriesPage() {
   const [label, setLabel] = useState("");
   const [image, setImage] = useState("");
   const [busy, setBusy] = useState(false);
+  const admin = isAdmin();
 
   async function load() {
     setRows(await sellerRequest<SellerCategory[]>("/seller/categories"));
@@ -61,6 +62,7 @@ export default function SellerCategoriesPage() {
 
   return (
     <div className="grid gap-8 lg:grid-cols-2">
+      {admin && (
       <form onSubmit={onSubmit} className="space-y-4 rounded-[20px] bg-white p-6">
         <h1 className="text-2xl font-black">Nouvelle catégorie</h1>
         <p className="text-sm text-[#666]">
@@ -92,6 +94,7 @@ export default function SellerCategoriesPage() {
           Ajouter la catégorie
         </button>
       </form>
+      )}
 
       <div>
         <h2 className="text-xl font-black">{rows.length} catégories</h2>
@@ -108,9 +111,11 @@ export default function SellerCategoriesPage() {
                 <p className="font-bold">{c.label}</p>
                 <p className="text-xs text-[#888]">{c.id}</p>
               </div>
+              {admin && (
               <button type="button" className="text-sm font-medium text-red-600" onClick={() => remove(c.id)}>
                 Supprimer
               </button>
+              )}
             </li>
           ))}
         </ul>
