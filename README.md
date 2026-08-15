@@ -101,13 +101,12 @@ Les photos vont dans le dossier Cloudinary `kicks/products` ; l’URL HTTPS est 
 Render définit `PORT` tout seul. L’API écoute `0.0.0.0`.
 
 4. Après le premier deploy, ouvre `https://TON-SERVICE.onrender.com/api/health` → `{"ok":true,"service":"kicks-api"}`.
-5. En local, pointe le front vers Render :
+5. Front local → API Render : dans `.env.local` (déjà dans `.env.example`) :
 
 ```bash
-# .env.local
-NEXT_PUBLIC_API_URL=https://TON-SERVICE.onrender.com/api
+NEXT_PUBLIC_API_URL=https://vender-chaussures-api.onrender.com/api
 ```
 
-Puis `npm run dev` (front seulement). Les commandes et le catalogue passent par l’API Render + Neon.
+Remplace l’hôte par l’URL exacte de ton service Render si elle diffère. Puis `npm run dev` (front seulement).
 
 Tu peux aussi importer le Blueprint `render.yaml` (New → Blueprint) : il cible déjà `rootDir: backend`.
