@@ -12,7 +12,7 @@ Storefront inspiré de [kicks-navy.vercel.app](https://kicks-navy.vercel.app/), 
 ## Lancer
 
 1. Copie `backend/.env.example` vers `backend/.env` et renseigne `DATABASE_URL` (Neon) + Cloudinary.
-2. Copie `.env.example` vers `.env.local` (URL de l’API).
+2. Copie `.env.example` vers `.env.local` (front Next.js — URL de l’API).
 
 ```bash
 # terminal 1 — API Nest (port 3001)
