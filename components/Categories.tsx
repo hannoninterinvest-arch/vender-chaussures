@@ -1,7 +1,11 @@
+"use client";
+
 import Link from "next/link";
-import { categories } from "@/lib/products";
+import { useCatalog } from "@/lib/catalog";
 
 export function Categories() {
+  const { categories } = useCatalog();
+
   return (
     <section className="bg-[#1F1F1F] py-16">
       <div className="mx-auto max-w-[1280px] px-4 md:px-6">
@@ -17,7 +21,7 @@ export function Categories() {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={c.image}
+                src={c.image || "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=1200&q=80"}
                 alt={c.label}
                 className="h-64 w-full object-cover transition duration-300 group-hover:scale-105"
               />

@@ -5,20 +5,14 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ProductCard } from "@/components/ProductCard";
 import { useCatalog } from "@/lib/catalog";
-import {
-  allSizes,
-  brandsOf,
-  categories,
-  type Category,
-  type Gender,
-} from "@/lib/products";
+import { allSizes, brandsOf, type Gender } from "@/lib/products";
 
 export function ShopClient() {
-  const { products } = useCatalog();
+  const { products, categories } = useCatalog();
   const params = useSearchParams();
   const drop = params.get("drop");
   const gender = params.get("gender") as Gender | null;
-  const category = params.get("category") as Category | null;
+  const category = params.get("category");
   const brand = params.get("brand");
   const size = params.get("size");
 

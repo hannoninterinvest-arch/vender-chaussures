@@ -277,3 +277,31 @@ export const catalog: CatalogProduct[] = [
     ],
   },
 ];
+
+export const categorySeed: { id: string; label: string; image: string }[] = [
+  {
+    id: 'lifestyle',
+    label: 'Lifestyle',
+    image: img('photo-1549298916-b41d501d3772'),
+  },
+  {
+    id: 'running',
+    label: 'Running',
+    image: img('photo-1460353581641-37baddab0fa2'),
+  },
+  {
+    id: 'basket',
+    label: 'Basket',
+    image: img('photo-1595950653106-6c9ebd614d3a'),
+  },
+  {
+    id: 'outdoor',
+    label: 'Outdoor',
+    image: img('photo-1520256862855-398228c41684'),
+  },
+  {
+    id: 'sneakers',
+    label: 'Sneakers',
+    image: img('photo-1605348532760-6753d2c43329'),
+  },
+];

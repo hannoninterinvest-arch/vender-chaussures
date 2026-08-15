@@ -10,7 +10,7 @@ export class OrderItem {
   @ManyToOne(() => Order, (order) => order.items, { onDelete: 'CASCADE' })
   order: Order;
 
-  @ManyToOne(() => Product, { eager: true, nullable: true })
+  @ManyToOne(() => Product, { eager: true, nullable: true, onDelete: 'SET NULL' })
   product: Product | null;
 
   @Column()
@@ -30,4 +30,7 @@ export class OrderItem {
 
   @Column('decimal', { precision: 10, scale: 2 })
   price: number;
+
+  @Column('decimal', { precision: 10, scale: 2, default: 0 })
+  cost: number;
 }

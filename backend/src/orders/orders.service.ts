@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProductsService } from '../products/products.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { OrderStatus } from './dto/update-order-status.dto';
 import { OrderItem } from './order-item.entity';
 import { Order } from './order.entity';
 
@@ -34,7 +35,7 @@ export class OrdersService {
     let subtotal = 0;
 
     for (const line of dto.items) {
-      const product = await this.products.findOne(line.productId);
+      const product = await this.products.getEntity(line.productId);
       if (!product) {
         throw new BadRequestException(`Produit inconnu: ${line.productId}`);
       }
@@ -42,6 +43,7 @@ export class OrdersService {
         throw new BadRequestException(`Pointure indisponible pour ${product.name}`);
       }
       const price = Number(product.price);
+      const cost = Number(product.cost) || 0;
       subtotal += price * line.qty;
       lines.push(
         this.items.create({
@@ -52,6 +54,7 @@ export class OrdersService {
           size: line.size,
           qty: line.qty,
           price,
+          cost,
         }),
       );
     }
@@ -66,6 +69,7 @@ export class OrdersService {
       address: dto.address,
       notes: dto.notes ?? '',
       payment: dto.payment,
+      status: 'en_attente',
       subtotal,
       delivery,
       total: subtotal + delivery,
@@ -75,10 +79,77 @@ export class OrdersService {
     return this.orders.save(order);
   }
 
+  async findAll() {
+    const rows = await this.orders.find({ order: { createdAt: 'DESC' } });
+    return rows.map((order) => this.toClient(order));
+  }
+
   async findOne(id: string) {
     const order = await this.orders.findOne({ where: { id } });
     if (!order) throw new NotFoundException('Commande introuvable');
     return this.toClient(order);
+  }
+
+  async updateStatus(id: string, status: OrderStatus) {
+    const order = await this.orders.findOne({ where: { id } });
+    if (!order) throw new NotFoundException('Commande introuvable');
+    order.status = status;
+    return this.toClient(await this.orders.save(order));
+  }
+
+  async stats() {
+    const rows = await this.orders.find({ order: { createdAt: 'DESC' } });
+    const delivered = rows.filter((o) => o.status === 'livree');
+    const pending = rows.filter(
+      (o) => o.status === 'en_attente' || o.status === 'en_livraison',
+    );
+    const cancelled = rows.filter((o) => o.status === 'annulee');
+
+    let revenue = 0;
+    let cost = 0;
+    const byProduct = new Map<
+      string,
+      { productId: string; name: string; image: string; qty: number; revenue: number; profit: number }
+    >();
+
+    for (const order of delivered) {
+      revenue += Number(order.subtotal);
+      for (const item of order.items) {
+        const qty = item.qty;
+        const lineRev = Number(item.price) * qty;
+        const lineCost = (Number(item.cost) || 0) * qty;
+        cost += lineCost;
+        const productId = item.product?.id || item.name;
+        const prev = byProduct.get(productId) || {
+          productId,
+          name: item.name,
+          image: item.image,
+          qty: 0,
+          revenue: 0,
+          profit: 0,
+        };
+        prev.qty += qty;
+        prev.revenue += lineRev;
+        prev.profit += lineRev - lineCost;
+        byProduct.set(productId, prev);
+      }
+    }
+
+    const ranking = [...byProduct.values()].sort(
+      (a, b) => b.qty - a.qty || b.revenue - a.revenue,
+    );
+
+    return {
+      orders: rows.length,
+      pending: pending.length,
+      delivered: delivered.length,
+      cancelled: cancelled.length,
+      revenue,
+      cost,
+      profit: revenue - cost,
+      bestProduct: ranking[0] ?? null,
+      topProducts: ranking.slice(0, 5),
+    };
   }
 
   private async nextId() {
@@ -94,6 +165,7 @@ export class OrdersService {
     return {
       id: order.id,
       createdAt: order.createdAt,
+      status: order.status || 'en_attente',
       subtotal: Number(order.subtotal),
       delivery: Number(order.delivery),
       total: Number(order.total),

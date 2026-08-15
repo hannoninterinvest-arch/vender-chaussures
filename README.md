@@ -6,6 +6,7 @@ Storefront inspiré de [kicks-navy.vercel.app](https://kicks-navy.vercel.app/), 
 - Back : NestJS + TypeORM + PostgreSQL (Neon)
 - Commandes et produits en base
 - Paiement à la livraison (COD)
+- Espace vendeur : produits, catégories, livraisons, bénéfices
 
 ## Lancer
 
@@ -23,6 +24,9 @@ npm run dev
 
 Ouvre [http://localhost:3000](http://localhost:3000).
 
+Espace vendeur : [http://localhost:3000/vendeur](http://localhost:3000/vendeur)  
+Clé par défaut (`SELLER_KEY` dans `backend/.env`) : `kicks-vendeur`
+
 ## API
 
 | Méthode | Route | Description |
@@ -30,7 +34,13 @@ Ouvre [http://localhost:3000](http://localhost:3000).
 | GET | `/api/health` | Santé |
 | GET | `/api/products` | Catalogue |
 | GET | `/api/products/:id` | Produit |
+| GET | `/api/categories` | Catégories boutique |
 | POST | `/api/orders` | Créer une commande invité |
 | GET | `/api/orders/:id` | Détail commande |
+| POST | `/api/seller/session` | Vérifier la clé vendeur |
+| GET/POST/PATCH/DELETE | `/api/seller/products` | CRUD produits (clé requise) |
+| GET/POST/DELETE | `/api/seller/categories` | Catégories (clé requise) |
+| GET/PATCH | `/api/seller/orders` | Commandes + statut livraison |
+| GET | `/api/seller/stats` | Bénéfices et meilleur produit |
 
 Les tables sont créées au démarrage (`synchronize: true`) et le catalogue est seedé s’il est vide.

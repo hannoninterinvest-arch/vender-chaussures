@@ -40,3 +40,9 @@ export async function fetchOrder(id: string) {
   if (!res.ok) throw new Error("Impossible de charger la commande");
   return res.json();
 }
+
+export async function fetchCategories() {
+  const res = await fetch(apiUrl("/categories"), { cache: "no-store" });
+  if (!res.ok) throw new Error("Impossible de charger les catégories");
+  return res.json();
+}
