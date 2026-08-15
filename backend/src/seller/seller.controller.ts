@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -6,16 +7,21 @@ import {
   Param,
   Patch,
   Post,
+  UploadedFile,
   UnauthorizedException,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
+import { memoryStorage } from 'multer';
 import { CreateCategoryDto } from '../products/dto/create-category.dto';
 import { CreateProductDto } from '../products/dto/create-product.dto';
 import { UpdateProductDto } from '../products/dto/update-product.dto';
 import { ProductsService } from '../products/products.service';
 import { UpdateOrderStatusDto } from '../orders/dto/update-order-status.dto';
 import { OrdersService } from '../orders/orders.service';
+import { CloudinaryService } from './cloudinary.service';
 import { SellerLoginDto } from './dto/seller-login.dto';
 import { keysMatch, SellerGuard, sellerKey } from './seller.guard';
 
@@ -24,6 +30,7 @@ export class SellerController {
   constructor(
     private readonly products: ProductsService,
     private readonly orders: OrdersService,
+    private readonly uploads: CloudinaryService,
     private readonly config: ConfigService,
   ) {}
 
@@ -33,6 +40,19 @@ export class SellerController {
       throw new UnauthorizedException('Clé vendeur invalide');
     }
     return { ok: true };
+  }
+
+  @Post('uploads')
+  @UseGuards(SellerGuard)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 6 * 1024 * 1024 },
+    }),
+  )
+  uploadImage(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Choisis une image');
+    return this.uploads.uploadImage(file);
   }
 
   @Get('stats')

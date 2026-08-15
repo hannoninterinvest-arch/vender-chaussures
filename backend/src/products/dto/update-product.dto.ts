@@ -7,6 +7,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  ArrayMaxSize,
   Min,
   MinLength,
   ValidateNested,
@@ -67,5 +68,6 @@ export class UpdateProductDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  @ArrayMaxSize(5)
   images?: string[];
 }

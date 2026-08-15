@@ -5,6 +5,7 @@ import { allSizes } from "@/lib/products";
 import { formatTnd } from "@/lib/format";
 import {
   sellerRequest,
+  sellerUploadImage,
   type SellerCategory,
   type SellerProduct,
 } from "@/lib/seller";
@@ -24,9 +25,7 @@ const emptyForm = {
   extraColorName: "",
   extraColorHex: "#5B6AF6",
   sizes: [40, 41, 42, 43, 44] as number[],
-  image1: "",
-  image2: "",
-  image3: "",
+  images: ["", "", "", "", ""] as string[],
 };
 
 export default function SellerProductsPage() {
@@ -36,6 +35,7 @@ export default function SellerProductsPage() {
   const [form, setForm] = useState(emptyForm);
   const [editing, setEditing] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState<number | null>(null);
 
   async function load() {
     const [p, c] = await Promise.all([
@@ -83,9 +83,7 @@ export default function SellerProductsPage() {
       extraColorName: p.colors[1]?.name || "",
       extraColorHex: p.colors[1]?.hex || "#5B6AF6",
       sizes: p.sizes,
-      image1: p.images[0] || "",
-      image2: p.images[1] || "",
-      image3: p.images[2] || "",
+      images: [0, 1, 2, 3, 4].map((i) => p.images[i] || ""),
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -100,9 +98,9 @@ export default function SellerProductsPage() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    const images = [form.image1, form.image2, form.image3].map((s) => s.trim()).filter(Boolean);
+    const images = form.images.map((s) => s.trim()).filter(Boolean);
     if (!images.length) {
-      toast("Ajoute au moins une URL d’image");
+      toast("Ajoute au moins une photo (Cloudinary)");
       return;
     }
     if (!form.sizes.length) {
@@ -163,6 +161,23 @@ export default function SellerProductsPage() {
       ...f,
       sizes: f.sizes.includes(n) ? f.sizes.filter((s) => s !== n) : [...f.sizes, n].sort((a, b) => a - b),
     }));
+  }
+
+  async function onUpload(index: number, file: File) {
+    setUploading(index);
+    try {
+      const { url } = await sellerUploadImage(file);
+      setForm((f) => {
+        const images = [...f.images];
+        images[index] = url;
+        return { ...f, images };
+      });
+      toast("Photo enregistrée sur Cloudinary");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Upload Cloudinary impossible");
+    } finally {
+      setUploading(null);
+    }
   }
 
   return (
@@ -272,14 +287,53 @@ export default function SellerProductsPage() {
             </button>
           ))}
         </div>
-        <Field
-          label="Image 1 (URL)"
-          value={form.image1}
-          onChange={(v) => setForm({ ...form, image1: v })}
-          required
-        />
-        <Field label="Image 2 (URL)" value={form.image2} onChange={(v) => setForm({ ...form, image2: v })} />
-        <Field label="Image 3 (URL)" value={form.image3} onChange={(v) => setForm({ ...form, image3: v })} />
+        <p className="text-sm font-bold">Photos (5 max) — Cloudinary</p>
+        <p className="text-xs text-[#666]">
+          Chaque fichier est envoyé sur Cloudinary. Le lien HTTPS est ensuite enregistré en base.
+        </p>
+        <div className="grid grid-cols-5 gap-2">
+          {form.images.map((url, i) => (
+            <div key={i} className="space-y-1">
+              <div className="relative aspect-square overflow-hidden rounded-xl bg-[#F5F5F5]">
+                {url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="grid h-full place-items-center text-xs text-[#888]">{i + 1}</span>
+                )}
+              </div>
+              <label className="block cursor-pointer rounded-lg bg-[#1A1A1A] px-2 py-1.5 text-center text-[11px] font-bold text-white">
+                {uploading === i ? "Envoi…" : url ? "Changer" : "Upload"}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  disabled={uploading !== null}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = "";
+                    if (file) void onUpload(i, file);
+                  }}
+                />
+              </label>
+              {url && (
+                <button
+                  type="button"
+                  className="w-full text-[11px] text-red-600"
+                  onClick={() =>
+                    setForm((f) => {
+                      const images = [...f.images];
+                      images[i] = "";
+                      return { ...f, images };
+                    })
+                  }
+                >
+                  Retirer
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
         <div className="flex gap-3">
           <button
             type="submit"

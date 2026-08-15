@@ -103,7 +103,7 @@ export class ProductsService implements OnModuleInit {
       isNew: dto.isNew ?? true,
       colors: dto.colors,
       sizes: dto.sizes,
-      images: dto.images.filter(Boolean),
+      images: dto.images.filter(Boolean).slice(0, 5),
     });
     return this.toSeller(await this.products.save(product));
   }
@@ -121,7 +121,7 @@ export class ProductsService implements OnModuleInit {
     if (dto.isNew !== undefined) product.isNew = dto.isNew;
     if (dto.colors !== undefined) product.colors = dto.colors;
     if (dto.sizes !== undefined) product.sizes = dto.sizes;
-    if (dto.images !== undefined) product.images = dto.images.filter(Boolean);
+    if (dto.images !== undefined) product.images = dto.images.filter(Boolean).slice(0, 5);
     return this.toSeller(await this.products.save(product));
   }
 

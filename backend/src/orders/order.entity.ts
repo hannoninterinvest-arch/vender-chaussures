@@ -33,6 +33,9 @@ export class Order {
   @Column()
   payment: string;
 
+  @Column({ type: 'text', default: '' })
+  paymentPhone: string;
+
   @Column('decimal', { precision: 10, scale: 2 })
   subtotal: number;
 

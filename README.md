@@ -5,12 +5,13 @@ Storefront inspiré de [kicks-navy.vercel.app](https://kicks-navy.vercel.app/), 
 - Front : Next.js (catalogue, panier, checkout invité)
 - Back : NestJS + TypeORM + PostgreSQL (Neon)
 - Commandes et produits en base
-- Paiement à la livraison (COD)
+- Paiement : à la livraison, Flouci, D17
+- Photos produit : jusqu’à 5 images via Cloudinary, URL en PostgreSQL
 - Espace vendeur : produits, catégories, livraisons, bénéfices
 
 ## Lancer
 
-1. Copie `backend/.env.example` vers `backend/.env` et renseigne `DATABASE_URL` (Neon).
+1. Copie `backend/.env.example` vers `backend/.env` et renseigne `DATABASE_URL` (Neon) + Cloudinary.
 2. Copie `.env.example` vers `.env.local` (URL de l’API).
 
 ```bash
@@ -41,6 +42,7 @@ Clé par défaut (`SELLER_KEY` dans `backend/.env`) : `kicks-vendeur`
 | GET/POST/PATCH/DELETE | `/api/seller/products` | CRUD produits (clé requise) |
 | GET/POST/DELETE | `/api/seller/categories` | Catégories (clé requise) |
 | GET/PATCH | `/api/seller/orders` | Commandes + statut livraison |
+| POST | `/api/seller/uploads` | Upload image Cloudinary (clé requise) |
 | GET | `/api/seller/stats` | Bénéfices et meilleur produit |
 
 Les tables sont créées au démarrage (`synchronize: true`) et le catalogue est seedé s’il est vide.

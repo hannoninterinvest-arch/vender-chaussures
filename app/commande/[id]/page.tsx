@@ -10,6 +10,7 @@ type OrderView = {
   id: string;
   total: number;
   payment: string;
+  paymentPhone?: string;
   customer: {
     name: string;
     phone: string;
@@ -94,6 +95,7 @@ export default function OrderPage({
         </p>
         <p className="mt-4 text-sm">
           Paiement : <strong>{pay}</strong>
+          {order.paymentPhone ? ` · ${order.paymentPhone}` : ""}
         </p>
         <ul className="mt-6 space-y-3 border-t border-[#EEE] pt-4">
           {order.items.map((item) => (

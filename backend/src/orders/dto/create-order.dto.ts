@@ -52,6 +52,10 @@ export class CreateOrderDto {
   @IsIn(PAYMENTS)
   payment: (typeof PAYMENTS)[number];
 
+  @IsOptional()
+  @IsString()
+  paymentPhone?: string;
+
   @ValidateNested({ each: true })
   @Type(() => CreateOrderItemDto)
   @ArrayMinSize(1)

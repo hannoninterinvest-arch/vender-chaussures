@@ -23,6 +23,7 @@ export type SellerOrder = {
   delivery: number;
   total: number;
   payment: string;
+  paymentPhone?: string;
   customer: {
     name: string;
     phone: string;
@@ -117,4 +118,16 @@ export async function sellerLogin(key: string) {
   if (!res.ok) await parseError(res);
   setSellerKey(key);
   return res.json();
+}
+
+export async function sellerUploadImage(file: File): Promise<{ url: string }> {
+  const body = new FormData();
+  body.append("file", file);
+  const res = await fetch(apiUrl("/seller/uploads"), {
+    method: "POST",
+    headers: { "x-seller-key": getSellerKey() },
+    body,
+  });
+  if (!res.ok) await parseError(res);
+  return res.json() as Promise<{ url: string }>;
 }

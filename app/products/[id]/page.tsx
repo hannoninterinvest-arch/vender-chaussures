@@ -62,7 +62,7 @@ export default function ProductPage({
             alt={product.name}
             className="aspect-square w-full rounded-[16px] object-cover"
           />
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-5 gap-3">
             {product.images.map((src, i) => (
               <button
                 key={src}

@@ -31,6 +31,14 @@ export class OrdersService {
   ) {}
 
   async create(dto: CreateOrderDto) {
+    if ((dto.payment === 'flouci' || dto.payment === 'd17') && !dto.paymentPhone?.trim()) {
+      throw new BadRequestException(
+        dto.payment === 'flouci'
+          ? 'Indique ton numéro Flouci'
+          : 'Indique ton numéro D17',
+      );
+    }
+
     const lines: OrderItem[] = [];
     let subtotal = 0;
 
@@ -69,6 +77,7 @@ export class OrdersService {
       address: dto.address,
       notes: dto.notes ?? '',
       payment: dto.payment,
+      paymentPhone: dto.paymentPhone?.trim() ?? '',
       status: 'en_attente',
       subtotal,
       delivery,
@@ -170,6 +179,7 @@ export class OrdersService {
       delivery: Number(order.delivery),
       total: Number(order.total),
       payment: order.payment,
+      paymentPhone: order.paymentPhone || '',
       customer: {
         name: order.customerName,
         phone: order.phone,

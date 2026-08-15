@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { formatTnd } from "@/lib/format";
+import { paymentLabel } from "@/lib/tunisia";
 import { sellerRequest, type SellerOrder } from "@/lib/seller";
 import { useToast } from "@/components/Toast";
 
@@ -89,6 +90,10 @@ export default function SellerOrdersPage() {
                 <p className="font-black">{o.id}</p>
                 <p className="text-sm text-[#666]">
                   {new Date(o.createdAt).toLocaleString("fr-TN")} · {o.customer.name} · {o.customer.phone}
+                </p>
+                <p className="text-sm text-[#666]">
+                  {paymentLabel(o.payment)}
+                  {o.paymentPhone ? ` · ${o.paymentPhone}` : ""}
                 </p>
                 <p className="text-sm text-[#666]">
                   {o.customer.address}, {o.customer.city} ({o.customer.gouvernorat})

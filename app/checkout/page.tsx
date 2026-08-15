@@ -19,6 +19,7 @@ export default function CheckoutPage() {
   const toast = useToast();
   const { lines, subtotal, clear } = useCart();
   const [payment, setPayment] = useState<PaymentMethod>("cod");
+  const [paymentPhone, setPaymentPhone] = useState("");
   const [gouvernorat, setGouvernorat] = useState<Gouvernorat>("Tunis");
   const [busy, setBusy] = useState(false);
   const fee = useMemo(() => deliveryFee(gouvernorat), [gouvernorat]);
@@ -38,6 +39,7 @@ export default function CheckoutPage() {
         address: String(data.get("address")),
         notes: String(data.get("notes") || ""),
         payment,
+        paymentPhone: payment === "cod" ? "" : paymentPhone,
         items: lines.map((l) => ({
           productId: l.productId,
           size: l.size,
@@ -119,6 +121,21 @@ export default function CheckoutPage() {
                 </span>
               </label>
             ))}
+            {payment !== "cod" && (
+              <label className="block pt-2">
+                <span className="text-sm font-medium">
+                  {paymentMethods.find((m) => m.id === payment)?.walletLabel}
+                </span>
+                <input
+                  type="tel"
+                  required
+                  value={paymentPhone}
+                  onChange={(e) => setPaymentPhone(e.target.value)}
+                  placeholder="ex. 20 123 456"
+                  className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-3 outline-none focus:border-[#5B6AF6]"
+                />
+              </label>
+            )}
           </div>
         </div>
 
