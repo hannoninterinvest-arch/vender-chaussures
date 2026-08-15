@@ -1,5 +1,8 @@
 # KICKS — boutique sneakers (front Next.js + API NestJS)
 
+- Front : https://github.com/hannoninterinvest-arch/vender-chaussures
+- Back : https://github.com/hannoninterinvest-arch/ventechaussureBack
+
 Storefront inspiré de [kicks-navy.vercel.app](https://kicks-navy.vercel.app/), **sans login**.
 
 - Front : Next.js (catalogue, panier, checkout invité)
