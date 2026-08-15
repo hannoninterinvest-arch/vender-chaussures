@@ -1,5 +1,6 @@
 const API =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
+  process.env.NEXT_PUBLIC_API_URL ??
+  "https://vender-chaussures-api.onrender.com/api";
 
 export function apiUrl(path: string) {
   return `${API}${path.startsWith("/") ? path : `/${path}`}`;

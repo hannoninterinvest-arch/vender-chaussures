@@ -89,6 +89,38 @@ export class ProductsService implements OnModuleInit {
     return { ok: true };
   }
 
+  async resolveCategory(value: string) {
+    const raw = value.trim();
+    if (!raw) throw new BadRequestException('Catégorie manquante');
+    const byId = await this.categories.findOne({ where: { id: slugify(raw) } });
+    if (byId) return byId.id;
+    const all = await this.categories.find();
+    const byLabel = all.find(
+      (c) => c.label.trim().toLowerCase() === raw.toLowerCase() || c.id === raw,
+    );
+    if (byLabel) return byLabel.id;
+    throw new BadRequestException(`Catégorie inconnue : ${raw}`);
+  }
+
+  async importMany(dtos: CreateProductDto[]) {
+    const created: Awaited<ReturnType<ProductsService['create']>>[] = [];
+    const errors: { index: number; name: string; message: string }[] = [];
+    for (let i = 0; i < dtos.length; i++) {
+      const dto = dtos[i];
+      try {
+        const category = await this.resolveCategory(dto.category);
+        created.push(await this.create({ ...dto, category }));
+      } catch (err) {
+        errors.push({
+          index: i,
+          name: dto.name || `ligne ${i + 2}`,
+          message: err instanceof Error ? err.message : 'Import impossible',
+        });
+      }
+    }
+    return { created: created.length, products: created, errors };
+  }
+
   async create(dto: CreateProductDto) {
     const id = await this.uniqueId(slugify(dto.id?.trim() || dto.name));
     const product = this.products.create({

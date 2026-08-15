@@ -1,0 +1,16 @@
+# API Nest en local (le front Next va sur Vercel, pas dans ce conteneur).
+# Usage : cp backend/.env.example backend/.env  puis  docker compose up --build
+
+services:
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./backend/.env
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      FRONTEND_URL: "*"

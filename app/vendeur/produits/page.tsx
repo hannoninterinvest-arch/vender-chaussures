@@ -1,9 +1,11 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { allSizes } from "@/lib/products";
 import { formatTnd } from "@/lib/format";
 import {
+  isAdmin,
   sellerRequest,
   sellerUploadImage,
   type SellerCategory,
@@ -36,6 +38,7 @@ export default function SellerProductsPage() {
   const [editing, setEditing] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState<number | null>(null);
+  const admin = isAdmin();
 
   async function load() {
     const [p, c] = await Promise.all([
@@ -186,6 +189,13 @@ export default function SellerProductsPage() {
         <h1 className="text-2xl font-black">
           {editing ? "Modifier le produit" : "Nouveau produit"}
         </h1>
+        <p className="text-sm text-[#666]">
+          Pour plusieurs paires d’un coup, utilise{" "}
+          <Link href="/vendeur/import" className="font-bold text-[#5B6AF6]">
+            Import CSV
+          </Link>{" "}
+          (liens photos dans le fichier).
+        </p>
         <Field label="Nom" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
         <Field label="Marque" value={form.brand} onChange={(v) => setForm({ ...form, brand: v })} required />
         <div className="grid grid-cols-2 gap-3">
@@ -373,9 +383,11 @@ export default function SellerProductsPage() {
                   <button type="button" className="font-medium text-[#5B6AF6]" onClick={() => startEdit(p)}>
                     Modifier
                   </button>
-                  <button type="button" className="font-medium text-red-600" onClick={() => remove(p.id)}>
-                    Supprimer
-                  </button>
+                  {admin && (
+                    <button type="button" className="font-medium text-red-600" onClick={() => remove(p.id)}>
+                      Supprimer
+                    </button>
+                  )}
                 </div>
               </div>
             </li>
