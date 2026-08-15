@@ -28,11 +28,23 @@ npm run dev
 
 Ouvre [http://localhost:3000](http://localhost:3000).
 
-Espace équipe : [http://localhost:3000/vendeur](http://localhost:3000/vendeur)  
-Comptes locaux (table `users` vide au 1er lancement) :
+Espace équipe : [http://localhost:3000/vendeur](http://localhost:3000/vendeur)
+
+### Premier admin
+
+Si la table `users` est vide, `/vendeur` affiche **Créer le premier admin** (nom, e-mail, mot de passe).  
+Sinon connecte-toi. En local, un seed peut déjà avoir créé :
 
 - Admin : `admin@kicks.tn` / `KicksAdmin123`
 - Vendeur : `vendeur@kicks.tn` / `Vendeur123`
+
+### Vendeurs
+
+Connecté en **admin** → onglet **Équipe** → créer un compte rôle `vendeur`.
+
+### Import CSV
+
+Onglet **Import CSV** : fichier `.csv` avec les liens photos (`https://…|https://…`, max 5). Télécharge le modèle depuis la page.
 
 ## API
 
@@ -44,10 +56,13 @@ Comptes locaux (table `users` vide au 1er lancement) :
 | GET | `/api/categories` | Catégories boutique |
 | POST | `/api/orders` | Créer une commande invité |
 | GET | `/api/orders/:id` | Détail commande |
+| GET | `/api/auth/setup` | `needed: true` s’il n’y a encore aucun admin |
+| POST | `/api/auth/setup` | Créer le premier administrateur |
 | POST | `/api/auth/login` | Connexion e-mail + mot de passe |
 | GET | `/api/auth/me` | Session staff (JWT) |
 | GET/POST/PATCH/DELETE | `/api/staff` | Comptes admin/vendeur (admin seulement) |
-| GET/POST/PATCH/DELETE | `/api/seller/products` | CRUD produits (clé requise) |
+| GET/POST/PATCH/DELETE | `/api/seller/products` | CRUD produits (JWT) |
+| POST | `/api/seller/products/import` | Import CSV (liste de produits + liens photos) |
 | GET/POST/DELETE | `/api/seller/categories` | Catégories (clé requise) |
 | GET/PATCH | `/api/seller/orders` | Commandes + statut livraison |
 | POST | `/api/seller/uploads` | Upload image Cloudinary (clé requise) |

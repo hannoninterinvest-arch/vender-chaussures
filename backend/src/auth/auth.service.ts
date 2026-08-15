@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   OnModuleInit,
   UnauthorizedException,
@@ -14,6 +15,7 @@ import { Repository } from 'typeorm';
 import type { AuthUser } from './auth.types';
 import { CreateStaffDto } from './dto/create-staff.dto';
 import { LoginDto } from './dto/login.dto';
+import { SetupAdminDto } from './dto/setup-admin.dto';
 import { UpdateStaffDto } from './dto/update-staff.dto';
 import type { StaffRole } from './user.entity';
 import { User } from './user.entity';
@@ -56,6 +58,20 @@ export class AuthService implements OnModuleInit {
     }
 
     console.log(`Comptes staff créés : ${adminEmail}` + (vendeurPassword ? `, ${vendeurEmail}` : ''));
+  }
+
+  async setupNeeded() {
+    return { needed: (await this.users.count()) === 0 };
+  }
+
+  async setupFirstAdmin(dto: SetupAdminDto) {
+    if ((await this.users.count()) > 0) {
+      throw new ForbiddenException('Un administrateur existe déjà. Connecte-toi.');
+    }
+    const user = await this.createUser(dto.email, dto.name, dto.password, 'admin');
+    const saved = await this.users.findOne({ where: { id: user.id } });
+    if (!saved) throw new BadRequestException('Impossible de créer l’administrateur');
+    return { token: this.signToken(saved), user };
   }
 
   jwtSecret() {

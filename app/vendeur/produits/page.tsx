@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { allSizes } from "@/lib/products";
 import { formatTnd } from "@/lib/format";
 import {
@@ -188,6 +189,13 @@ export default function SellerProductsPage() {
         <h1 className="text-2xl font-black">
           {editing ? "Modifier le produit" : "Nouveau produit"}
         </h1>
+        <p className="text-sm text-[#666]">
+          Pour plusieurs paires d’un coup, utilise{" "}
+          <Link href="/vendeur/import" className="font-bold text-[#5B6AF6]">
+            Import CSV
+          </Link>{" "}
+          (liens photos dans le fichier).
+        </p>
         <Field label="Nom" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
         <Field label="Marque" value={form.brand} onChange={(v) => setForm({ ...form, brand: v })} required />
         <div className="grid grid-cols-2 gap-3">

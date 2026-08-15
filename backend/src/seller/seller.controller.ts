@@ -18,6 +18,7 @@ import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { CreateCategoryDto } from '../products/dto/create-category.dto';
 import { CreateProductDto } from '../products/dto/create-product.dto';
+import { ImportProductsDto } from '../products/dto/import-products.dto';
 import { UpdateProductDto } from '../products/dto/update-product.dto';
 import { ProductsService } from '../products/products.service';
 import { UpdateOrderStatusDto } from '../orders/dto/update-order-status.dto';
@@ -68,6 +69,11 @@ export class SellerController {
   @Post('products')
   createProduct(@Body() dto: CreateProductDto) {
     return this.products.create(dto);
+  }
+
+  @Post('products/import')
+  importProducts(@Body() dto: ImportProductsDto) {
+    return this.products.importMany(dto.products);
   }
 
   @Patch('products/:id')

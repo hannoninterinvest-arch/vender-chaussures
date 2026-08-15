@@ -140,6 +140,35 @@ export async function sellerRequest<T>(path: string, init: RequestInit = {}): Pr
   return res.json() as Promise<T>;
 }
 
+export async function fetchSetupNeeded() {
+  const res = await fetch(apiUrl("/auth/setup"), { cache: "no-store" });
+  if (!res.ok) return { needed: false };
+  return res.json() as Promise<{ needed: boolean }>;
+}
+
+export async function createFirstAdmin(name: string, email: string, password: string) {
+  const res = await fetch(apiUrl("/auth/setup"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email, password }),
+  });
+  if (!res.ok) await parseError(res);
+  const data = (await res.json()) as { token: string; user: StaffUser };
+  setSession(data.token, data.user);
+  return data.user;
+}
+
+export async function importProductsCsv(products: unknown[]) {
+  return sellerRequest<{
+    created: number;
+    products: SellerProduct[];
+    errors: { index: number; name: string; message: string }[];
+  }>("/seller/products/import", {
+    method: "POST",
+    body: JSON.stringify({ products }),
+  });
+}
+
 export async function sellerLogin(email: string, password: string) {
   const res = await fetch(apiUrl("/auth/login"), {
     method: "POST",

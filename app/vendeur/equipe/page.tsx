@@ -88,10 +88,11 @@ export default function SellerTeamPage() {
   return (
     <div className="grid gap-8 lg:grid-cols-2">
       <form onSubmit={onSubmit} className="space-y-4 rounded-[20px] bg-white p-6">
-        <h1 className="text-2xl font-black">Nouvel équipier</h1>
+        <h1 className="text-2xl font-black">Créer un vendeur ou un admin</h1>
         <p className="text-sm text-[#666]">
-          <strong>Admin</strong> : boutique + comptes. <strong>Vendeur</strong> : commandes et
-          produits, sans supprimer le catalogue ni gérer l’équipe.
+          <strong>Toi (admin)</strong> ajoutes les comptes ici. Un <strong>vendeur</strong> gère
+          commandes et produits. Un <strong>admin</strong> peut aussi gérer l’équipe et supprimer
+          le catalogue.
         </p>
         <label className="block text-sm font-medium">
           Nom
