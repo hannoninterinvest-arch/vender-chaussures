@@ -62,12 +62,42 @@ Oui : le front Next.js reste en local (ou plus tard sur Vercel). Render ne lance
    - **Start Command** : `npm run start:prod`
 3. Variables d’environnement (Environment) :
 
-| Variable | Valeur |
-| --- | --- |
-| `DATABASE_URL` | URL Neon (`sslmode=require`, sans `channel_binding=require`) |
-| `FRONTEND_URL` | `http://localhost:3000` (puis l’URL Vercel du front, plusieurs origines séparées par une virgule) |
-| `SELLER_KEY` | la même clé que en local (ex. `kicks-vendeur`) |
-| `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | compte Cloudinary |
+Sur Render : **Environment** → **Add Environment Variable**, une ligne par nom ci-dessous (ne commite jamais ces valeurs).
+
+### `DATABASE_URL` (Neon)
+
+1. Compte gratuit : [neon.tech](https://neon.tech) → **Create project** (région proche, Postgres).
+2. **Dashboard** → **Connect** → copie la connection string (URI).
+3. Colle-la telle quelle. Si tu vois `channel_binding=require`, tu peux le laisser : l’API le retire au démarrage.
+4. Forme attendue : `postgresql://USER:PASSWORD@HOST/neondb?sslmode=require`
+
+C’est la **même** base que `backend/.env` en local. Une seule Neon pour local + Render.
+
+### `FRONTEND_URL`
+
+- Tant que le site tourne sur ton PC : `http://localhost:3000`
+- Plus tard, URL Vercel du front, sans slash final. Plusieurs origines : `https://ton-front.vercel.app,http://localhost:3000`
+
+Sans ça, le navigateur bloque les appels (CORS).
+
+### `SELLER_KEY`
+
+Ce n’est **pas** un compte Cloudinary/Neon. C’est le mot de passe de `/vendeur`.
+
+Choisis une phrase secrète (ou garde `kicks-vendeur` pour tester) et mets **la même** dans `backend/.env` (local) et sur Render. Tu la tapes dans l’espace vendeur.
+
+### Cloudinary (photos produit)
+
+Sans ces 3 variables, le catalogue marche, mais l’upload d’images dans `/vendeur` renvoie 503.
+
+1. Compte gratuit : [cloudinary.com](https://cloudinary.com/users/register/free)
+2. Une fois connecté, le **Dashboard** affiche **API Keys** (ou **Settings** → **API Keys**) :
+   - **Cloud name** → `CLOUDINARY_CLOUD_NAME` (ex. `demo`)
+   - **API Key** → `CLOUDINARY_API_KEY` (chiffres)
+   - **API Secret** → **Reveal** → `CLOUDINARY_API_SECRET` (ne le publie jamais)
+3. Colle les 3 sur Render, **exactement** ces noms de variables.
+
+Les photos vont dans le dossier Cloudinary `kicks/products` ; l’URL HTTPS est stockée en Postgres.
 
 Render définit `PORT` tout seul. L’API écoute `0.0.0.0`.
 
