@@ -169,9 +169,9 @@ Render définit `PORT` tout seul. L’API écoute `0.0.0.0`.
 5. Front local → API Render : dans `.env.local` (déjà dans `.env.example`) :
 
 ```bash
-NEXT_PUBLIC_API_URL=https://vender-chaussures-api.onrender.com/api
+NEXT_PUBLIC_API_URL=https://vender-chaussures.onrender.com/api
 ```
 
-Remplace l’hôte par l’URL exacte de ton service Render si elle diffère. Puis `npm run dev` (front seulement).
+L’URL **doit** finir par `/api`. Sans ça, le login appelle `/auth/login` et Render répond 404. Puis `npm run dev` (front seulement).
 
 Tu peux aussi importer le Blueprint `render.yaml` (New → Blueprint) : il cible déjà `rootDir: backend`.
