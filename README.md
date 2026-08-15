@@ -49,3 +49,36 @@ Clé par défaut (`SELLER_KEY` dans `backend/.env`) : `kicks-vendeur`
 | GET | `/api/seller/stats` | Bénéfices et meilleur produit |
 
 Les tables sont créées au démarrage (`synchronize: true`) et le catalogue est seedé s’il est vide.
+
+## Déployer uniquement le back sur Render
+
+Oui : le front Next.js reste en local (ou plus tard sur Vercel). Render ne lance que le dossier `backend/`.
+
+1. [Render](https://dashboard.render.com) → **New** → **Web Service** → connecte le dépôt GitHub `vender-chaussures`.
+2. Réglages :
+   - **Root Directory** : `backend`
+   - **Runtime** : Node
+   - **Build Command** : `npm ci --include=dev && npm run build`
+   - **Start Command** : `npm run start:prod`
+3. Variables d’environnement (Environment) :
+
+| Variable | Valeur |
+| --- | --- |
+| `DATABASE_URL` | URL Neon (`sslmode=require`, sans `channel_binding=require`) |
+| `FRONTEND_URL` | `http://localhost:3000` (puis l’URL Vercel du front, plusieurs origines séparées par une virgule) |
+| `SELLER_KEY` | la même clé que en local (ex. `kicks-vendeur`) |
+| `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | compte Cloudinary |
+
+Render définit `PORT` tout seul. L’API écoute `0.0.0.0`.
+
+4. Après le premier deploy, ouvre `https://TON-SERVICE.onrender.com/api/health` → `{"ok":true,"service":"kicks-api"}`.
+5. En local, pointe le front vers Render :
+
+```bash
+# .env.local
+NEXT_PUBLIC_API_URL=https://TON-SERVICE.onrender.com/api
+```
+
+Puis `npm run dev` (front seulement). Les commandes et le catalogue passent par l’API Render + Neon.
+
+Tu peux aussi importer le Blueprint `render.yaml` (New → Blueprint) : il cible déjà `rootDir: backend`.

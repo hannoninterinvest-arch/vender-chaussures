@@ -7,6 +7,17 @@ import { ProductsModule } from './products/products.module';
 import { OrdersModule } from './orders/orders.module';
 import { SellerModule } from './seller/seller.module';
 
+/** Neon ajoute parfois channel_binding=require, que node-pg refuse. */
+function postgresUrl(raw: string) {
+  try {
+    const parsed = new URL(raw);
+    parsed.searchParams.delete('channel_binding');
+    return parsed.toString();
+  } catch {
+    return raw.replace(/([?&])channel_binding=[^&]*&?/g, '$1').replace(/[?&]$/, '');
+  }
+}
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -14,7 +25,7 @@ import { SellerModule } from './seller/seller.module';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
-        url: config.getOrThrow<string>('DATABASE_URL'),
+        url: postgresUrl(config.getOrThrow<string>('DATABASE_URL')),
         autoLoadEntities: true,
         synchronize: true,
         ssl: { rejectUnauthorized: false },
