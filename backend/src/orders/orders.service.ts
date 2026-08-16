@@ -205,21 +205,32 @@ export class OrdersService {
         o.status === 'paiement_en_cours',
     );
     const cancelled = rows.filter((o) => o.status === 'annulee');
+    const paid = rows.filter((o) => this.isPaidSale(o));
+    const unpaid = rows.filter(
+      (o) => o.status !== 'annulee' && !this.isPaidSale(o),
+    );
+
+    const paidOnline = paid.filter((o) => o.payment === 'online').length;
+    const paidCod = paid.filter((o) => o.payment !== 'online').length;
 
     let revenue = 0;
     let cost = 0;
+    let deliveryFees = 0;
+    let pairs = 0;
     const byProduct = new Map<
       string,
       { productId: string; name: string; image: string; qty: number; revenue: number; profit: number }
     >();
 
-    for (const order of delivered) {
+    for (const order of paid) {
       revenue += Number(order.subtotal);
+      deliveryFees += Number(order.delivery);
       for (const item of order.items) {
         const qty = item.qty;
         const lineRev = Number(item.price) * qty;
         const lineCost = (Number(item.cost) || 0) * qty;
         cost += lineCost;
+        pairs += qty;
         const productId = item.product?.id || item.name;
         const prev = byProduct.get(productId) || {
           productId,
@@ -240,17 +251,88 @@ export class OrdersService {
       (a, b) => b.qty - a.qty || b.revenue - a.revenue,
     );
 
+    const months = this.monthlyPaidStats(paid);
+    const thisKey = this.monthKey(new Date());
+    const last = new Date();
+    last.setMonth(last.getMonth() - 1);
+    const lastKey = this.monthKey(last);
+    const thisMonth = months.find((m) => m.key === thisKey) ?? this.emptyMonth(thisKey);
+    const lastMonth = months.find((m) => m.key === lastKey) ?? this.emptyMonth(lastKey);
+
     return {
       orders: rows.length,
       pending: pending.length,
       delivered: delivered.length,
       cancelled: cancelled.length,
+      paid: paid.length,
+      unpaid: unpaid.length,
+      paidOnline,
+      paidCod,
+      pairs,
+      averageOrder: paid.length ? Math.round(revenue / paid.length) : 0,
       revenue,
+      deliveryFees,
       cost,
       profit: revenue - cost,
+      thisMonth,
+      lastMonth,
+      months,
       bestProduct: ranking[0] ?? null,
-      topProducts: ranking.slice(0, 5),
+      topProducts: ranking.slice(0, 8),
     };
+  }
+
+  /** En ligne payé Konnect, ou COD encaissé à la livraison. */
+  private isPaidSale(order: Order) {
+    if (order.status === 'annulee') return false;
+    if (order.payment === 'online') return order.paymentStatus === 'paid';
+    return order.status === 'livree';
+  }
+
+  private monthKey(date: Date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    return `${y}-${m}`;
+  }
+
+  private monthLabel(key: string) {
+    const [y, m] = key.split('-').map(Number);
+    const date = new Date(y, m - 1, 1);
+    const label = date.toLocaleDateString('fr-TN', { month: 'short', year: 'numeric' });
+    return label.replace('.', '');
+  }
+
+  private emptyMonth(key: string) {
+    return {
+      key,
+      label: this.monthLabel(key),
+      orders: 0,
+      pairs: 0,
+      revenue: 0,
+      profit: 0,
+    };
+  }
+
+  private monthlyPaidStats(paid: Order[]) {
+    const now = new Date();
+    const keys: string[] = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      keys.push(this.monthKey(d));
+    }
+    const map = new Map(keys.map((key) => [key, this.emptyMonth(key)]));
+    for (const order of paid) {
+      const key = this.monthKey(new Date(order.createdAt));
+      const row = map.get(key);
+      if (!row) continue;
+      row.orders += 1;
+      row.revenue += Number(order.subtotal);
+      for (const item of order.items) {
+        row.pairs += item.qty;
+        row.profit += Number(item.price) * item.qty - (Number(item.cost) || 0) * item.qty;
+      }
+    }
+    return keys.map((key) => map.get(key)!);
   }
 
   private async nextId() {
