@@ -16,7 +16,7 @@ type SiteHome = {
 const fallback: SiteHome = {
   heroKicker: "Collection",
   heroTitle: "CUIR PREMIUM",
-  heroSubtitle: "Fabrication tunisienne, confort et design intemporel — commande sans compte.",
+  heroSubtitle: "L'élégance du cuir, pensée pour la ville et la cérémonie.",
   coverImages: [],
 };
 

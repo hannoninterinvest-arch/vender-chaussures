@@ -6,6 +6,10 @@ import { SiteSettings } from './site-settings.entity';
 import { homepageCovers } from '../products/catalog';
 
 const HOME_ID = 'home';
+const DEFAULT_SUBTITLE =
+  "L'élégance du cuir, pensée pour la ville et la cérémonie.";
+const OLD_SUBTITLE =
+  'Fabrication tunisienne, confort et design intemporel — commande sans compte.';
 
 @Injectable()
 export class SiteService implements OnModuleInit {
@@ -22,14 +26,21 @@ export class SiteService implements OnModuleInit {
           id: HOME_ID,
           heroKicker: 'Collection',
           heroTitle: 'CUIR PREMIUM',
-          heroSubtitle:
-            'Fabrication tunisienne, confort et design intemporel — commande sans compte.',
+          heroSubtitle: DEFAULT_SUBTITLE,
           coverImages: homepageCovers,
         }),
       );
-    } else if (!Array.isArray(exists.coverImages) || exists.coverImages.length === 0) {
-      exists.coverImages = homepageCovers;
-      await this.rows.save(exists);
+    } else {
+      let dirty = false;
+      if (!Array.isArray(exists.coverImages) || exists.coverImages.length === 0) {
+        exists.coverImages = homepageCovers;
+        dirty = true;
+      }
+      if (!exists.heroSubtitle || exists.heroSubtitle === OLD_SUBTITLE) {
+        exists.heroSubtitle = DEFAULT_SUBTITLE;
+        dirty = true;
+      }
+      if (dirty) await this.rows.save(exists);
     }
   }
 
@@ -57,8 +68,7 @@ export class SiteService implements OnModuleInit {
         id: HOME_ID,
         heroKicker: 'Collection',
         heroTitle: 'CUIR PREMIUM',
-        heroSubtitle:
-          'Fabrication tunisienne, confort et design intemporel — commande sans compte.',
+        heroSubtitle: DEFAULT_SUBTITLE,
         coverImages: homepageCovers,
       }),
     );
@@ -68,9 +78,7 @@ export class SiteService implements OnModuleInit {
     return {
       heroKicker: row.heroKicker || 'Collection',
       heroTitle: row.heroTitle || 'CUIR PREMIUM',
-      heroSubtitle:
-        row.heroSubtitle ||
-        'Fabrication tunisienne, confort et design intemporel — commande sans compte.',
+      heroSubtitle: row.heroSubtitle || DEFAULT_SUBTITLE,
       coverImages: Array.isArray(row.coverImages) ? row.coverImages.filter(Boolean) : [],
     };
   }
