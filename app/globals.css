@@ -55,6 +55,40 @@ body {
   font-family: var(--font-body), Arial, Helvetica, sans-serif;
 }
 
+body::after {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.logo-mark {
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.32));
+  transition: transform 0.4s ease, filter 0.4s ease;
+}
+
+a:hover .logo-mark,
+.logo-mark:hover {
+  filter: drop-shadow(0 10px 18px rgba(212, 175, 55, 0.32)) brightness(1.08);
+}
+
+.logo-float {
+  animation: logo-float 7s ease-in-out infinite;
+}
+
+@keyframes logo-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
 button {
   cursor: pointer;
 }
@@ -313,6 +347,10 @@ a {
   html {
     scroll-behavior: auto;
   }
+  .logo-mark,
+  .logo-float,
+  .logo-mark,
+  .logo-float,
   .gold-btn,
   .gold-btn::after,
   img,

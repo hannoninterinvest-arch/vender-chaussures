@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BrandLockup } from "@/components/Logo";
+import { BrandLockup, LogoMark } from "@/components/Logo";
 import { brand } from "@/lib/brand";
 
 export function Footer() {
@@ -70,6 +70,7 @@ export function Footer() {
       </div>
       <div className="gold-line mx-auto max-w-[1280px]" />
       <div className="px-4 py-10 text-center">
+        <LogoMark className="mx-auto mb-4 h-16 w-12" />
         <p className="footer-mark font-[family-name:var(--font-display)] text-[56px] font-semibold tracking-[0.28em] text-[#C9A45C] md:text-[96px]">
           ELVARO
         </p>

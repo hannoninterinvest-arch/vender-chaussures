@@ -5,22 +5,27 @@ import { brand } from "@/lib/brand";
 export function Hero() {
   return (
     <section className="mx-auto max-w-[1280px] px-4 pb-6 pt-10 md:px-6">
-      <div className="mb-8 flex flex-col items-start gap-4">
-        <div className="anim-fade-up flex items-center gap-3 text-[#C9A45C]">
-          <LogoMark className="h-8 w-6" />
-          <span className="text-[11px] tracking-[0.32em] uppercase">{brand.byline}</span>
+      <div className="mb-8 grid items-end gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="flex flex-col items-start gap-4">
+          <div className="anim-fade-up flex items-center gap-3 text-[var(--gold)]">
+            <LogoMark className="h-10 w-8" />
+            <span className="text-[11px] tracking-[0.32em] uppercase">{brand.byline}</span>
+          </div>
+          <h1 className="font-[family-name:var(--font-display)] leading-[0.92] tracking-[0.12em]">
+            <span className="anim-fade-up anim-d1 block text-[42px] text-[var(--fg)] sm:text-[64px] md:text-[84px]">
+              L&apos;EXCELLENCE
+            </span>
+            <span className="anim-fade-up anim-d2 gold-text block text-[42px] sm:text-[64px] md:text-[84px]">
+              À CHAQUE PAS
+            </span>
+          </h1>
         </div>
-        <h1 className="font-[family-name:var(--font-display)] leading-[0.92] tracking-[0.12em]">
-          <span className="anim-fade-up anim-d1 block text-[42px] text-[var(--fg)] sm:text-[64px] md:text-[84px]">
-            L&apos;EXCELLENCE
-          </span>
-          <span className="anim-fade-up anim-d2 gold-text block text-[42px] sm:text-[64px] md:text-[84px]">
-            À CHAQUE PAS
-          </span>
-        </h1>
+        <div className="anim-fade-up anim-d3 hidden justify-end lg:flex">
+          <LogoMark className="logo-float h-44 w-32 opacity-90" />
+        </div>
       </div>
 
-      <div className="anim-fade-up anim-d3 gold-frame relative overflow-hidden rounded-[4px] bg-[#14110C]">
+      <div className="anim-fade-up anim-d4 gold-frame relative overflow-hidden rounded-[4px] bg-[#14110C]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=1600&q=80"
@@ -28,6 +33,7 @@ export function Hero() {
           className="hero-photo h-[420px] w-full object-cover opacity-80 md:h-[560px]"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" />
+        <LogoMark className="pointer-events-none absolute right-8 top-8 hidden h-24 w-[72px] opacity-80 md:block" />
         <div className="absolute bottom-8 left-6 right-6 md:left-12">
           <p className="text-[11px] tracking-[0.28em] uppercase text-[#C9A45C]">Collection</p>
           <p className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.14em] text-[#F3EDE2] md:text-5xl">
