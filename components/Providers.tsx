@@ -21,7 +21,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <ToastProvider>
         <CatalogProvider>
           <Header />
-          <main id="contenu" className="flex-1">
+          <main id="contenu" className="flex-1 pt-[var(--header-h)]">
             {children}
           </main>
           <Footer />

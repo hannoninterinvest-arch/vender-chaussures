@@ -1,3 +1,7 @@
+"use client";
+
+import { Reveal } from "./Reveal";
+
 const items = [
   {
     title: "Cuir premium",
@@ -62,16 +66,16 @@ export function Pillars() {
     <section className="mx-auto max-w-[1280px] px-4 py-14 md:px-6">
       <div className="gold-line mb-10" />
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
-        {items.map((item) => (
-          <div key={item.title} className="text-center">
-            <svg className="mx-auto h-8 w-8 text-[#C5A059]" viewBox="0 0 24 24" fill="none" aria-hidden>
+        {items.map((item, i) => (
+          <Reveal key={item.title} delay={i * 70} className="text-center">
+            <svg className="mx-auto h-8 w-8 text-[#C9A45C]" viewBox="0 0 24 24" fill="none" aria-hidden>
               {item.icon}
             </svg>
-            <p className="mt-3 text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">
+            <p className="mt-3 text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C9A45C]">
               {item.title}
             </p>
             <p className="mt-2 text-sm text-[var(--muted)]">{item.text}</p>
-          </div>
+          </Reveal>
         ))}
       </div>
     </section>

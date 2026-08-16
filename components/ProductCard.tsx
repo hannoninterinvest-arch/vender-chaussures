@@ -4,10 +4,10 @@ import type { Product } from "@/lib/products";
 
 export function ProductCard({ product }: { product: Product }) {
   return (
-    <article className="group">
+    <article className="product-card group">
       <div className="gold-frame relative overflow-hidden rounded-[4px] bg-[var(--panel)]">
         {product.isNew && (
-          <span className="absolute left-3 top-3 z-10 rounded-sm bg-[#C5A059] px-2.5 py-1 text-[10px] font-bold tracking-[0.16em] uppercase text-[#1A1A1B]">
+          <span className="absolute left-3 top-3 z-10 rounded-sm bg-[#C9A45C] px-2.5 py-1 text-[10px] font-bold tracking-[0.16em] uppercase text-[#14110C]">
             New
           </span>
         )}
@@ -16,7 +16,7 @@ export function ProductCard({ product }: { product: Product }) {
           <img
             src={product.images[0]}
             alt={product.name}
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+            className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.06]"
           />
         </Link>
       </div>

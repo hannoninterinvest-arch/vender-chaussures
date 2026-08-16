@@ -3,8 +3,8 @@ export function LogoMark({ className = "h-10 w-8" }: { className?: string }) {
     <svg className={className} viewBox="0 0 72 96" fill="none" aria-hidden>
       <defs>
         <linearGradient id="elvaro-gold" x1="8" y1="4" x2="68" y2="92" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#E6D275" />
-          <stop offset="0.45" stopColor="#C5A059" />
+          <stop stopColor="#E8D48B" />
+          <stop offset="0.45" stopColor="#C9A45C" />
           <stop offset="1" stopColor="#8A6E2F" />
         </linearGradient>
       </defs>
@@ -29,7 +29,7 @@ export function BrandLockup({
       <span className="leading-none">
         <span
           className={`block font-[family-name:var(--font-display)] text-[22px] font-semibold tracking-[0.28em] ${
-            light ? "text-[#EDE8DE]" : "text-[#C5A059]"
+            light ? "text-[#F3EDE2]" : "text-[#C9A45C]"
           }`}
         >
           ELVARO

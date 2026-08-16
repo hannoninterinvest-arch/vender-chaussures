@@ -15,38 +15,38 @@ export function Footer() {
         </div>
         <div>
           <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#C5A059]">Collection</p>
-          <ul className="mt-4 space-y-2 text-sm text-[#EDE8DE]/80">
+          <ul className="mt-4 space-y-2 text-sm text-[#F3EDE2]/80">
             <li>
-              <Link href="/shop?category=running">Running</Link>
+              <Link href="/shop?category=running" className="transition-colors hover:text-[#C9A45C]">Running</Link>
             </li>
             <li>
-              <Link href="/shop?category=sneakers">Sneakers</Link>
+              <Link href="/shop?category=sneakers" className="transition-colors hover:text-[#C9A45C]">Sneakers</Link>
             </li>
             <li>
-              <Link href="/shop?category=basket">Basket</Link>
+              <Link href="/shop?category=basket" className="transition-colors hover:text-[#C9A45C]">Basket</Link>
             </li>
             <li>
-              <Link href="/shop?category=outdoor">Outdoor</Link>
+              <Link href="/shop?category=outdoor" className="transition-colors hover:text-[#C9A45C]">Outdoor</Link>
             </li>
             <li>
-              <Link href="/shop?category=lifestyle">Lifestyle</Link>
+              <Link href="/shop?category=lifestyle" className="transition-colors hover:text-[#C9A45C]">Lifestyle</Link>
             </li>
           </ul>
         </div>
         <div>
           <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#C5A059]">Boutique</p>
-          <ul className="mt-4 space-y-2 text-sm text-[#EDE8DE]/80">
+          <ul className="mt-4 space-y-2 text-sm text-[#F3EDE2]/80">
             <li>
-              <Link href="/shop">Toute la collection</Link>
+              <Link href="/shop" className="transition-colors hover:text-[#C9A45C]">Toute la collection</Link>
             </li>
             <li>
-              <Link href="/cart">Panier</Link>
+              <Link href="/cart" className="transition-colors hover:text-[#C9A45C]">Panier</Link>
             </li>
             <li>
-              <Link href="/checkout">Commander</Link>
+              <Link href="/checkout" className="transition-colors hover:text-[#C9A45C]">Commander</Link>
             </li>
             <li>
-              <Link href="/vendeur">Espace équipe</Link>
+              <Link href="/vendeur" className="transition-colors hover:text-[#C9A45C]">Espace équipe</Link>
             </li>
           </ul>
         </div>
@@ -70,7 +70,7 @@ export function Footer() {
       </div>
       <div className="gold-line mx-auto max-w-[1280px]" />
       <div className="px-4 py-10 text-center">
-        <p className="font-[family-name:var(--font-display)] text-[56px] font-semibold tracking-[0.28em] text-[#C5A059]/20 md:text-[96px]">
+        <p className="footer-mark font-[family-name:var(--font-display)] text-[56px] font-semibold tracking-[0.28em] text-[#C9A45C] md:text-[96px]">
           ELVARO
         </p>
         <p className="mt-2 text-[11px] tracking-[0.16em] uppercase text-[#EDE8DE]/50">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { brand, whatsappHref } from "@/lib/brand";
 import { useTheme } from "@/lib/theme";
+import { Reveal } from "@/components/Reveal";
 
 export function ThemeToggle() {
   const { theme, toggle } = useTheme();
@@ -14,7 +15,7 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label={light ? "Passer en mode sombre" : "Passer en mode clair"}
       title={light ? "Mode sombre" : "Mode clair"}
-      className="rounded-full p-2 text-[#C5A059] hover:bg-white/5"
+      className="icon-btn rounded-full p-2 text-[#C9A45C]"
     >
       {light ? (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -49,27 +50,29 @@ export function TrustBar() {
   ];
   return (
     <section className="mx-auto max-w-[1280px] px-4 md:px-6">
-      <div className="gold-frame grid gap-4 rounded-[4px] bg-[var(--panel)] px-4 py-5 sm:grid-cols-2 lg:grid-cols-4">
-        {items.map((item) => {
-          const inner = (
-            <>
-              <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">
-                {item.title}
-              </p>
-              <p className="mt-1 text-sm text-[var(--muted)]">{item.text}</p>
-            </>
-          );
-          return item.href ? (
-            <a key={item.title} href={item.href} target="_blank" rel="noreferrer" className="text-center">
-              {inner}
-            </a>
-          ) : (
-            <div key={item.title} className="text-center">
-              {inner}
-            </div>
-          );
-        })}
-      </div>
+      <Reveal>
+        <div className="gold-frame grid gap-4 rounded-[4px] bg-[var(--panel)] px-4 py-5 sm:grid-cols-2 lg:grid-cols-4">
+          {items.map((item) => {
+            const inner = (
+              <>
+                <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C9A45C]">
+                  {item.title}
+                </p>
+                <p className="mt-1 text-sm text-[var(--muted)]">{item.text}</p>
+              </>
+            );
+            return item.href ? (
+              <a key={item.title} href={item.href} target="_blank" rel="noreferrer" className="text-center transition-colors hover:text-[#C9A45C]">
+                {inner}
+              </a>
+            ) : (
+              <div key={item.title} className="text-center">
+                {inner}
+              </div>
+            );
+          })}
+        </div>
+      </Reveal>
     </section>
   );
 }
@@ -108,7 +111,7 @@ export function WhatsAppFab() {
       target="_blank"
       rel="noreferrer"
       aria-label="Écrire sur WhatsApp"
-      className={`fixed left-5 z-40 grid h-12 w-12 place-items-center rounded-full bg-[#C5A059] text-[#1A1A1B] shadow-[0_8px_24px_rgba(0,0,0,0.35)] hover:brightness-110 ${
+      className={`wa-fab fixed left-5 z-40 grid h-12 w-12 place-items-center rounded-full bg-[#C9A45C] text-[#14110C] transition-transform hover:scale-105 ${
         path.startsWith("/products") ? "bottom-24 lg:bottom-5" : "bottom-5"
       }`}
     >

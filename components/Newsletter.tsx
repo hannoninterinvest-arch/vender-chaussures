@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useToast } from "./Toast";
+import { Reveal } from "./Reveal";
 
 export function Newsletter() {
   const toast = useToast();
@@ -19,9 +20,10 @@ export function Newsletter() {
 
   return (
     <section className="mx-auto max-w-[1280px] px-4 pb-16 md:px-6">
+      <Reveal>
       <div className="gold-frame relative overflow-hidden rounded-[4px] bg-[var(--panel)] px-6 py-12 md:px-12 md:py-16">
         <div className="max-w-xl">
-          <p className="text-[11px] tracking-[0.28em] uppercase text-[#C5A059]">Cercle ELVARO</p>
+          <p className="text-[11px] tracking-[0.28em] uppercase text-[#C9A45C]">Cercle ELVARO</p>
           <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] text-[var(--fg)] md:text-4xl">
             REJOINS-NOUS ET OBTIENS 15%
           </h2>
@@ -41,10 +43,11 @@ export function Newsletter() {
             </button>
           </form>
         </div>
-        <p className="pointer-events-none absolute -bottom-4 right-6 hidden font-[family-name:var(--font-display)] text-[100px] tracking-[0.2em] text-[#C5A059]/10 md:block">
+        <p className="pointer-events-none absolute -bottom-4 right-6 hidden font-[family-name:var(--font-display)] text-[100px] tracking-[0.2em] text-[#C9A45C]/10 md:block">
           ELVARO
         </p>
       </div>
+      </Reveal>
     </section>
   );
 }
