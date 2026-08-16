@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UpdateSiteDto } from './dto/update-site.dto';
 import { SiteSettings } from './site-settings.entity';
+import { homepageCovers } from '../products/catalog';
 
 const HOME_ID = 'home';
 
@@ -23,9 +24,12 @@ export class SiteService implements OnModuleInit {
           heroTitle: 'CUIR PREMIUM',
           heroSubtitle:
             'Fabrication tunisienne, confort et design intemporel — commande sans compte.',
-          coverImages: [],
+          coverImages: homepageCovers,
         }),
       );
+    } else if (!Array.isArray(exists.coverImages) || exists.coverImages.length === 0) {
+      exists.coverImages = homepageCovers;
+      await this.rows.save(exists);
     }
   }
 
@@ -55,7 +59,7 @@ export class SiteService implements OnModuleInit {
         heroTitle: 'CUIR PREMIUM',
         heroSubtitle:
           'Fabrication tunisienne, confort et design intemporel — commande sans compte.',
-        coverImages: [],
+        coverImages: homepageCovers,
       }),
     );
   }

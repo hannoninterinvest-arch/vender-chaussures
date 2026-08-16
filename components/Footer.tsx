@@ -17,19 +17,19 @@ export function Footer() {
           <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#C5A059]">Collection</p>
           <ul className="mt-4 space-y-2 text-sm text-[#F3EDE2]/80">
             <li>
-              <Link href="/shop?category=running" className="transition-colors hover:text-[#C9A45C]">Running</Link>
+              <Link href="/shop?category=ville" className="transition-colors hover:text-[#C9A45C]">Ville</Link>
             </li>
             <li>
-              <Link href="/shop?category=sneakers" className="transition-colors hover:text-[#C9A45C]">Sneakers</Link>
+              <Link href="/shop?category=ceremonie" className="transition-colors hover:text-[#C9A45C]">Cérémonie</Link>
             </li>
             <li>
-              <Link href="/shop?category=basket" className="transition-colors hover:text-[#C9A45C]">Basket</Link>
+              <Link href="/shop?category=mocassins" className="transition-colors hover:text-[#C9A45C]">Mocassins</Link>
             </li>
             <li>
-              <Link href="/shop?category=outdoor" className="transition-colors hover:text-[#C9A45C]">Outdoor</Link>
+              <Link href="/shop?category=bottes" className="transition-colors hover:text-[#C9A45C]">Bottes</Link>
             </li>
             <li>
-              <Link href="/shop?category=lifestyle" className="transition-colors hover:text-[#C9A45C]">Lifestyle</Link>
+              <Link href="/shop?category=femme" className="transition-colors hover:text-[#C9A45C]">Femme</Link>
             </li>
           </ul>
         </div>

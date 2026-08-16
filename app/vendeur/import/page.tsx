@@ -88,7 +88,7 @@ export default function SellerImportPage() {
             <strong>couleurs</strong> : <code>Noir:#171717|Blanc:#ffffff</code>
           </li>
           <li>
-            <strong>categorie</strong> : id ou nom déjà créé (ex. <code>sneakers</code>)
+            <strong>categorie</strong> : id ou nom déjà créé (ex. <code>ville</code>, <code>ceremonie</code>)
           </li>
           <li>
             <strong>genre</strong> : homme, femme ou unisexe

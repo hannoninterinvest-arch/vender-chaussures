@@ -140,7 +140,7 @@ function parseImages(value: string) {
         .split(/[, ]+/)
         .map((p) => p.trim())
         .filter(Boolean);
-  return raw.filter((url) => /^https?:\/\//i.test(url)).slice(0, 5);
+  return raw.filter((url) => /^https?:\/\//i.test(url) || url.startsWith("/")).slice(0, 5);
 }
 
 export function parseProductCsv(text: string): { products: CsvProduct[]; errors: CsvParseError[] } {
@@ -187,7 +187,7 @@ export function parseProductCsv(text: string): { products: CsvProduct[]; errors:
         cost: Number.isFinite(Number(costRaw)) ? Number(costRaw) : 0,
         description: get("description") || name,
         gender: parseGender(get("gender")),
-        category: get("category") || "sneakers",
+        category: get("category") || "ville",
         isNew: parseBool(get("isNew")),
         colors: parseColors(get("colors")),
         sizes: parseSizes(get("sizes")),
@@ -205,6 +205,6 @@ export function parseProductCsv(text: string): { products: CsvProduct[]; errors:
 }
 
 export const CSV_TEMPLATE = `nom;marque;prix;achat;description;genre;categorie;nouveau;couleurs;pointures;images
-Air Max 90;Nike;289;180;Classique confortable;unisexe;sneakers;oui;Noir:#171717|Blanc:#ffffff;40|41|42|43|44;https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800|https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800
-Forum Low;Adidas;249;150;Cuir vintage;homme;lifestyle;non;Blanc:#f5f5f5;39|40|41|42|43;https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800
+Oxford Noir;ELVARO;489;280;Richelieu cuir lustré;homme;ceremonie;oui;Noir:#1A1612|Bordeaux:#6B1D2A;40|41|42|43|44;/chaussures/oxford-noir.jpg|/chaussures/oxford-noir-pair.jpg
+Derby Cognac;ELVARO;459;260;Derby ville en cuir;homme;ville;oui;Cognac:#8B5A2B;40|41|42|43;/chaussures/derby-laces.jpg|/chaussures/derby-cuir.jpg
 `;
