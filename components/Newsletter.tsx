@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useToast } from "./Toast";
+import { Reveal } from "./Reveal";
 
 export function Newsletter() {
   const toast = useToast();
@@ -14,18 +15,20 @@ export function Newsletter() {
       return;
     }
     setEmail("");
-    toast("Inscrit au club — 15% sur ta prochaine commande.");
+    toast("Inscrit — 15% sur ta prochaine commande.");
   }
 
   return (
     <section className="mx-auto max-w-[1280px] px-4 pb-16 md:px-6">
-      <div className="relative overflow-hidden rounded-[28px] bg-[#5B6AF6] px-6 py-12 text-white md:px-12 md:py-16">
+      <Reveal>
+      <div className="gold-frame relative overflow-hidden rounded-[4px] bg-[var(--panel)] px-6 py-12 md:px-12 md:py-16">
         <div className="max-w-xl">
-          <h2 className="text-3xl font-black leading-tight md:text-4xl">
-            REJOINS LE KICKSPLUS CLUB ET OBTIENS 15%
+          <p className="text-[11px] tracking-[0.28em] uppercase text-[#C9A45C]">Cercle ELVARO</p>
+          <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] text-[var(--fg)] md:text-4xl">
+            REJOINS-NOUS ET OBTIENS 15%
           </h2>
-          <p className="mt-3 text-white/85">
-            Pas de compte boutique — juste un e-mail pour les drops et la réduction.
+          <p className="mt-3 text-[var(--muted)]">
+            Pas de compte boutique — juste un e-mail pour les nouveautés et la réduction.
           </p>
           <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-3 sm:flex-row">
             <input
@@ -33,20 +36,18 @@ export function Newsletter() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Adresse e-mail"
-              className="flex-1 rounded-lg border-2 border-white/30 bg-transparent px-4 py-3 text-white placeholder:text-white/60 outline-none"
+              className="field flex-1"
             />
-            <button
-              type="submit"
-              className="rounded-lg bg-[#2D2D2D] px-6 py-3 font-semibold"
-            >
-              ENVOYER
+            <button type="submit" className="gold-btn rounded-sm px-6 py-3 text-xs uppercase">
+              Envoyer
             </button>
           </form>
         </div>
-        <p className="pointer-events-none absolute -bottom-6 right-6 hidden text-[120px] font-black leading-none text-white/20 md:block">
-          KICKS<span className="text-[#FF8A00]">.</span>
+        <p className="pointer-events-none absolute -bottom-4 right-6 hidden font-[family-name:var(--font-display)] text-[100px] tracking-[0.2em] text-[#C9A45C]/10 md:block">
+          ELVARO
         </p>
       </div>
+      </Reveal>
     </section>
   );
 }

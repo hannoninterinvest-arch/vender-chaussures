@@ -22,10 +22,12 @@ const emptyForm = {
   gender: "unisexe" as SellerProduct["gender"],
   category: "",
   isNew: true,
-  colorName: "Noir",
-  colorHex: "#171717",
-  extraColorName: "",
-  extraColorHex: "#5B6AF6",
+  featured: false,
+  colorSlots: [
+    { name: "Noir", hex: "#1A1612" },
+    { name: "Or", hex: "#D4AF37" },
+    { name: "Crème", hex: "#F3EDE2" },
+  ],
   sizes: [40, 41, 42, 43, 44] as number[],
   images: ["", "", "", "", ""] as string[],
 };
@@ -81,23 +83,26 @@ export default function SellerProductsPage() {
       gender: p.gender,
       category: p.category,
       isNew: p.isNew,
-      colorName: p.colors[0]?.name || "Noir",
-      colorHex: p.colors[0]?.hex || "#171717",
-      extraColorName: p.colors[1]?.name || "",
-      extraColorHex: p.colors[1]?.hex || "#5B6AF6",
+      featured: Boolean(p.featured),
+      colorSlots: p.colors.length
+        ? p.colors.map((c) => ({ name: c.name, hex: c.hex }))
+        : [
+            { name: "Noir", hex: "#1A1612" },
+            { name: "Or", hex: "#D4AF37" },
+          ],
       sizes: p.sizes,
       images: [0, 1, 2, 3, 4].map((i) => p.images[i] || ""),
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  const colors = useMemo(() => {
-    const list = [{ name: form.colorName.trim() || "Noir", hex: form.colorHex || "#171717" }];
-    if (form.extraColorName.trim()) {
-      list.push({ name: form.extraColorName.trim(), hex: form.extraColorHex || "#5B6AF6" });
-    }
-    return list;
-  }, [form]);
+  const colors = useMemo(
+    () =>
+      form.colorSlots
+        .map((c) => ({ name: c.name.trim(), hex: c.hex || "#1A1612" }))
+        .filter((c) => c.name),
+    [form.colorSlots],
+  );
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -110,6 +115,10 @@ export default function SellerProductsPage() {
       toast("Choisis au moins une pointure");
       return;
     }
+    if (colors.length < 1) {
+      toast("Ajoute au moins une couleur");
+      return;
+    }
     setBusy(true);
     const body = {
       name: form.name,
@@ -120,6 +129,7 @@ export default function SellerProductsPage() {
       gender: form.gender,
       category: form.category,
       isNew: form.isNew,
+      featured: form.featured,
       colors,
       sizes: form.sizes,
       images,
@@ -185,13 +195,13 @@ export default function SellerProductsPage() {
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr]">
-      <form onSubmit={onSubmit} className="space-y-4 rounded-[20px] bg-white p-6">
-        <h1 className="text-2xl font-black">
+      <form onSubmit={onSubmit} className="space-y-4 rounded-[4px] border border-[#C5A059]/35 bg-white p-6">
+        <h1 className="font-[family-name:var(--font-display)] text-2xl tracking-[0.08em] uppercase">
           {editing ? "Modifier le produit" : "Nouveau produit"}
         </h1>
         <p className="text-sm text-[#666]">
           Pour plusieurs paires d’un coup, utilise{" "}
-          <Link href="/vendeur/import" className="font-bold text-[#5B6AF6]">
+          <Link href="/vendeur/import" className="font-bold text-[#C5A059]">
             Import CSV
           </Link>{" "}
           (liens photos dans le fichier).
@@ -219,7 +229,7 @@ export default function SellerProductsPage() {
             required
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
-            className="mt-1 min-h-24 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#5B6AF6]"
+            className="mt-1 min-h-24 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#C5A059]"
           />
         </label>
         <div className="grid grid-cols-2 gap-3">
@@ -259,29 +269,67 @@ export default function SellerProductsPage() {
           />
           New drop
         </label>
-        <p className="text-sm font-bold">Couleurs</p>
-        <div className="grid grid-cols-[1fr_auto] gap-2">
-          <Field label="Couleur 1" value={form.colorName} onChange={(v) => setForm({ ...form, colorName: v })} />
+        <label className="flex items-center gap-2 text-sm font-medium">
           <input
-            type="color"
-            value={form.colorHex}
-            onChange={(e) => setForm({ ...form, colorHex: e.target.value })}
-            className="mt-6 h-10 w-14 rounded"
+            type="checkbox"
+            checked={form.featured}
+            onChange={(e) => setForm({ ...form, featured: e.target.checked })}
           />
+          Afficher sur la page d’accueil
+        </label>
+        <p className="text-sm font-bold">Couleurs (jusqu’à 6)</p>
+        <div className="space-y-2">
+          {form.colorSlots.map((slot, i) => (
+            <div key={i} className="grid grid-cols-[1fr_auto_auto] items-end gap-2">
+              <Field
+                label={`Couleur ${i + 1}`}
+                value={slot.name}
+                onChange={(v) =>
+                  setForm({
+                    ...form,
+                    colorSlots: form.colorSlots.map((c, idx) => (idx === i ? { ...c, name: v } : c)),
+                  })
+                }
+              />
+              <input
+                type="color"
+                value={slot.hex}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    colorSlots: form.colorSlots.map((c, idx) => (idx === i ? { ...c, hex: e.target.value } : c)),
+                  })
+                }
+                className="mb-0.5 h-10 w-14 rounded"
+              />
+              {form.colorSlots.length > 1 && (
+                <button
+                  type="button"
+                  className="mb-1 text-xs text-red-600"
+                  onClick={() =>
+                    setForm({ ...form, colorSlots: form.colorSlots.filter((_, idx) => idx !== i) })
+                  }
+                >
+                  Retirer
+                </button>
+              )}
+            </div>
+          ))}
         </div>
-        <div className="grid grid-cols-[1fr_auto] gap-2">
-          <Field
-            label="Couleur 2 (optionnel)"
-            value={form.extraColorName}
-            onChange={(v) => setForm({ ...form, extraColorName: v })}
-          />
-          <input
-            type="color"
-            value={form.extraColorHex}
-            onChange={(e) => setForm({ ...form, extraColorHex: e.target.value })}
-            className="mt-6 h-10 w-14 rounded"
-          />
-        </div>
+        {form.colorSlots.length < 6 && (
+          <button
+            type="button"
+            className="text-sm font-medium text-[#C9A45C]"
+            onClick={() =>
+              setForm({
+                ...form,
+                colorSlots: [...form.colorSlots, { name: "", hex: "#D4AF37" }],
+              })
+            }
+          >
+            + Ajouter une couleur
+          </button>
+        )}
         <p className="text-sm font-bold">Pointures</p>
         <div className="flex flex-wrap gap-2">
           {allSizes.map((n) => (
@@ -348,7 +396,7 @@ export default function SellerProductsPage() {
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-[#5B6AF6] px-5 py-3 font-bold text-white disabled:opacity-60"
+            className="gold-btn rounded-sm px-5 py-3 text-xs uppercase disabled:opacity-60"
           >
             {editing ? "Enregistrer" : "Ajouter à la boutique"}
           </button>
@@ -371,16 +419,17 @@ export default function SellerProductsPage() {
         <h2 className="text-xl font-black">{products.length} produits</h2>
         <ul className="mt-4 space-y-3">
           {products.map((p) => (
-            <li key={p.id} className="flex gap-3 rounded-[16px] bg-white p-3">
+            <li key={p.id} className="flex gap-3 rounded-[4px] border border-[#C5A059]/30 bg-white p-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.images[0]} alt="" className="h-20 w-20 rounded-xl object-cover bg-[#EEE]" />
               <div className="min-w-0 flex-1">
                 <p className="font-bold">{p.name}</p>
                 <p className="text-sm text-[#666]">
                   {p.brand} · {formatTnd(p.price)} · achat {formatTnd(p.cost || 0)}
+                  {p.featured ? " · accueil" : ""}
                 </p>
                 <div className="mt-2 flex gap-3 text-sm">
-                  <button type="button" className="font-medium text-[#5B6AF6]" onClick={() => startEdit(p)}>
+                  <button type="button" className="font-medium text-[#C5A059]" onClick={() => startEdit(p)}>
                     Modifier
                   </button>
                   {admin && (
@@ -419,7 +468,7 @@ function Field({
         required={required}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#5B6AF6]"
+        className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#C5A059]"
       />
     </label>
   );

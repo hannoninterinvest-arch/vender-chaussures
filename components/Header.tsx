@@ -1,153 +1,212 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { BrandLockup } from "@/components/Logo";
+import { ThemeToggle } from "@/components/Experience";
 import { useCart } from "@/lib/cart";
 import { useCatalog } from "@/lib/catalog";
 import { formatTnd } from "@/lib/format";
+import { whatsappHref } from "@/lib/brand";
+
+const NAV = [
+  { href: "/shop?drop=new", label: "Nouveautés" },
+  { href: "/shop?gender=homme", label: "Hommes" },
+  { href: "/shop?gender=femme", label: "Femmes" },
+  { href: "/shop", label: "Collection" },
+];
 
 function IconSearch() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M20 20l-3.2-3.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M20 20l-3.2-3.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   );
 }
 
 function IconBag() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M6 8h12l-1 12H7L6 8z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M9 8V7a3 3 0 0 1 6 0v1"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M6 8h12l-1 12H7L6 8z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M9 8V7a3 3 0 0 1 6 0v1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   );
 }
 
 export function Header() {
+  const path = usePathname();
   const { count } = useCart();
   const { products } = useCatalog();
   const [open, setOpen] = useState(false);
   const [menu, setMenu] = useState(false);
   const [q, setQ] = useState("");
+  const [scrolled, setScrolled] = useState(false);
 
   const results = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (s.length < 2) return [];
-    return products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(s) ||
-        p.brand.toLowerCase().includes(s) ||
-        p.category.toLowerCase().includes(s),
-    );
+    return products
+      .filter(
+        (p) =>
+          p.name.toLowerCase().includes(s) ||
+          p.brand.toLowerCase().includes(s) ||
+          p.category.toLowerCase().includes(s),
+      )
+      .slice(0, 8);
   }, [q, products]);
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    setMenu(false);
+    setOpen(false);
+  }, [path]);
+
+  useEffect(() => {
+    if (!open && !menu) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setOpen(false);
+        setMenu(false);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = open || menu ? "hidden" : "";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [open, menu]);
+
   return (
-    <header className="sticky top-0 z-50 px-3 pt-3 md:px-6">
-      <div className="mx-auto flex max-w-[1280px] items-center justify-between rounded-[20px] bg-white px-4 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)] md:px-8 md:py-4">
-        <nav className="hidden items-center gap-6 text-sm font-medium text-[#1A1A1A] md:flex">
-          <Link href="/shop?drop=new" className="hover:opacity-70">
-            New Drops <span className="text-[#FF8A00]">🔥</span>
-          </Link>
-          <Link href="/shop?gender=homme" className="hover:opacity-70">
-            Hommes
-          </Link>
-          <Link href="/shop?gender=femme" className="hover:opacity-70">
-            Femmes
-          </Link>
+    <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
+      <div className="header-hairline" />
+      <a
+        href="#contenu"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[80] focus:bg-[#C9A45C] focus:px-3 focus:py-2 focus:text-[#14110C]"
+      >
+        Aller au contenu
+      </a>
+      <div className="mx-auto grid h-[var(--header-h)] max-w-[1280px] grid-cols-[1fr_auto] items-center px-4 md:grid-cols-[1fr_auto_1fr] md:px-6">
+        <Link href="/" aria-label="ELVARO accueil" className="justify-self-start transition-transform duration-300 hover:scale-[1.03]">
+          <span className="md:hidden">
+            <BrandLockup compact />
+          </span>
+          <span className="hidden md:block">
+            <BrandLockup />
+          </span>
+        </Link>
+
+        <nav className="hidden items-center gap-8 text-[11px] font-medium tracking-[0.2em] uppercase text-[var(--header-fg)] md:flex">
+          {NAV.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`nav-link ${path.startsWith("/shop") && item.href === "/shop" ? "is-active" : ""}`}
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
 
-        <div className="flex items-center gap-2 md:contents">
-          <button
-            type="button"
-            className="rounded-full p-2 hover:bg-[#F5F5F5] md:hidden"
-            aria-label="Menu"
-            onClick={() => setMenu((v) => !v)}
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
-          </button>
-        <Link href="/" className="text-[28px] font-black tracking-tight text-[#1A1A1A]">
-          KICKS
-        </Link>
-        </div>
-
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-self-end gap-0.5 text-[var(--gold)]">
+          <ThemeToggle />
           <button
             type="button"
             aria-label="Rechercher"
             onClick={() => setOpen(true)}
-            className="rounded-full p-2 hover:bg-[#F5F5F5]"
+            className="icon-btn rounded-full p-2"
           >
             <IconSearch />
           </button>
-          <Link href="/cart" className="relative rounded-full p-2 hover:bg-[#F5F5F5]" aria-label="Panier">
+          <Link
+            href="/cart"
+            className="icon-btn relative rounded-full p-2"
+            aria-label={`Panier, ${count} article${count > 1 ? "s" : ""}`}
+          >
             <IconBag />
             {count > 0 && (
-              <span className="absolute right-0.5 top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-[#FF8A00] px-1 text-[10px] font-bold text-white">
+              <span className="badge-pop absolute right-0.5 top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-[var(--gold)] px-1 text-[10px] font-bold text-[#2C261C]">
                 {count}
               </span>
             )}
           </Link>
+          <button
+            type="button"
+            className="icon-btn rounded-full p-2 md:hidden"
+            aria-label={menu ? "Fermer le menu" : "Ouvrir le menu"}
+            aria-expanded={menu}
+            onClick={() => setMenu((v) => !v)}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+              {menu ? (
+                <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              ) : (
+                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              )}
+            </svg>
+          </button>
         </div>
       </div>
 
       {menu && (
-        <div className="mx-auto mt-2 flex max-w-[1280px] flex-col gap-2 rounded-[20px] bg-white p-4 text-sm font-medium shadow md:hidden">
-          <Link href="/shop?drop=new" onClick={() => setMenu(false)}>
-            New Drops
-          </Link>
-          <Link href="/shop?gender=homme" onClick={() => setMenu(false)}>
-            Hommes
-          </Link>
-          <Link href="/shop?gender=femme" onClick={() => setMenu(false)}>
-            Femmes
-          </Link>
-          <Link href="/shop" onClick={() => setMenu(false)}>
-            Tous les produits
-          </Link>
+        <div className="absolute inset-x-0 top-[var(--header-h)] border-b border-[var(--line)] bg-[var(--header-bg)] px-6 py-6 backdrop-blur-md md:hidden">
+          <nav className="mx-auto flex max-w-[1280px] flex-col gap-5 text-xs font-medium tracking-[0.2em] uppercase text-[var(--header-fg)]">
+            {NAV.map((item) => (
+              <Link key={item.href} href={item.href} onClick={() => setMenu(false)} className="nav-link w-fit">
+                {item.label}
+              </Link>
+            ))}
+            <a href={whatsappHref()} target="_blank" rel="noreferrer" className="gold-text font-semibold">
+              WhatsApp
+            </a>
+          </nav>
         </div>
       )}
 
       {open && (
-        <div className="fixed inset-0 z-[70] bg-black/40 p-4" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm" onClick={() => setOpen(false)}>
           <div
-            className="mx-auto mt-20 max-w-xl rounded-2xl bg-white p-5 shadow-xl"
+            className="gold-frame anim-fade-up mx-auto mt-28 max-w-xl rounded-[4px] bg-[#12110F] p-5"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-label="Recherche"
           >
             <input
               autoFocus
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Chercher une paire, une marque…"
-              className="w-full rounded-lg border border-[#E5E5E5] px-4 py-3 outline-none focus:border-[#5B6AF6]"
+              placeholder="Rechercher une paire, une marque…"
+              className="field"
             />
+            <p className="mt-2 text-[11px] text-[#F3EDE2]/45">Échap pour fermer</p>
             <ul className="mt-3 max-h-80 overflow-auto">
               {results.map((p) => (
                 <li key={p.id}>
                   <Link
                     href={`/products/${p.id}`}
                     onClick={() => setOpen(false)}
-                    className="flex items-center justify-between rounded-lg px-2 py-3 hover:bg-[#F5F5F5]"
+                    className="flex items-center gap-3 rounded-sm px-2 py-2 transition-colors hover:bg-white/5"
                   >
-                    <span className="font-medium">{p.name}</span>
-                    <span className="text-[#5B6AF6]">{formatTnd(p.price)}</span>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={p.images[0]} alt="" className="h-12 w-12 rounded-sm object-cover" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium text-[#F3EDE2]">{p.name}</span>
+                      <span className="text-xs text-[#F3EDE2]/55">{p.brand}</span>
+                    </span>
+                    <span className="text-[#C9A45C]">{formatTnd(p.price)}</span>
                   </Link>
                 </li>
               ))}
               {q.length >= 2 && results.length === 0 && (
-                <li className="px-2 py-6 text-center text-sm text-[#666]">Aucun résultat</li>
+                <li className="px-2 py-6 text-center text-sm text-[#F3EDE2]/60">Aucun résultat</li>
               )}
             </ul>
           </div>

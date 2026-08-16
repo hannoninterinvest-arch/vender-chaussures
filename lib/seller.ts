@@ -56,6 +56,8 @@ export type SellerOrder = {
   total: number;
   payment: string;
   paymentPhone?: string;
+  paymentStatus?: string;
+  payUrl?: string;
   customer: {
     name: string;
     phone: string;
@@ -111,6 +113,7 @@ export type SellerProduct = {
   gender: "homme" | "femme" | "unisexe";
   category: string;
   isNew: boolean;
+  featured: boolean;
   colors: { name: string; hex: string }[];
   sizes: number[];
   images: string[];
@@ -127,7 +130,8 @@ async function parseError(res: Response) {
 }
 
 export async function sellerRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(apiUrl(path), {
+  const sameOrigin = path === "/seller/site" || path.startsWith("/seller/site?");
+  const res = await fetch(sameOrigin ? `/api${path}` : apiUrl(path), {
     ...init,
     cache: "no-store",
     headers: {

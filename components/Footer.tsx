@@ -1,66 +1,82 @@
 import Link from "next/link";
+import { BrandLockup, LogoMark } from "@/components/Logo";
+import { brand } from "@/lib/brand";
 
 export function Footer() {
   return (
-    <footer className="bg-[#1F1F1F] text-white">
-      <div className="mx-auto grid max-w-[1280px] gap-10 px-4 py-14 md:grid-cols-4 md:px-6">
+    <footer className="mt-8 border-t border-[#C5A059]/30 bg-[#070707] text-[#EDE8DE]">
+      <div className="mx-auto grid max-w-[1280px] gap-10 px-4 py-16 md:grid-cols-4 md:px-6">
         <div>
-          <p className="text-xl font-bold text-[#FF8A00]">À propos</p>
-          <p className="mt-3 text-sm leading-relaxed text-white/80">
-            La plus grande sneaker shop de Tunisie. Drops, classiques et
-            outdoor — commande sans créer de compte, paiement à la livraison.
+          <BrandLockup light />
+          <p className="mt-4 text-[11px] tracking-[0.2em] uppercase text-[#C5A059]">
+            {brand.slogan}
           </p>
+          <p className="mt-3 text-sm leading-relaxed text-[#EDE8DE]/70">{brand.activity}.</p>
         </div>
         <div>
-          <p className="text-xl font-bold text-[#FF8A00]">Catégories</p>
-          <ul className="mt-3 space-y-2 text-sm">
+          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#C5A059]">Collection</p>
+          <ul className="mt-4 space-y-2 text-sm text-[#F3EDE2]/80">
             <li>
-              <Link href="/shop?category=running">Running</Link>
+              <Link href="/shop?category=ville" className="transition-colors hover:text-[#C9A45C]">Ville</Link>
             </li>
             <li>
-              <Link href="/shop?category=sneakers">Sneakers</Link>
+              <Link href="/shop?category=ceremonie" className="transition-colors hover:text-[#C9A45C]">Cérémonie</Link>
             </li>
             <li>
-              <Link href="/shop?category=basket">Basket</Link>
+              <Link href="/shop?category=mocassins" className="transition-colors hover:text-[#C9A45C]">Mocassins</Link>
             </li>
             <li>
-              <Link href="/shop?category=outdoor">Outdoor</Link>
+              <Link href="/shop?category=bottes" className="transition-colors hover:text-[#C9A45C]">Bottes</Link>
             </li>
             <li>
-              <Link href="/shop?category=lifestyle">Lifestyle</Link>
+              <Link href="/shop?category=femme" className="transition-colors hover:text-[#C9A45C]">Femme</Link>
             </li>
           </ul>
         </div>
         <div>
-          <p className="text-xl font-bold text-[#FF8A00]">Boutique</p>
-          <ul className="mt-3 space-y-2 text-sm">
+          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#C5A059]">Boutique</p>
+          <ul className="mt-4 space-y-2 text-sm text-[#F3EDE2]/80">
             <li>
-              <Link href="/shop">Tous les produits</Link>
+              <Link href="/shop" className="transition-colors hover:text-[#C9A45C]">Toute la collection</Link>
             </li>
             <li>
-              <Link href="/cart">Panier</Link>
+              <Link href="/cart" className="transition-colors hover:text-[#C9A45C]">Panier</Link>
             </li>
             <li>
-              <Link href="/checkout">Commander</Link>
+              <Link href="/checkout" className="transition-colors hover:text-[#C9A45C]">Commander</Link>
             </li>
             <li>
-              <Link href="/vendeur">Espace équipe</Link>
+              <Link href="/vendeur" className="transition-colors hover:text-[#C9A45C]">Espace équipe</Link>
             </li>
           </ul>
         </div>
         <div>
-          <p className="text-xl font-bold text-[#FF8A00]">Livraison</p>
-          <p className="mt-3 text-sm text-white/80">
-            Tunis, Sfax, Sousse et tout le pays. Confirmation téléphone /
-            WhatsApp avant expédition.
-          </p>
+          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#C5A059]">Contact</p>
+          <ul className="mt-4 space-y-2 text-sm text-[#EDE8DE]/80">
+            <li>
+              <a href={brand.phoneHref} className="hover:text-[#C5A059]">{brand.phone}</a>
+            </li>
+            <li>
+              <a href={brand.whatsapp} target="_blank" rel="noreferrer" className="hover:text-[#C5A059]">
+                WhatsApp
+              </a>
+            </li>
+            <li>
+              <a href={`mailto:${brand.email}`} className="hover:text-[#C5A059]">{brand.email}</a>
+            </li>
+            <li>{brand.address}</li>
+          </ul>
         </div>
       </div>
-      <div className="overflow-hidden border-t border-white/10 px-4 py-8 text-center">
-        <p className="text-[72px] font-black leading-none tracking-tight text-white/10 md:text-[140px]">
-          KICKS
+      <div className="gold-line mx-auto max-w-[1280px]" />
+      <div className="px-4 py-10 text-center">
+        <LogoMark className="mx-auto mb-4 h-16 w-12" />
+        <p className="footer-mark font-[family-name:var(--font-display)] text-[56px] font-semibold tracking-[0.28em] text-[#C9A45C] md:text-[96px]">
+          ELVARO
         </p>
-        <p className="text-xs text-white/60">© {new Date().getFullYear()} KICKS Tunisie — Tous droits réservés</p>
+        <p className="mt-2 text-[11px] tracking-[0.16em] uppercase text-[#EDE8DE]/50">
+          © {new Date().getFullYear()} {brand.name} {brand.byline} — Tunisie
+        </p>
       </div>
     </footer>
   );

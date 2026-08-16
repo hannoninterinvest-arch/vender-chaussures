@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { isAdmin, sellerRequest, type SellerCategory } from "@/lib/seller";
+import { isAdmin, sellerRequest, sellerUploadImage, type SellerCategory } from "@/lib/seller";
 import { useToast } from "@/components/Toast";
 
 export default function SellerCategoriesPage() {
@@ -63,8 +63,8 @@ export default function SellerCategoriesPage() {
   return (
     <div className="grid gap-8 lg:grid-cols-2">
       {admin && (
-      <form onSubmit={onSubmit} className="space-y-4 rounded-[20px] bg-white p-6">
-        <h1 className="text-2xl font-black">Nouvelle catégorie</h1>
+      <form onSubmit={onSubmit} className="space-y-4 rounded-[4px] border border-[#C5A059]/35 bg-white p-6">
+        <h1 className="font-[family-name:var(--font-display)] text-2xl tracking-[0.08em] uppercase">Nouvelle catégorie</h1>
         <p className="text-sm text-[#666]">
           Ex. Running, Basketball, Enfants… Elle apparaît sur l’accueil et dans la boutique.
         </p>
@@ -74,22 +74,38 @@ export default function SellerCategoriesPage() {
             required
             value={label}
             onChange={(e) => setLabel(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#5B6AF6]"
+            className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#C5A059]"
           />
         </label>
         <label className="block text-sm font-medium">
-          Image (URL)
+          Image (upload ou URL)
           <input
             value={image}
             onChange={(e) => setImage(e.target.value)}
             placeholder="https://…"
-            className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#5B6AF6]"
+            className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#C5A059]"
+          />
+        </label>
+        <label className="inline-flex cursor-pointer rounded-sm bg-[#1A1A1B] px-4 py-2 text-xs font-bold tracking-[0.08em] uppercase text-white">
+          Uploader
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (!file) return;
+              sellerUploadImage(file)
+                .then(({ url }) => setImage(url))
+                .catch((err: Error) => toast(err.message));
+            }}
           />
         </label>
         <button
           type="submit"
           disabled={busy}
-          className="rounded-lg bg-[#5B6AF6] px-5 py-3 font-bold text-white disabled:opacity-60"
+          className="gold-btn rounded-sm px-5 py-3 text-xs uppercase disabled:opacity-60"
         >
           Ajouter la catégorie
         </button>
@@ -100,7 +116,7 @@ export default function SellerCategoriesPage() {
         <h2 className="text-xl font-black">{rows.length} catégories</h2>
         <ul className="mt-4 space-y-3">
           {rows.map((c) => (
-            <li key={c.id} className="flex items-center gap-3 rounded-[16px] bg-white p-3">
+            <li key={c.id} className="flex items-center gap-3 rounded-[4px] border border-[#C5A059]/30 bg-white p-3">
               {c.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={c.image} alt="" className="h-16 w-16 rounded-xl object-cover" />

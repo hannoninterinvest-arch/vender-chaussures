@@ -59,10 +59,15 @@ export class CreateProductDto {
   @IsBoolean()
   isNew?: boolean;
 
+  @IsOptional()
+  @IsBoolean()
+  featured?: boolean;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ProductColorDto)
   @ArrayMinSize(1)
+  @ArrayMaxSize(8)
   colors: ProductColorDto[];
 
   @IsArray()

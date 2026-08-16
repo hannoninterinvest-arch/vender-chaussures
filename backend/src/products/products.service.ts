@@ -5,8 +5,13 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { catalog, categorySeed } from './catalog';
+import { In, Repository } from 'typeorm';
+import {
+  catalog,
+  categorySeed,
+  legacyCategoryIds,
+  legacyProductIds,
+} from './catalog';
 import { Category } from './category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -33,15 +38,31 @@ export class ProductsService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
+    if (legacyProductIds.length) {
+      await this.products.delete({ id: In(legacyProductIds) });
+    }
+    if (legacyCategoryIds.length) {
+      await this.categories.delete({ id: In(legacyCategoryIds) });
+    }
     for (const item of categorySeed) {
       const exists = await this.categories.findOne({ where: { id: item.id } });
-      if (!exists) await this.categories.save(this.categories.create(item));
+      if (!exists) {
+        await this.categories.save(this.categories.create(item));
+      } else if (!exists.image) {
+        exists.image = item.image;
+        exists.label = item.label;
+        await this.categories.save(exists);
+      }
     }
     for (const item of catalog) {
       const exists = await this.products.findOne({ where: { id: item.id } });
       if (!exists) {
         await this.products.save(
-          this.products.create({ ...item, cost: Math.round(item.price * 0.62) }),
+          this.products.create({
+            ...item,
+            featured: item.featured ?? false,
+            cost: Math.round(item.price * 0.62),
+          }),
         );
       }
     }
@@ -133,6 +154,7 @@ export class ProductsService implements OnModuleInit {
       gender: dto.gender,
       category: dto.category,
       isNew: dto.isNew ?? true,
+      featured: dto.featured ?? false,
       colors: dto.colors,
       sizes: dto.sizes,
       images: dto.images.filter(Boolean).slice(0, 5),
@@ -151,6 +173,7 @@ export class ProductsService implements OnModuleInit {
     if (dto.gender !== undefined) product.gender = dto.gender;
     if (dto.category !== undefined) product.category = dto.category;
     if (dto.isNew !== undefined) product.isNew = dto.isNew;
+    if (dto.featured !== undefined) product.featured = dto.featured;
     if (dto.colors !== undefined) product.colors = dto.colors;
     if (dto.sizes !== undefined) product.sizes = dto.sizes;
     if (dto.images !== undefined) product.images = dto.images.filter(Boolean).slice(0, 5);
@@ -183,6 +206,7 @@ export class ProductsService implements OnModuleInit {
       gender: product.gender,
       category: product.category,
       isNew: product.isNew,
+      featured: Boolean(product.featured),
       colors: product.colors,
       sizes: product.sizes,
       images: product.images,

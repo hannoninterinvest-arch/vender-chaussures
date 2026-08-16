@@ -54,6 +54,10 @@ export class UpdateProductDto {
   isNew?: boolean;
 
   @IsOptional()
+  @IsBoolean()
+  featured?: boolean;
+
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ProductColorDto)

@@ -87,8 +87,8 @@ export default function SellerTeamPage() {
 
   return (
     <div className="grid gap-8 lg:grid-cols-2">
-      <form onSubmit={onSubmit} className="space-y-4 rounded-[20px] bg-white p-6">
-        <h1 className="text-2xl font-black">Créer un vendeur ou un admin</h1>
+      <form onSubmit={onSubmit} className="space-y-4 rounded-[4px] border border-[#C5A059]/35 bg-white p-6">
+        <h1 className="font-[family-name:var(--font-display)] text-2xl tracking-[0.08em] uppercase">Créer un vendeur ou un admin</h1>
         <p className="text-sm text-[#666]">
           <strong>Toi (admin)</strong> ajoutes les comptes ici. Un <strong>vendeur</strong> gère
           commandes et produits. Un <strong>admin</strong> peut aussi gérer l’équipe et supprimer
@@ -100,7 +100,7 @@ export default function SellerTeamPage() {
             required
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#5B6AF6]"
+            className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#C5A059]"
           />
         </label>
         <label className="block text-sm font-medium">
@@ -110,7 +110,7 @@ export default function SellerTeamPage() {
             type="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#5B6AF6]"
+            className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#C5A059]"
           />
         </label>
         <label className="block text-sm font-medium">
@@ -121,7 +121,7 @@ export default function SellerTeamPage() {
             minLength={8}
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
-            className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#5B6AF6]"
+            className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#C5A059]"
           />
         </label>
         <label className="block text-sm font-medium">
@@ -138,7 +138,7 @@ export default function SellerTeamPage() {
         <button
           type="submit"
           disabled={busy}
-          className="rounded-lg bg-[#5B6AF6] px-5 py-3 font-bold text-white disabled:opacity-60"
+          className="gold-btn rounded-sm px-5 py-3 text-xs uppercase disabled:opacity-60"
         >
           Créer le compte
         </button>
@@ -148,7 +148,7 @@ export default function SellerTeamPage() {
         <h2 className="text-xl font-black">{rows.length} comptes</h2>
         <ul className="mt-4 space-y-3">
           {rows.map((u) => (
-            <li key={u.id} className="rounded-[16px] bg-white p-4">
+            <li key={u.id} className="rounded-[4px] border border-[#C5A059]/30 bg-white p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-bold">{u.name}</p>
@@ -161,7 +161,7 @@ export default function SellerTeamPage() {
                 <div className="flex flex-col items-end gap-2 text-sm">
                   <button
                     type="button"
-                    className="font-medium text-[#5B6AF6]"
+                    className="font-medium text-[#C5A059]"
                     onClick={() => void setActive(u.id, !u.active)}
                   >
                     {u.active ? "Désactiver" : "Réactiver"}

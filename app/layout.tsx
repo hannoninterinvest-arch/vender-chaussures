@@ -1,24 +1,39 @@
 import type { Metadata } from "next";
-import { Rubik } from "next/font/google";
+import { Cinzel, Montserrat } from "next/font/google";
 import { Providers } from "@/components/Providers";
 import "./globals.css";
 
-const rubik = Rubik({
-  variable: "--font-rubik",
+const display = Cinzel({
+  variable: "--font-display",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const body = Montserrat({
+  variable: "--font-body",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "KICKS — Do It Right | Boutique sneakers Tunisie",
+  title: "ELVARO by AIR GO SHOES — L'excellence à chaque pas",
   description:
-    "Boutique de chaussures premium. Commande sans compte, paiement à la livraison partout en Tunisie.",
+    "Chaussures haut de gamme fabriquées en Tunisie. Commande sans compte, paiement à la livraison.",
+  icons: {
+    icon: "/logo.svg",
+    apple: "/logo.svg",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="fr" className={`${rubik.variable} h-full antialiased`}>
+    <html lang="fr" className={`${display.variable} ${body.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('elvaro-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}`,
+          }}
+        />
         <Providers>{children}</Providers>
       </body>
     </html>
