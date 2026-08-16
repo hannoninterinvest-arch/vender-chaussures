@@ -9,6 +9,7 @@ import { formatTnd } from "@/lib/format";
 import { useCart } from "@/lib/cart";
 import { useToast } from "@/components/Toast";
 import { ProductCard } from "@/components/ProductCard";
+import { whatsappHref } from "@/lib/brand";
 
 export default function ProductPage({
   params,
@@ -22,10 +23,12 @@ export default function ProductPage({
   const toast = useToast();
   const [color, setColor] = useState<string | null>(null);
   const [size, setSize] = useState<number | null>(null);
+  const [qty, setQty] = useState(1);
   const [photo, setPhoto] = useState(0);
+  const [sizeHint, setSizeHint] = useState(false);
 
   if (!ready) {
-    return <p className="px-6 py-20 text-center text-sm text-[#EDE8DE]/60">Chargement…</p>;
+    return <p className="px-6 py-20 text-center text-sm text-[var(--muted)]">Chargement…</p>;
   }
   if (!product) notFound();
 
@@ -42,16 +45,17 @@ export default function ProductPage({
 
   function add() {
     if (!size) {
+      setSizeHint(true);
       toast("Choisis une pointure.");
       return;
     }
-    cart.add({ ...snapshot, size });
-    toast("Ajouté au panier.");
+    cart.add({ ...snapshot, size, qty });
+    toast(qty > 1 ? `${qty} paires ajoutées.` : "Ajouté au panier.");
   }
 
   return (
-    <div className="mx-auto max-w-[1280px] px-4 py-10 md:px-6">
-      <p className="mb-6 text-[11px] tracking-[0.16em] uppercase text-[#EDE8DE]/55">
+    <div className="mx-auto max-w-[1280px] px-4 py-10 pb-28 md:px-6 lg:pb-10">
+      <p className="mb-6 text-[11px] tracking-[0.16em] uppercase text-[var(--muted)]">
         <Link href="/shop" className="hover:text-[#C5A059]">
           Boutique
         </Link>{" "}
@@ -71,9 +75,8 @@ export default function ProductPage({
                 key={src}
                 type="button"
                 onClick={() => setPhoto(i)}
-                className={`overflow-hidden rounded-sm ${
-                  photo === i ? "gold-frame" : "opacity-70"
-                }`}
+                aria-label={`Photo ${i + 1}`}
+                className={`overflow-hidden rounded-sm ${photo === i ? "gold-frame" : "opacity-70"}`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={src} alt="" className="aspect-square w-full object-cover" />
@@ -92,9 +95,12 @@ export default function ProductPage({
             {product.name}
           </h1>
           <p className="mt-3 text-2xl font-semibold text-[#C5A059]">{formatTnd(product.price)}</p>
+          <p className="mt-1 text-sm text-[var(--muted)]">Livraison calculée au checkout · Échange 7 jours</p>
 
           <div className="mt-8">
-            <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">Couleur</p>
+            <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">
+              Couleur · {selectedColor}
+            </p>
             <div className="mt-3 flex gap-3">
               {product.colors.map((c) => (
                 <button
@@ -120,20 +126,39 @@ export default function ProductPage({
                 <button
                   key={s}
                   type="button"
-                  onClick={() => setSize(s)}
+                  onClick={() => {
+                    setSize(s);
+                    setSizeHint(false);
+                  }}
                   className={`h-12 w-12 rounded-sm text-sm font-medium ${
                     size === s
                       ? "bg-[#C5A059] text-[#1A1A1B]"
-                      : "border border-[#C5A059]/35 text-[#EDE8DE]"
+                      : "border border-[#C5A059]/35 text-[var(--fg)]"
                   }`}
                 >
                   {s}
                 </button>
               ))}
             </div>
+            {sizeHint ? (
+              <p className="mt-2 text-sm text-[#C5A059]">Choisis une pointure pour continuer.</p>
+            ) : null}
           </div>
 
-          <div className="mt-8 space-y-3">
+          <div className="mt-6">
+            <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">Quantité</p>
+            <div className="mt-3 inline-flex items-center rounded-sm border border-[#C5A059]/35">
+              <button type="button" className="px-4 py-2" onClick={() => setQty((n) => Math.max(1, n - 1))} aria-label="Moins">
+                −
+              </button>
+              <span className="min-w-8 text-center text-sm">{qty}</span>
+              <button type="button" className="px-4 py-2" onClick={() => setQty((n) => Math.min(10, n + 1))} aria-label="Plus">
+                +
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-8 hidden space-y-3 lg:block">
             <button type="button" onClick={add} className="gold-btn h-12 w-full rounded-sm text-xs uppercase">
               Ajouter au panier
             </button>
@@ -142,23 +167,32 @@ export default function ProductPage({
               onClick={(e) => {
                 if (!size) {
                   e.preventDefault();
+                  setSizeHint(true);
                   toast("Choisis une pointure.");
                   return;
                 }
-                cart.add({ ...snapshot, size });
+                cart.add({ ...snapshot, size, qty });
               }}
               className="flex h-12 w-full items-center justify-center rounded-sm border border-[#C5A059] text-xs font-semibold tracking-[0.08em] uppercase text-[#C5A059] hover:bg-[#C5A059]/10"
             >
               Acheter maintenant
             </Link>
+            <a
+              href={whatsappHref(`Bonjour ELVARO, je m’intéresse à ${product.name} (${selectedColor}).`)}
+              target="_blank"
+              rel="noreferrer"
+              className="block text-center text-sm text-[var(--muted)] underline hover:text-[#C5A059]"
+            >
+              Demander conseil sur WhatsApp
+            </a>
           </div>
 
           <div className="mt-10">
             <h2 className="font-[family-name:var(--font-display)] text-lg tracking-[0.14em] uppercase">
               À propos du produit
             </h2>
-            <p className="mt-3 text-sm leading-relaxed text-[#EDE8DE]/70">{product.description}</p>
-            <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-[#EDE8DE]/65">
+            <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">{product.description}</p>
+            <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-[var(--muted)]">
               <li>Commande sans compte</li>
               <li>Paiement à la livraison en Tunisie</li>
               <li>Échange 7 jours si non portées</li>
@@ -177,6 +211,18 @@ export default function ProductPage({
           ))}
         </div>
       </section>
+
+      <div className="gold-frame fixed inset-x-3 bottom-3 z-40 rounded-[4px] bg-[#0A0A0A]/95 p-3 backdrop-blur-md lg:hidden">
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs text-[#EDE8DE]/70">{product.name}</p>
+            <p className="font-semibold text-[#C5A059]">{formatTnd(product.price)}</p>
+          </div>
+          <button type="button" onClick={add} className="gold-btn h-11 shrink-0 rounded-sm px-5 text-[11px] uppercase">
+            Ajouter
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

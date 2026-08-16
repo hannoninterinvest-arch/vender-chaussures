@@ -15,6 +15,7 @@ import {
 import { createOrder } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { brand } from "@/lib/brand";
+import { CheckoutSteps } from "@/components/Experience";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -72,26 +73,28 @@ export default function CheckoutPage() {
 
   return (
     <div className="mx-auto max-w-[1100px] px-4 py-10 md:px-6">
+      <CheckoutSteps step={2} />
       <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-[#C5A059]">Paiement</p>
       <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.12em] uppercase">
         Checkout invité
       </h1>
-      <p className="mt-2 text-sm text-[#EDE8DE]/65">
+      <p className="mt-2 text-sm text-[var(--muted)]">
         Pas de mot de passe. On te contacte au {brand.phone} pour confirmer.
       </p>
 
       <form onSubmit={onSubmit} className="mt-8 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-        <div className="gold-frame space-y-6 rounded-[4px] bg-[#141414] p-6">
+        <div className="gold-frame space-y-6 rounded-[4px] bg-[var(--panel)] p-6">
           <h2 className="font-[family-name:var(--font-display)] text-lg tracking-[0.14em] uppercase">
             Livraison
           </h2>
-          <Field name="name" label="Nom complet" required />
+          <Field name="name" label="Nom complet" required autoComplete="name" />
           <Field
             name="phone"
             label="Téléphone (WhatsApp de préférence)"
             type="tel"
             required
             placeholder="ex. 20 123 456"
+            autoComplete="tel"
           />
           <div>
             <label className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#C5A059]">
@@ -100,15 +103,15 @@ export default function CheckoutPage() {
             <select
               value={gouvernorat}
               onChange={(e) => setGouvernorat(e.target.value as Gouvernorat)}
-              className="mt-1.5 w-full rounded-sm border border-[#C5A059]/35 bg-[#0A0A0A] px-3 py-3 text-sm outline-none focus:border-[#C5A059]"
+              className="field mt-1.5"
             >
               {gouvernorats.map((g) => (
                 <option key={g}>{g}</option>
               ))}
             </select>
           </div>
-          <Field name="city" label="Ville / délégation" required />
-          <Field name="address" label="Adresse" required placeholder="Rue, immeuble, étage…" />
+          <Field name="city" label="Ville / délégation" required autoComplete="address-level2" />
+          <Field name="address" label="Adresse" required placeholder="Rue, immeuble, étage…" autoComplete="street-address" />
           <Field name="notes" label="Note pour le livreur (optionnel)" />
 
           <h2 className="pt-2 font-[family-name:var(--font-display)] text-lg tracking-[0.14em] uppercase">
@@ -133,7 +136,7 @@ export default function CheckoutPage() {
                 />
                 <span>
                   <span className="block font-semibold">{m.label}</span>
-                  <span className="text-sm text-[#EDE8DE]/65">{m.hint}</span>
+                  <span className="text-sm text-[var(--muted)]">{m.hint}</span>
                 </span>
               </label>
             ))}
@@ -148,14 +151,14 @@ export default function CheckoutPage() {
                   value={paymentPhone}
                   onChange={(e) => setPaymentPhone(e.target.value)}
                   placeholder="ex. 20 123 456"
-                  className="mt-1.5 w-full rounded-sm border border-[#C5A059]/35 bg-[#0A0A0A] px-3 py-3 text-sm outline-none focus:border-[#C5A059]"
+                  className="field mt-1.5"
                 />
               </label>
             )}
           </div>
         </div>
 
-        <aside className="gold-frame h-fit rounded-[4px] bg-[#141414] p-6">
+        <aside className="gold-frame h-fit rounded-[4px] bg-[var(--panel)] p-6 lg:sticky lg:top-28">
           <h2 className="font-[family-name:var(--font-display)] text-lg tracking-[0.14em] uppercase">
             Ta commande
           </h2>
@@ -166,7 +169,7 @@ export default function CheckoutPage() {
                 <img src={l.image} alt="" className="h-14 w-14 rounded-sm object-cover" />
                 <div className="flex-1">
                   <p className="font-medium">{l.name}</p>
-                  <p className="text-[#EDE8DE]/60">
+                  <p className="text-[var(--muted)]">
                     {l.color} · {l.size} · x{l.qty}
                   </p>
                 </div>
@@ -176,11 +179,11 @@ export default function CheckoutPage() {
           </ul>
           <div className="gold-line my-4" />
           <div className="space-y-1 text-sm">
-            <div className="flex justify-between text-[#EDE8DE]/70">
+            <div className="flex justify-between text-[var(--muted)]">
               <span>Sous-total</span>
               <span>{formatTnd(subtotal)}</span>
             </div>
-            <div className="flex justify-between text-[#EDE8DE]/70">
+            <div className="flex justify-between text-[var(--muted)]">
               <span>Livraison ({gouvernorat})</span>
               <span>{formatTnd(fee)}</span>
             </div>
@@ -192,7 +195,7 @@ export default function CheckoutPage() {
           <button type="submit" disabled={busy} className="gold-btn mt-6 h-12 w-full rounded-sm text-xs uppercase disabled:opacity-60">
             {busy ? "Envoi…" : "Confirmer la commande"}
           </button>
-          <p className="mt-3 text-center text-[11px] tracking-[0.14em] uppercase text-[#EDE8DE]/45">
+          <p className="mt-3 text-center text-[11px] tracking-[0.14em] uppercase text-[var(--muted)]">
             {brand.slogan}
           </p>
         </aside>
@@ -207,12 +210,14 @@ function Field({
   required,
   type = "text",
   placeholder,
+  autoComplete,
 }: {
   name: string;
   label: string;
   required?: boolean;
   type?: string;
   placeholder?: string;
+  autoComplete?: string;
 }) {
   return (
     <label className="block">
@@ -222,7 +227,8 @@ function Field({
         type={type}
         required={required}
         placeholder={placeholder}
-        className="mt-1.5 w-full rounded-sm border border-[#C5A059]/35 bg-[#0A0A0A] px-3 py-3 text-sm outline-none placeholder:text-[#EDE8DE]/35 focus:border-[#C5A059]"
+        autoComplete={autoComplete}
+        className="field mt-1.5"
       />
     </label>
   );

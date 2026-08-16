@@ -36,9 +36,17 @@ export function Hero() {
           <p className="mt-2 max-w-md text-sm text-[#EDE8DE]/75">
             Fabrication tunisienne, confort et design intemporel — commande sans compte.
           </p>
-          <Link href="/shop?drop=new" className="gold-btn mt-5 inline-flex rounded-sm px-8 py-3 text-xs uppercase">
-            Découvrir
-          </Link>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link href="/shop?drop=new" className="gold-btn inline-flex rounded-sm px-8 py-3 text-xs uppercase">
+              Découvrir
+            </Link>
+            <Link
+              href="/shop"
+              className="inline-flex rounded-sm border border-[#C5A059] px-8 py-3 text-xs font-semibold tracking-[0.08em] uppercase text-[#C5A059] hover:bg-[#C5A059]/10"
+            >
+              Toute la collection
+            </Link>
+          </div>
         </div>
       </div>
     </section>

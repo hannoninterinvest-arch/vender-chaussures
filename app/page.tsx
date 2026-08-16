@@ -1,4 +1,5 @@
 import { Categories } from "@/components/Categories";
+import { TrustBar } from "@/components/Experience";
 import { Hero } from "@/components/Hero";
 import { NewDrops } from "@/components/NewDrops";
 import { Newsletter } from "@/components/Newsletter";
@@ -9,6 +10,7 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+      <TrustBar />
       <Pillars />
       <NewDrops />
       <Categories />

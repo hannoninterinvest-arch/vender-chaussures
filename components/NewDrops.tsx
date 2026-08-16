@@ -12,7 +12,7 @@ export function NewDrops() {
       <div className="mb-8 flex items-end justify-between gap-4">
         <div>
           <p className="text-[11px] tracking-[0.28em] uppercase text-[#C5A059]">Sélection</p>
-          <h2 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.12em] text-[#EDE8DE] md:text-5xl">
+          <h2 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.12em] text-[var(--fg)] md:text-5xl">
             NOUVEAUTÉS
           </h2>
         </div>

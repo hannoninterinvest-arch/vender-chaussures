@@ -54,10 +54,15 @@ export function Footer() {
           <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#C5A059]">Contact</p>
           <ul className="mt-4 space-y-2 text-sm text-[#EDE8DE]/80">
             <li>
-              <a href={brand.phoneHref}>{brand.phone}</a>
+              <a href={brand.phoneHref} className="hover:text-[#C5A059]">{brand.phone}</a>
             </li>
             <li>
-              <a href={`mailto:${brand.email}`}>{brand.email}</a>
+              <a href={brand.whatsapp} target="_blank" rel="noreferrer" className="hover:text-[#C5A059]">
+                WhatsApp
+              </a>
+            </li>
+            <li>
+              <a href={`mailto:${brand.email}`} className="hover:text-[#C5A059]">{brand.email}</a>
             </li>
             <li>{brand.address}</li>
           </ul>

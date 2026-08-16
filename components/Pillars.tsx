@@ -70,7 +70,7 @@ export function Pillars() {
             <p className="mt-3 text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">
               {item.title}
             </p>
-            <p className="mt-2 text-sm text-[#EDE8DE]/65">{item.text}</p>
+            <p className="mt-2 text-sm text-[var(--muted)]">{item.text}</p>
           </div>
         ))}
       </div>
