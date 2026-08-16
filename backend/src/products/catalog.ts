@@ -35,8 +35,10 @@ export const catalog: CatalogProduct[] = [
     category: 'lifestyle',
     isNew: true,
     colors: [
-      { name: 'Rouge', hex: '#E11D48' },
-      { name: 'Noir', hex: '#171717' },
+      { name: 'Rouge', hex: '#C41E3A' },
+      { name: 'Noir', hex: '#1A1612' },
+      { name: 'Or', hex: '#D4AF37' },
+      { name: 'Crème', hex: '#F3EDE2' },
     ],
     sizes: [38, 39, 40, 41, 42, 43, 44, 45],
     images: [
@@ -56,8 +58,10 @@ export const catalog: CatalogProduct[] = [
     category: 'basket',
     isNew: true,
     colors: [
-      { name: 'Blanc', hex: '#F5F5F5' },
-      { name: 'Noir', hex: '#171717' },
+      { name: 'Blanc', hex: '#F5F0E6' },
+      { name: 'Noir', hex: '#1A1612' },
+      { name: 'Bordeaux', hex: '#6B1D2A' },
+      { name: 'Or', hex: '#D4AF37' },
     ],
     sizes: [38, 39, 40, 41, 42, 43, 44],
     images: [
@@ -77,8 +81,10 @@ export const catalog: CatalogProduct[] = [
     category: 'sneakers',
     isNew: true,
     colors: [
-      { name: 'Noir/Blanc', hex: '#111111' },
+      { name: 'Noir/Blanc', hex: '#1A1612' },
       { name: 'Marine', hex: '#1E3A5F' },
+      { name: 'Beige', hex: '#D8C4A8' },
+      { name: 'Or', hex: '#C9A45C' },
     ],
     sizes: [37, 38, 39, 40, 41, 42, 43, 44, 45],
     images: [
@@ -98,8 +104,10 @@ export const catalog: CatalogProduct[] = [
     category: 'running',
     isNew: false,
     colors: [
-      { name: 'Vert', hex: '#16A34A' },
-      { name: 'Gris', hex: '#737373' },
+      { name: 'Vert', hex: '#3D6B4F' },
+      { name: 'Gris', hex: '#8A8478' },
+      { name: 'Bleu', hex: '#3D5A73' },
+      { name: 'Or', hex: '#D4AF37' },
     ],
     sizes: [40, 41, 42, 43, 44, 45, 46],
     images: [
@@ -119,8 +127,10 @@ export const catalog: CatalogProduct[] = [
     category: 'lifestyle',
     isNew: false,
     colors: [
-      { name: 'Blanc', hex: '#FFFFFF' },
-      { name: 'Noir', hex: '#171717' },
+      { name: 'Blanc', hex: '#F7F2E8' },
+      { name: 'Noir', hex: '#1A1612' },
+      { name: 'Cognac', hex: '#8B5A2B' },
+      { name: 'Or', hex: '#D4AF37' },
     ],
     sizes: [36, 37, 38, 39, 40, 41, 42, 43, 44, 45],
     images: [
@@ -140,8 +150,10 @@ export const catalog: CatalogProduct[] = [
     category: 'running',
     isNew: true,
     colors: [
-      { name: 'Noir', hex: '#0A0A0A' },
-      { name: 'Blanc', hex: '#FAFAFA' },
+      { name: 'Noir', hex: '#1A1612' },
+      { name: 'Blanc', hex: '#F7F2E8' },
+      { name: 'Carbon', hex: '#4A453C' },
+      { name: 'Or', hex: '#C9A45C' },
     ],
     sizes: [40, 41, 42, 43, 44, 45],
     images: [
@@ -161,8 +173,10 @@ export const catalog: CatalogProduct[] = [
     category: 'sneakers',
     isNew: false,
     colors: [
-      { name: 'Blanc', hex: '#F8F8F8' },
-      { name: 'Noir', hex: '#171717' },
+      { name: 'Blanc', hex: '#F7F2E8' },
+      { name: 'Noir', hex: '#1A1612' },
+      { name: 'Gum', hex: '#C4A574' },
+      { name: 'Or', hex: '#D4AF37' },
     ],
     sizes: [36, 37, 38, 39, 40, 41, 42, 43, 44],
     images: [
@@ -183,7 +197,9 @@ export const catalog: CatalogProduct[] = [
     isNew: false,
     colors: [
       { name: 'Ivoire', hex: '#F5F0E8' },
-      { name: 'Vert', hex: '#3F6212' },
+      { name: 'Vert', hex: '#4A5C3A' },
+      { name: 'Marine', hex: '#2C3E50' },
+      { name: 'Or', hex: '#C9A45C' },
     ],
     sizes: [38, 39, 40, 41, 42, 43, 44],
     images: [
@@ -203,8 +219,10 @@ export const catalog: CatalogProduct[] = [
     category: 'running',
     isNew: true,
     colors: [
-      { name: 'Lilas', hex: '#C4B5FD' },
-      { name: 'Blanc', hex: '#FFFFFF' },
+      { name: 'Lilas', hex: '#B8A4C4' },
+      { name: 'Blanc', hex: '#F7F2E8' },
+      { name: 'Champagne', hex: '#E8D5A3' },
+      { name: 'Or', hex: '#D4AF37' },
     ],
     sizes: [36, 37, 38, 39, 40, 41, 42],
     images: [
@@ -224,8 +242,10 @@ export const catalog: CatalogProduct[] = [
     category: 'lifestyle',
     isNew: false,
     colors: [
-      { name: 'Noir', hex: '#111111' },
-      { name: 'Blanc', hex: '#FAFAFA' },
+      { name: 'Noir', hex: '#1A1612' },
+      { name: 'Blanc', hex: '#F7F2E8' },
+      { name: 'Bordeaux', hex: '#6B1D2A' },
+      { name: 'Or', hex: '#C9A45C' },
     ],
     sizes: [36, 37, 38, 39, 40, 41, 42, 43, 44, 45],
     images: [
@@ -245,8 +265,10 @@ export const catalog: CatalogProduct[] = [
     category: 'outdoor',
     isNew: true,
     colors: [
-      { name: 'Argent', hex: '#A3A3A3' },
-      { name: 'Noir', hex: '#171717' },
+      { name: 'Argent', hex: '#B8B0A4' },
+      { name: 'Noir', hex: '#1A1612' },
+      { name: 'Kaki', hex: '#6B5E45' },
+      { name: 'Or', hex: '#D4AF37' },
     ],
     sizes: [39, 40, 41, 42, 43, 44, 45],
     images: [
@@ -266,8 +288,10 @@ export const catalog: CatalogProduct[] = [
     category: 'running',
     isNew: false,
     colors: [
-      { name: 'Rose', hex: '#FB7185' },
-      { name: 'Blanc', hex: '#FFFFFF' },
+      { name: 'Rose', hex: '#C9A08A' },
+      { name: 'Blanc', hex: '#F7F2E8' },
+      { name: 'Nude', hex: '#E4D0B8' },
+      { name: 'Or', hex: '#D4AF37' },
     ],
     sizes: [36, 37, 38, 39, 40, 41],
     images: [

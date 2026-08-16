@@ -63,6 +63,7 @@ export class CreateProductDto {
   @ValidateNested({ each: true })
   @Type(() => ProductColorDto)
   @ArrayMinSize(1)
+  @ArrayMaxSize(8)
   colors: ProductColorDto[];
 
   @IsArray()

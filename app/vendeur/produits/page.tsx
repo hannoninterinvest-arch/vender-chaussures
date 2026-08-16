@@ -22,10 +22,11 @@ const emptyForm = {
   gender: "unisexe" as SellerProduct["gender"],
   category: "",
   isNew: true,
-  colorName: "Noir",
-  colorHex: "#171717",
-  extraColorName: "",
-  extraColorHex: "#C5A059",
+  colorSlots: [
+    { name: "Noir", hex: "#1A1612" },
+    { name: "Or", hex: "#D4AF37" },
+    { name: "Crème", hex: "#F3EDE2" },
+  ],
   sizes: [40, 41, 42, 43, 44] as number[],
   images: ["", "", "", "", ""] as string[],
 };
@@ -81,23 +82,25 @@ export default function SellerProductsPage() {
       gender: p.gender,
       category: p.category,
       isNew: p.isNew,
-      colorName: p.colors[0]?.name || "Noir",
-      colorHex: p.colors[0]?.hex || "#171717",
-      extraColorName: p.colors[1]?.name || "",
-      extraColorHex: p.colors[1]?.hex || "#C5A059",
+      colorSlots: p.colors.length
+        ? p.colors.map((c) => ({ name: c.name, hex: c.hex }))
+        : [
+            { name: "Noir", hex: "#1A1612" },
+            { name: "Or", hex: "#D4AF37" },
+          ],
       sizes: p.sizes,
       images: [0, 1, 2, 3, 4].map((i) => p.images[i] || ""),
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  const colors = useMemo(() => {
-    const list = [{ name: form.colorName.trim() || "Noir", hex: form.colorHex || "#171717" }];
-    if (form.extraColorName.trim()) {
-      list.push({ name: form.extraColorName.trim(), hex: form.extraColorHex || "#C5A059" });
-    }
-    return list;
-  }, [form]);
+  const colors = useMemo(
+    () =>
+      form.colorSlots
+        .map((c) => ({ name: c.name.trim(), hex: c.hex || "#1A1612" }))
+        .filter((c) => c.name),
+    [form.colorSlots],
+  );
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -108,6 +111,10 @@ export default function SellerProductsPage() {
     }
     if (!form.sizes.length) {
       toast("Choisis au moins une pointure");
+      return;
+    }
+    if (colors.length < 1) {
+      toast("Ajoute au moins une couleur");
       return;
     }
     setBusy(true);
@@ -259,29 +266,59 @@ export default function SellerProductsPage() {
           />
           New drop
         </label>
-        <p className="text-sm font-bold">Couleurs</p>
-        <div className="grid grid-cols-[1fr_auto] gap-2">
-          <Field label="Couleur 1" value={form.colorName} onChange={(v) => setForm({ ...form, colorName: v })} />
-          <input
-            type="color"
-            value={form.colorHex}
-            onChange={(e) => setForm({ ...form, colorHex: e.target.value })}
-            className="mt-6 h-10 w-14 rounded"
-          />
+        <p className="text-sm font-bold">Couleurs (jusqu’à 6)</p>
+        <div className="space-y-2">
+          {form.colorSlots.map((slot, i) => (
+            <div key={i} className="grid grid-cols-[1fr_auto_auto] items-end gap-2">
+              <Field
+                label={`Couleur ${i + 1}`}
+                value={slot.name}
+                onChange={(v) =>
+                  setForm({
+                    ...form,
+                    colorSlots: form.colorSlots.map((c, idx) => (idx === i ? { ...c, name: v } : c)),
+                  })
+                }
+              />
+              <input
+                type="color"
+                value={slot.hex}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    colorSlots: form.colorSlots.map((c, idx) => (idx === i ? { ...c, hex: e.target.value } : c)),
+                  })
+                }
+                className="mb-0.5 h-10 w-14 rounded"
+              />
+              {form.colorSlots.length > 1 && (
+                <button
+                  type="button"
+                  className="mb-1 text-xs text-red-600"
+                  onClick={() =>
+                    setForm({ ...form, colorSlots: form.colorSlots.filter((_, idx) => idx !== i) })
+                  }
+                >
+                  Retirer
+                </button>
+              )}
+            </div>
+          ))}
         </div>
-        <div className="grid grid-cols-[1fr_auto] gap-2">
-          <Field
-            label="Couleur 2 (optionnel)"
-            value={form.extraColorName}
-            onChange={(v) => setForm({ ...form, extraColorName: v })}
-          />
-          <input
-            type="color"
-            value={form.extraColorHex}
-            onChange={(e) => setForm({ ...form, extraColorHex: e.target.value })}
-            className="mt-6 h-10 w-14 rounded"
-          />
-        </div>
+        {form.colorSlots.length < 6 && (
+          <button
+            type="button"
+            className="text-sm font-medium text-[#C9A45C]"
+            onClick={() =>
+              setForm({
+                ...form,
+                colorSlots: [...form.colorSlots, { name: "", hex: "#D4AF37" }],
+              })
+            }
+          >
+            + Ajouter une couleur
+          </button>
+        )}
         <p className="text-sm font-bold">Pointures</p>
         <div className="flex flex-wrap gap-2">
           {allSizes.map((n) => (

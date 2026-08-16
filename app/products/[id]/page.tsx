@@ -9,6 +9,7 @@ import { formatTnd } from "@/lib/format";
 import { useCart } from "@/lib/cart";
 import { useToast } from "@/components/Toast";
 import { ProductCard } from "@/components/ProductCard";
+import { ColorDots } from "@/components/ColorDots";
 import { whatsappHref } from "@/lib/brand";
 
 export default function ProductPage({
@@ -101,19 +102,8 @@ export default function ProductPage({
             <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">
               Couleur · {selectedColor}
             </p>
-            <div className="mt-3 flex gap-3">
-              {product.colors.map((c) => (
-                <button
-                  key={c.name}
-                  type="button"
-                  title={c.name}
-                  onClick={() => setColor(c.name)}
-                  className={`h-11 w-11 rounded-full border-2 ${
-                    selectedColor === c.name ? "border-[#C5A059]" : "border-transparent"
-                  }`}
-                  style={{ background: c.hex }}
-                />
-              ))}
+            <div className="mt-3">
+              <ColorDots colors={product.colors} selected={selectedColor} onSelect={setColor} />
             </div>
           </div>
 

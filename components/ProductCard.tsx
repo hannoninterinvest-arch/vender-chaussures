@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatTnd } from "@/lib/format";
 import type { Product } from "@/lib/products";
+import { ColorDots } from "./ColorDots";
 
 export function ProductCard({ product }: { product: Product }) {
   return (
@@ -23,6 +24,9 @@ export function ProductCard({ product }: { product: Product }) {
       <h3 className="mt-3 text-[13px] font-semibold tracking-[0.14em] uppercase text-[var(--fg)]">
         {product.name}
       </h3>
+      <div className="mt-2">
+        <ColorDots colors={product.colors} size="sm" />
+      </div>
       <Link
         href={`/products/${product.id}`}
         className="gold-btn mt-3 flex w-full items-center justify-center gap-2 rounded-sm px-3 py-3.5 text-xs uppercase"
