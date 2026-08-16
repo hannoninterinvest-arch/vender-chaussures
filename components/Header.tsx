@@ -94,62 +94,67 @@ export function Header() {
       >
         Aller au contenu
       </a>
-      <div className="mx-auto flex h-[var(--header-h)] max-w-[1280px] items-center justify-between px-4 md:px-6">
-        <nav className="hidden items-center gap-8 text-[11px] font-medium tracking-[0.2em] uppercase text-[#F3EDE2] md:flex">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`nav-link ${path.startsWith("/shop") && item.href === "/shop" ? "is-active" : ""}`}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="flex items-center gap-2 md:contents">
-          <button
-            type="button"
-            className="icon-btn rounded-full p-2 text-[#C9A45C] md:hidden"
-            aria-label={menu ? "Fermer le menu" : "Ouvrir le menu"}
-            aria-expanded={menu}
-            onClick={() => setMenu((v) => !v)}
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-              {menu ? (
-                <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-              ) : (
-                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-              )}
-            </svg>
-          </button>
-          <Link href="/" aria-label="ELVARO accueil" className="transition-transform duration-300 hover:scale-[1.03]">
+      <div className="mx-auto flex h-[var(--header-h)] max-w-[1280px] items-center justify-between gap-6 px-4 md:px-6">
+        <Link href="/" aria-label="ELVARO accueil" className="shrink-0 transition-transform duration-300 hover:scale-[1.03]">
+          <span className="md:hidden">
             <BrandLockup compact />
-          </Link>
-        </div>
+          </span>
+          <span className="hidden md:block">
+            <BrandLockup />
+          </span>
+        </Link>
 
-        <div className="flex items-center gap-0.5 text-[#C9A45C]">
-          <ThemeToggle />
-          <button
-            type="button"
-            aria-label="Rechercher"
-            onClick={() => setOpen(true)}
-            className="icon-btn rounded-full p-2"
-          >
-            <IconSearch />
-          </button>
-          <Link
-            href="/cart"
-            className="icon-btn relative rounded-full p-2"
-            aria-label={`Panier, ${count} article${count > 1 ? "s" : ""}`}
-          >
-            <IconBag />
-            {count > 0 && (
-              <span className="badge-pop absolute right-0.5 top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-[#C9A45C] px-1 text-[10px] font-bold text-[#14110C]">
-                {count}
-              </span>
-            )}
-          </Link>
+        <div className="flex items-center gap-6">
+          <nav className="hidden items-center gap-7 text-[11px] font-medium tracking-[0.2em] uppercase text-[#F3EDE2] md:flex">
+            {NAV.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`nav-link ${path.startsWith("/shop") && item.href === "/shop" ? "is-active" : ""}`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-0.5 text-[#C9A45C]">
+            <ThemeToggle />
+            <button
+              type="button"
+              aria-label="Rechercher"
+              onClick={() => setOpen(true)}
+              className="icon-btn rounded-full p-2"
+            >
+              <IconSearch />
+            </button>
+            <Link
+              href="/cart"
+              className="icon-btn relative rounded-full p-2"
+              aria-label={`Panier, ${count} article${count > 1 ? "s" : ""}`}
+            >
+              <IconBag />
+              {count > 0 && (
+                <span className="badge-pop absolute right-0.5 top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-[#C9A45C] px-1 text-[10px] font-bold text-[#14110C]">
+                  {count}
+                </span>
+              )}
+            </Link>
+            <button
+              type="button"
+              className="icon-btn rounded-full p-2 md:hidden"
+              aria-label={menu ? "Fermer le menu" : "Ouvrir le menu"}
+              aria-expanded={menu}
+              onClick={() => setMenu((v) => !v)}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+                {menu ? (
+                  <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                ) : (
+                  <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                )}
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
