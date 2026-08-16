@@ -8,23 +8,12 @@ import {
   type SellerProduct,
 } from "@/lib/seller";
 import { useToast } from "@/components/Toast";
-
-type SiteHome = {
-  heroKicker: string;
-  heroTitle: string;
-  heroSubtitle: string;
-  coverImages: string[];
-};
+import { defaultSite, type SiteHome } from "@/lib/site";
 
 export default function SellerVitrinePage() {
   const toast = useToast();
   const admin = isAdmin();
-  const [site, setSite] = useState<SiteHome>({
-    heroKicker: "Collection",
-    heroTitle: "CUIR PREMIUM",
-    heroSubtitle: "",
-    coverImages: [],
-  });
+  const [site, setSite] = useState<SiteHome>(defaultSite);
   const [products, setProducts] = useState<SellerProduct[]>([]);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -39,14 +28,16 @@ export default function SellerVitrinePage() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      sellerRequest<SiteHome>("/seller/site"),
-      sellerRequest<SellerProduct[]>("/seller/products"),
-    ])
-      .then(([home, list]) => {
-        if (cancelled) return;
-        setSite(home);
-        setProducts(list);
+    sellerRequest<SellerProduct[]>("/seller/products")
+      .then((list) => {
+        if (!cancelled) setProducts(list);
+      })
+      .catch((err: Error) => {
+        if (!cancelled) toast(err.message);
+      });
+    sellerRequest<SiteHome>("/seller/site")
+      .then((home) => {
+        if (!cancelled && home) setSite({ ...defaultSite, ...home });
       })
       .catch((err: Error) => {
         if (!cancelled) toast(err.message);

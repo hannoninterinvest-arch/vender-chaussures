@@ -5,23 +5,10 @@ import Link from "next/link";
 import { LogoMark } from "@/components/Logo";
 import { brand } from "@/lib/brand";
 import { fetchSite } from "@/lib/api";
-
-type SiteHome = {
-  heroKicker: string;
-  heroTitle: string;
-  heroSubtitle: string;
-  coverImages: string[];
-};
-
-const fallback: SiteHome = {
-  heroKicker: "Collection",
-  heroTitle: "CUIR PREMIUM",
-  heroSubtitle: "L'élégance du cuir, pensée pour la ville et la cérémonie.",
-  coverImages: [],
-};
+import { defaultSite, type SiteHome } from "@/lib/site";
 
 export function Hero() {
-  const [site, setSite] = useState<SiteHome>(fallback);
+  const [site, setSite] = useState<SiteHome>(defaultSite);
   const [index, setIndex] = useState(0);
   const photos = site.coverImages.filter(Boolean);
 
@@ -29,10 +16,10 @@ export function Hero() {
     let cancelled = false;
     fetchSite()
       .then((data) => {
-        if (!cancelled) setSite({ ...fallback, ...data, coverImages: data.coverImages || [] });
+        if (!cancelled) setSite({ ...defaultSite, ...data, coverImages: data.coverImages?.length ? data.coverImages : defaultSite.coverImages });
       })
       .catch(() => {
-        if (!cancelled) setSite(fallback);
+        if (!cancelled) setSite(defaultSite);
       });
     return () => {
       cancelled = true;

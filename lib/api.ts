@@ -58,7 +58,7 @@ export async function retryOrderPayment(id: string) {
 }
 
 export async function fetchSite() {
-  const res = await fetch(apiUrl("/site"), { cache: "no-store" });
+  const res = await fetch("/api/site", { cache: "no-store" });
   if (!res.ok) throw new Error("Impossible de charger la vitrine");
   return res.json() as Promise<{
     heroKicker: string;
