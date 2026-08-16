@@ -59,7 +59,9 @@ export function ShopClient() {
 
   const active = [
     drop === "new" ? { label: "Nouveautés", href: href({ drop: null }) } : null,
-    gender ? { label: gender, href: href({ gender: null }) } : null,
+    gender
+      ? { label: gender === "homme" ? "Homme" : gender === "femme" ? "Femme" : gender, href: href({ gender: null }) }
+      : null,
     category
       ? { label: categories.find((c) => c.slug === category)?.label || category, href: href({ category: null }) }
       : null,
@@ -67,8 +69,27 @@ export function ShopClient() {
     size ? { label: `EU ${size}`, href: href({ size: null }) } : null,
   ].filter(Boolean) as { label: string; href: string }[];
 
+  const pairLabel = ready
+    ? `${filtered.length} paire${filtered.length > 1 ? "s" : ""}`
+    : "Chargement…";
+
+  const sortControl = (
+    <label className="flex items-center gap-2 text-[11px] font-semibold tracking-[0.16em] uppercase text-[#C5A059]">
+      Trier
+      <select
+        value={sort}
+        onChange={(e) => setSort(e.target.value as Sort)}
+        className="field w-auto min-w-[10rem] py-2 text-xs uppercase"
+      >
+        <option value="new">Nouveautés</option>
+        <option value="price-asc">Prix croissant</option>
+        <option value="price-desc">Prix décroissant</option>
+      </select>
+    </label>
+  );
+
   const filters = (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <FilterGroup title="Catégorie">
         {categories.map((c) => (
           <Chip
@@ -100,80 +121,116 @@ export function ShopClient() {
           ))}
         </div>
       </FilterGroup>
-      {active.length > 0 && (
-        <Link href="/shop" className="text-sm font-medium text-[#C5A059] underline">
-          Réinitialiser
-        </Link>
-      )}
     </div>
   );
 
   return (
-    <div className="mx-auto max-w-[1280px] px-4 py-10 md:px-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-[11px] tracking-[0.28em] uppercase text-[#C5A059]">Boutique</p>
-          <h1 className="mt-1 font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase">
+    <div>
+      <div className="gold-line" />
+      <section className="shop-hero">
+        <div className="relative mx-auto max-w-[1280px] px-4 py-12 md:px-6 md:py-16">
+          <div className="shop-hero-ornament">
+            <span className="text-[10px] tracking-[0.42em] uppercase">ELVARO</span>
+          </div>
+          <p className="mt-4 text-[11px] font-semibold tracking-[0.36em] uppercase text-[#C5A059]">Boutique</p>
+          <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.14em] uppercase text-[var(--fg)] md:text-6xl">
             {title}
           </h1>
-          <p className="mt-1 text-sm text-[var(--muted)]">
-            {ready ? `${filtered.length} paire${filtered.length > 1 ? "s" : ""}` : "Chargement…"}
+          <p className="mt-4 max-w-xl text-sm leading-relaxed text-[var(--muted)]">
+            Cuir premium, allure de ville et de cérémonie. Choisis ta paire — commande sans compte.
           </p>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <span className="rounded-sm border border-[#C5A059]/50 bg-[#C5A059]/12 px-3 py-1.5 text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">
+              {pairLabel}
+            </span>
+            <Link href="/shop" className="gold-btn-ghost rounded-sm px-4 py-2 text-[11px] uppercase">
+              Toute la collection
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            className="rounded-sm border border-[#C5A059]/40 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] md:hidden"
-            onClick={() => setFiltersOpen((v) => !v)}
-          >
-            {filtersOpen ? "Fermer" : "Filtres"}
-          </button>
-          <label className="flex items-center gap-2 text-xs uppercase tracking-[0.12em] text-[var(--muted)]">
-            Trier
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as Sort)}
-              className="field w-auto py-2 text-xs uppercase"
+      </section>
+
+      <div className="shop-toolbar">
+        <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-3 px-4 py-3 md:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <p className="hidden text-[11px] font-semibold tracking-[0.22em] uppercase text-[#C5A059] sm:block">
+              Boutique
+            </p>
+            <span className="hidden h-3 w-px bg-[#C5A059]/40 sm:block" />
+            <p className="truncate font-[family-name:var(--font-display)] text-sm tracking-[0.16em] uppercase text-[var(--fg)]">
+              {title}
+            </p>
+            <span className="rounded-sm bg-[#C5A059] px-2 py-0.5 text-[10px] font-bold tracking-[0.12em] uppercase text-[#1A1612]">
+              {pairLabel}
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="gold-btn-ghost rounded-sm px-3 py-2 text-[11px] uppercase md:hidden"
+              onClick={() => setFiltersOpen((v) => !v)}
             >
-              <option value="new">Nouveautés</option>
-              <option value="price-asc">Prix croissant</option>
-              <option value="price-desc">Prix décroissant</option>
-            </select>
-          </label>
+              {filtersOpen ? "Fermer" : "Filtres"}
+            </button>
+            {sortControl}
+          </div>
         </div>
       </div>
 
-      {active.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {active.map((chip) => (
-            <Link
-              key={chip.href + chip.label}
-              href={chip.href}
-              className="rounded-sm bg-[#C5A059] px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-[#1A1A1B]"
-            >
-              {chip.label} ×
-            </Link>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-8 flex flex-col gap-8 md:flex-row">
-        <aside className={`w-full shrink-0 md:w-56 ${filtersOpen ? "block" : "hidden md:block"}`}>
-          {filters}
-        </aside>
-
-        <div className="grid flex-1 grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-          {ready && filtered.length === 0 && (
-            <div className="gold-frame col-span-full rounded-[4px] bg-[var(--panel)] px-6 py-16 text-center">
-              <p className="font-medium">Aucun produit pour ces filtres.</p>
-              <Link href="/shop" className="gold-btn mt-4 inline-flex rounded-sm px-5 py-2.5 text-xs uppercase">
-                Voir toute la collection
-              </Link>
+      <div className="mx-auto max-w-[1280px] px-4 py-8 md:px-6 md:py-10">
+        <div className="flex flex-col gap-8 md:flex-row md:items-start">
+          <aside className={`shop-aside w-full shrink-0 md:w-[17.5rem] ${filtersOpen ? "block" : "hidden md:block"}`}>
+            <div className="shop-filters rounded-[4px]">
+              <div className="shop-filters-head">
+                <p className="font-[family-name:var(--font-display)] text-sm tracking-[0.2em] uppercase text-[#C5A059]">
+                  Filtres
+                </p>
+                <p className="mt-1 text-[11px] tracking-[0.08em] text-[var(--muted)]">
+                  Affine ta recherche avec confort.
+                </p>
+              </div>
+              <div className="shop-filters-body">
+                {active.length > 0 && (
+                  <div className="mb-6 flex flex-wrap gap-2">
+                    {active.map((chip) => (
+                      <Link
+                        key={chip.href + chip.label}
+                        href={chip.href}
+                        className="rounded-sm bg-[#C5A059] px-3 py-1 text-[11px] font-semibold tracking-[0.12em] uppercase text-[#1A1612]"
+                      >
+                        {chip.label} ×
+                      </Link>
+                    ))}
+                  </div>
+                )}
+                {filters}
+              </div>
+              <div className="shop-filters-foot">
+                <Link
+                  href="/shop"
+                  className="gold-btn-ghost flex w-full items-center justify-center rounded-sm px-4 py-2.5 text-[11px] uppercase"
+                >
+                  Réinitialiser
+                </Link>
+              </div>
             </div>
-          )}
+          </aside>
+
+          <div className="grid flex-1 grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+            {ready && filtered.length === 0 && (
+              <div className="gold-frame col-span-full rounded-[4px] bg-[var(--panel)] px-6 py-16 text-center">
+                <p className="font-[family-name:var(--font-display)] text-xl tracking-[0.12em] uppercase">
+                  Aucune paire pour ces filtres
+                </p>
+                <Link href="/shop" className="gold-btn mt-5 inline-flex rounded-sm px-6 py-3 text-xs uppercase">
+                  Toute la collection
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -189,7 +246,7 @@ function FilterGroup({
 }) {
   return (
     <div>
-      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[#C5A059]">{title}</p>
+      <p className="mb-2.5 text-[11px] font-bold tracking-[0.2em] uppercase text-[#C5A059]">{title}</p>
       <div className="flex flex-wrap gap-2">{children}</div>
     </div>
   );
@@ -207,8 +264,10 @@ function Chip({
   return (
     <Link
       href={href}
-      className={`rounded-sm px-3 py-1.5 text-sm ${
-        active ? "bg-[#C5A059] text-[#1A1A1B]" : "border border-[#C5A059]/40 text-[var(--fg)]"
+      className={`rounded-sm px-3 py-1.5 text-sm transition-colors ${
+        active
+          ? "bg-[#C5A059] font-semibold text-[#1A1612]"
+          : "border border-[#C5A059]/45 text-[var(--fg)] hover:border-[#C5A059] hover:bg-[#C5A059]/12"
       }`}
     >
       {children}

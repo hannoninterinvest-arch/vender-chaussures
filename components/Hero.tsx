@@ -86,7 +86,7 @@ export function Hero() {
             </Link>
             <Link
               href="/shop"
-              className="inline-flex rounded-sm border border-[#C9A45C] px-8 py-3 text-xs font-semibold tracking-[0.08em] uppercase text-[#C9A45C] transition-colors hover:bg-[#C9A45C]/10"
+              className="gold-btn-ghost inline-flex rounded-sm px-8 py-3 text-xs uppercase"
             >
               Toute la collection
             </Link>
