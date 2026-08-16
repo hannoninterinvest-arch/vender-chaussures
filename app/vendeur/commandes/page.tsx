@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { formatTnd } from "@/lib/format";
-import { paymentLabel } from "@/lib/tunisia";
+import { paymentLabel, paymentStatusLabel } from "@/lib/tunisia";
 import { sellerRequest, type SellerOrder } from "@/lib/seller";
 import { useToast } from "@/components/Toast";
 
 const LABELS: Record<string, string> = {
+  paiement_en_cours: "Paiement en cours",
   en_attente: "En attente",
   en_livraison: "En livraison",
   livree: "Livrée",
@@ -15,6 +16,7 @@ const LABELS: Record<string, string> = {
 
 const FILTERS = [
   { id: "all", label: "Toutes" },
+  { id: "paiement_en_cours", label: "Paiement" },
   { id: "en_attente", label: "En attente" },
   { id: "en_livraison", label: "En livraison" },
   { id: "livree", label: "Livrées" },
@@ -94,6 +96,8 @@ export default function SellerOrdersPage() {
                 <p className="text-sm text-[#666]">
                   {paymentLabel(o.payment)}
                   {o.paymentPhone ? ` · ${o.paymentPhone}` : ""}
+                  {" · "}
+                  {paymentStatusLabel(o.paymentStatus || "", o.payment)}
                 </p>
                 <p className="text-sm text-[#666]">
                   {o.customer.address}, {o.customer.city} ({o.customer.gouvernorat})
@@ -105,7 +109,16 @@ export default function SellerOrdersPage() {
               </div>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
-              {o.status !== "en_livraison" && o.status !== "livree" && o.status !== "annulee" && (
+              {o.payment === "online" && o.paymentStatus !== "paid" && o.status !== "annulee" && (
+                <p className="w-full text-sm text-amber-800">
+                  Paiement Konnect non confirmé — pas d’expédition tant que ce n’est pas payé.
+                </p>
+              )}
+              {o.status !== "en_livraison" &&
+                o.status !== "livree" &&
+                o.status !== "annulee" &&
+                o.status !== "paiement_en_cours" &&
+                !(o.payment === "online" && o.paymentStatus !== "paid") && (
                 <button
                   type="button"
                   className="rounded-lg bg-[#F5F5F5] px-3 py-2 text-sm font-medium"
@@ -114,7 +127,9 @@ export default function SellerOrdersPage() {
                   En livraison
                 </button>
               )}
-              {o.status !== "livree" && o.status !== "annulee" && (
+              {o.status !== "livree" &&
+                o.status !== "annulee" &&
+                !(o.payment === "online" && o.paymentStatus !== "paid") && (
                 <button
                   type="button"
                   className="gold-btn rounded-sm px-3 py-2 text-xs uppercase"
@@ -169,6 +184,7 @@ export default function SellerOrdersPage() {
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
+    paiement_en_cours: "bg-violet-100 text-violet-800",
     en_attente: "bg-amber-100 text-amber-800",
     en_livraison: "bg-blue-100 text-blue-800",
     livree: "bg-emerald-100 text-emerald-800",

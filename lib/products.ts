@@ -10,6 +10,7 @@ export type Product = {
   gender: Gender;
   category: string;
   isNew: boolean;
+  featured?: boolean;
   colors: { name: string; hex: string }[];
   sizes: number[];
   images: string[];

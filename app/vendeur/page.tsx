@@ -38,7 +38,11 @@ export default function SellerHomePage() {
       <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase">Tableau de bord</h1>
       <p className="mt-1 text-sm text-[#666]">
         Vue d’ensemble des ventes livrées. Marque une commande « livrée » pour qu’elle
-        compte dans les bénéfices.
+        compte dans les bénéfices. Les photos de la page de garde se choisissent dans{" "}
+        <Link href="/vendeur/vitrine" className="font-bold text-[#C5A059]">
+          Page d’accueil
+        </Link>
+        .
       </p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

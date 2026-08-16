@@ -23,12 +23,16 @@ export function Categories() {
                 href={`/shop?category=${c.slug}`}
                 className="gold-frame group relative block overflow-hidden rounded-[4px]"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+              {c.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={c.image || "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=1200&q=80"}
+                  src={c.image}
                   alt={c.label}
                   className="h-64 w-full object-cover transition duration-700 group-hover:scale-110"
                 />
+              ) : (
+                <div className="h-64 w-full bg-[#14110C]" />
+              )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 <span className="absolute bottom-5 left-5 text-sm font-semibold tracking-[0.16em] uppercase text-[#F3EDE2]">
                   {c.label}

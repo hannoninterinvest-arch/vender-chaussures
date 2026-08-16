@@ -23,6 +23,8 @@ import { UpdateProductDto } from '../products/dto/update-product.dto';
 import { ProductsService } from '../products/products.service';
 import { UpdateOrderStatusDto } from '../orders/dto/update-order-status.dto';
 import { OrdersService } from '../orders/orders.service';
+import { SiteService } from '../site/site.service';
+import { UpdateSiteDto } from '../site/dto/update-site.dto';
 import { CloudinaryService } from './cloudinary.service';
 
 @Controller('seller')
@@ -32,6 +34,7 @@ export class SellerController {
     private readonly products: ProductsService,
     private readonly orders: OrdersService,
     private readonly uploads: CloudinaryService,
+    private readonly site: SiteService,
   ) {}
 
   @Post('uploads')
@@ -102,5 +105,16 @@ export class SellerController {
   @Roles('admin')
   removeCategory(@Param('id') id: string) {
     return this.products.removeCategory(id);
+  }
+
+  @Get('site')
+  siteHome() {
+    return this.site.getHome();
+  }
+
+  @Patch('site')
+  @Roles('admin')
+  updateSite(@Body() dto: UpdateSiteDto) {
+    return this.site.updateHome(dto);
   }
 }

@@ -8,13 +8,14 @@ Boutique **ELVARO** (noir, crème, or) — commande **sans compte**.
 - Front : Next.js (catalogue, panier, checkout invité)
 - Back : NestJS + TypeORM + PostgreSQL (Neon)
 - Commandes et produits en base
-- Paiement : à la livraison, Flouci, D17
+- Paiement : **en ligne (Konnect)** ou **à la livraison**
 - Photos produit : jusqu’à 5 images via Cloudinary, URL en PostgreSQL
-- Espace vendeur : produits, catégories, livraisons, bénéfices
+- Page d’accueil : l’admin choisit les photos de garde (pas d’images statiques)
+- Espace vendeur : produits, vitrine, catégories, livraisons, bénéfices
 
 ## Lancer
 
-1. Copie `backend/.env.example` vers `backend/.env` et renseigne `DATABASE_URL` (Neon) + Cloudinary.
+1. Copie `backend/.env.example` vers `backend/.env` et renseigne `DATABASE_URL` (Neon) + Cloudinary + **Konnect**.
 2. Copie `.env.example` vers `.env.local` (front Next.js — URL de l’API).
 
 ```bash
@@ -54,8 +55,12 @@ Onglet **Import CSV** : fichier `.csv` avec les liens photos (`https://…|https
 | GET | `/api/products` | Catalogue |
 | GET | `/api/products/:id` | Produit |
 | GET | `/api/categories` | Catégories boutique |
-| POST | `/api/orders` | Créer une commande invité |
-| GET | `/api/orders/:id` | Détail commande |
+| POST | `/api/orders` | Créer une commande invité (`cod` ou `online`) |
+| POST | `/api/orders/:id/pay` | Relancer le paiement Konnect |
+| GET | `/api/orders/:id` | Détail commande (synchronise Konnect si besoin) |
+| GET | `/api/payments/config` | `{ online: true }` si Konnect est configuré |
+| GET | `/api/payments/konnect/webhook` | Webhook Konnect (`payment_ref`) |
+| GET | `/api/site` | Textes + photos de la page d’accueil |
 | GET | `/api/auth/setup` | `needed: true` s’il n’y a encore aucun admin |
 | POST | `/api/auth/setup` | Créer le premier administrateur |
 | POST | `/api/auth/login` | Connexion e-mail + mot de passe |
@@ -64,6 +69,7 @@ Onglet **Import CSV** : fichier `.csv` avec les liens photos (`https://…|https
 | GET/POST/PATCH/DELETE | `/api/seller/products` | CRUD produits (JWT) |
 | POST | `/api/seller/products/import` | Import CSV (liste de produits + liens photos) |
 | GET/POST/DELETE | `/api/seller/categories` | Catégories (clé requise) |
+| GET/PATCH | `/api/seller/site` | Photos et textes de la page d’accueil |
 | GET/PATCH | `/api/seller/orders` | Commandes + statut livraison |
 | POST | `/api/seller/uploads` | Upload image Cloudinary (clé requise) |
 | GET | `/api/seller/stats` | Bénéfices et meilleur produit |
@@ -87,7 +93,7 @@ Deux **projets** Vercel, **le même** dépôt GitHub `vender-chaussures` :
 2. **Projet 1 (front)** : Root Directory vide / `.` → Deploy. Variable :
    - `NEXT_PUBLIC_API_URL` = `https://TON-API.vercel.app/api` (tu la mets après le projet 2).
 3. **Add New Project** → **le même repo**.
-4. **Projet 2 (back)** : Root Directory = `backend`. Variables : `DATABASE_URL`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `FRONTEND_URL=*`, Cloudinary.
+4. **Projet 2 (back)** : Root Directory = `backend`. Variables : `DATABASE_URL`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `FRONTEND_URL=https://TON-FRONT.vercel.app`, `BACKEND_PUBLIC_URL=https://TON-API.vercel.app`, Cloudinary, Konnect.
 5. Test : `https://TON-API.vercel.app/api/health`
 6. Retour au projet front → mets `NEXT_PUBLIC_API_URL` → Redeploy.
 
@@ -162,6 +168,19 @@ Sans ces 3 variables, le catalogue marche, mais l’upload d’images dans `/ven
 3. Colle les 3 sur Render, **exactement** ces noms de variables.
 
 Les photos vont dans le dossier Cloudinary `kicks/products` ; l’URL HTTPS est stockée en Postgres.
+
+### Konnect (paiement en ligne)
+
+Sans `KONNECT_API_KEY` et `KONNECT_WALLET_ID`, le checkout ne propose que **à la livraison**.
+
+1. Crée un compte : [dashboard.sandbox.konnect.network](https://dashboard.sandbox.konnect.network) (test) ou [dashboard.konnect.network](https://dashboard.konnect.network) (prod).
+2. Copie **API Key** (`walletId:secret`) → `KONNECT_API_KEY`
+3. Copie **Wallet ID** → `KONNECT_WALLET_ID`
+4. `KONNECT_SANDBOX=true` en test, `false` en production
+5. `BACKEND_PUBLIC_URL` = URL publique de l’API (ex. `https://vender-chaussures.onrender.com`)
+6. `FRONTEND_URL` = URL publique de la boutique (redirection après paiement), pas `*`
+
+Le client choisit **en ligne** (carte, e-DINAR/D17, wallet, Flouci via Konnect) ou **à la livraison**.
 
 Render définit `PORT` tout seul. L’API écoute `0.0.0.0`.
 

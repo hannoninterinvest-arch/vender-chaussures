@@ -17,6 +17,7 @@ import {
 const NAV = [
   { href: "/vendeur", label: "Tableau", adminOnly: false },
   { href: "/vendeur/produits", label: "Produits", adminOnly: false },
+  { href: "/vendeur/vitrine", label: "Page d’accueil", adminOnly: false },
   { href: "/vendeur/categories", label: "Catégories", adminOnly: false },
   { href: "/vendeur/commandes", label: "Commandes", adminOnly: false },
   { href: "/vendeur/import", label: "Import CSV", adminOnly: false },

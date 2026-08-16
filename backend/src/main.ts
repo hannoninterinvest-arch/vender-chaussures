@@ -18,7 +18,9 @@ async function bootstrap() {
       path.startsWith('/staff') ||
       path.startsWith('/products') ||
       path.startsWith('/categories') ||
-      path.startsWith('/orders')
+      path.startsWith('/orders') ||
+      path.startsWith('/payments') ||
+      path.startsWith('/site')
     ) {
       req.url = `/api${url}`;
     }

@@ -22,6 +22,7 @@ const emptyForm = {
   gender: "unisexe" as SellerProduct["gender"],
   category: "",
   isNew: true,
+  featured: false,
   colorSlots: [
     { name: "Noir", hex: "#1A1612" },
     { name: "Or", hex: "#D4AF37" },
@@ -82,6 +83,7 @@ export default function SellerProductsPage() {
       gender: p.gender,
       category: p.category,
       isNew: p.isNew,
+      featured: Boolean(p.featured),
       colorSlots: p.colors.length
         ? p.colors.map((c) => ({ name: c.name, hex: c.hex }))
         : [
@@ -127,6 +129,7 @@ export default function SellerProductsPage() {
       gender: form.gender,
       category: form.category,
       isNew: form.isNew,
+      featured: form.featured,
       colors,
       sizes: form.sizes,
       images,
@@ -265,6 +268,14 @@ export default function SellerProductsPage() {
             onChange={(e) => setForm({ ...form, isNew: e.target.checked })}
           />
           New drop
+        </label>
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <input
+            type="checkbox"
+            checked={form.featured}
+            onChange={(e) => setForm({ ...form, featured: e.target.checked })}
+          />
+          Afficher sur la page d’accueil
         </label>
         <p className="text-sm font-bold">Couleurs (jusqu’à 6)</p>
         <div className="space-y-2">
@@ -415,6 +426,7 @@ export default function SellerProductsPage() {
                 <p className="font-bold">{p.name}</p>
                 <p className="text-sm text-[#666]">
                   {p.brand} · {formatTnd(p.price)} · achat {formatTnd(p.cost || 0)}
+                  {p.featured ? " · accueil" : ""}
                 </p>
                 <div className="mt-2 flex gap-3 text-sm">
                   <button type="button" className="font-medium text-[#C5A059]" onClick={() => startEdit(p)}>

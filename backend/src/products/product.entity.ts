@@ -29,6 +29,9 @@ export class Product {
   @Column({ default: false })
   isNew: boolean;
 
+  @Column({ default: false })
+  featured: boolean;
+
   @Column({ type: 'jsonb' })
   colors: { name: string; hex: string }[];
 

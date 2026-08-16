@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart";
@@ -12,7 +12,7 @@ import {
   type Gouvernorat,
   type PaymentMethod,
 } from "@/lib/tunisia";
-import { createOrder } from "@/lib/api";
+import { createOrder, fetchPaymentsConfig } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { brand } from "@/lib/brand";
 import { CheckoutSteps } from "@/components/Experience";
@@ -22,11 +22,27 @@ export default function CheckoutPage() {
   const toast = useToast();
   const { lines, subtotal, clear } = useCart();
   const [payment, setPayment] = useState<PaymentMethod>("cod");
-  const [paymentPhone, setPaymentPhone] = useState("");
+  const [onlineReady, setOnlineReady] = useState(false);
   const [gouvernorat, setGouvernorat] = useState<Gouvernorat>("Tunis");
   const [busy, setBusy] = useState(false);
   const fee = useMemo(() => deliveryFee(gouvernorat), [gouvernorat]);
   const total = subtotal + fee;
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchPaymentsConfig()
+      .then((cfg) => {
+        if (cancelled) return;
+        setOnlineReady(Boolean(cfg.online));
+        if (cfg.online) setPayment("online");
+      })
+      .catch(() => {
+        if (!cancelled) setOnlineReady(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -42,7 +58,6 @@ export default function CheckoutPage() {
         address: String(data.get("address")),
         notes: String(data.get("notes") || ""),
         payment,
-        paymentPhone: payment === "cod" ? "" : paymentPhone,
         items: lines.map((l) => ({
           productId: l.productId,
           size: l.size,
@@ -51,6 +66,10 @@ export default function CheckoutPage() {
         })),
       });
       clear();
+      if (order.payUrl) {
+        window.location.href = order.payUrl;
+        return;
+      }
       router.push(`/commande/${order.id}`);
     } catch (err) {
       toast(err instanceof Error ? err.message : "Commande impossible");
@@ -118,10 +137,14 @@ export default function CheckoutPage() {
             Paiement
           </h2>
           <div className="space-y-2">
-            {paymentMethods.map((m) => (
+            {paymentMethods.map((m) => {
+              const disabled = m.id === "online" && !onlineReady;
+              return (
               <label
                 key={m.id}
-                className={`flex cursor-pointer items-start gap-3 rounded-sm border p-4 ${
+                className={`flex items-start gap-3 rounded-sm border p-4 ${
+                  disabled ? "cursor-not-allowed opacity-55" : "cursor-pointer"
+                } ${
                   payment === m.id
                     ? "border-[#C5A059] bg-[#C5A059]/10"
                     : "border-[#C5A059]/25"
@@ -131,30 +154,21 @@ export default function CheckoutPage() {
                   type="radio"
                   name="payment"
                   checked={payment === m.id}
+                  disabled={disabled}
                   onChange={() => setPayment(m.id)}
                   className="mt-1 accent-[#C5A059]"
                 />
                 <span>
                   <span className="block font-semibold">{m.label}</span>
-                  <span className="text-sm text-[var(--muted)]">{m.hint}</span>
+                  <span className="text-sm text-[var(--muted)]">
+                    {disabled
+                      ? "Konnect n’est pas encore configuré (clés dans backend/.env). Tu peux payer à la livraison."
+                      : m.hint}
+                  </span>
                 </span>
               </label>
-            ))}
-            {payment !== "cod" && (
-              <label className="block pt-2">
-                <span className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#C5A059]">
-                  {paymentMethods.find((m) => m.id === payment)?.walletLabel}
-                </span>
-                <input
-                  type="tel"
-                  required
-                  value={paymentPhone}
-                  onChange={(e) => setPaymentPhone(e.target.value)}
-                  placeholder="ex. 20 123 456"
-                  className="field mt-1.5"
-                />
-              </label>
-            )}
+              );
+            })}
           </div>
         </div>
 
@@ -193,7 +207,7 @@ export default function CheckoutPage() {
             </div>
           </div>
           <button type="submit" disabled={busy} className="gold-btn mt-6 h-12 w-full rounded-sm text-xs uppercase disabled:opacity-60">
-            {busy ? "Envoi…" : "Confirmer la commande"}
+            {busy ? "Envoi…" : payment === "online" ? "Payer en ligne" : "Confirmer la commande"}
           </button>
           <p className="mt-3 text-center text-[11px] tracking-[0.14em] uppercase text-[var(--muted)]">
             {brand.slogan}

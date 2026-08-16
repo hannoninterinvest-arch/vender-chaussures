@@ -133,6 +133,7 @@ export class ProductsService implements OnModuleInit {
       gender: dto.gender,
       category: dto.category,
       isNew: dto.isNew ?? true,
+      featured: dto.featured ?? false,
       colors: dto.colors,
       sizes: dto.sizes,
       images: dto.images.filter(Boolean).slice(0, 5),
@@ -151,6 +152,7 @@ export class ProductsService implements OnModuleInit {
     if (dto.gender !== undefined) product.gender = dto.gender;
     if (dto.category !== undefined) product.category = dto.category;
     if (dto.isNew !== undefined) product.isNew = dto.isNew;
+    if (dto.featured !== undefined) product.featured = dto.featured;
     if (dto.colors !== undefined) product.colors = dto.colors;
     if (dto.sizes !== undefined) product.sizes = dto.sizes;
     if (dto.images !== undefined) product.images = dto.images.filter(Boolean).slice(0, 5);
@@ -183,6 +185,7 @@ export class ProductsService implements OnModuleInit {
       gender: product.gender,
       category: product.category,
       isNew: product.isNew,
+      featured: Boolean(product.featured),
       colors: product.colors,
       sizes: product.sizes,
       images: product.images,

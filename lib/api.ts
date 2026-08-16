@@ -42,6 +42,38 @@ export async function createOrder(body: unknown) {
   return res.json();
 }
 
+export async function retryOrderPayment(id: string) {
+  const res = await fetch(apiUrl(`/orders/${id}/pay`), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const message = Array.isArray(err.message)
+      ? err.message.join(", ")
+      : err.message || "Paiement impossible";
+    throw new Error(message);
+  }
+  return res.json() as Promise<{ payUrl?: string; id: string }>;
+}
+
+export async function fetchSite() {
+  const res = await fetch(apiUrl("/site"), { cache: "no-store" });
+  if (!res.ok) throw new Error("Impossible de charger la vitrine");
+  return res.json() as Promise<{
+    heroKicker: string;
+    heroTitle: string;
+    heroSubtitle: string;
+    coverImages: string[];
+  }>;
+}
+
+export async function fetchPaymentsConfig() {
+  const res = await fetch(apiUrl("/payments/config"), { cache: "no-store" });
+  if (!res.ok) return { online: false };
+  return res.json() as Promise<{ online: boolean }>;
+}
+
 export async function fetchOrder(id: string) {
   const res = await fetch(apiUrl(`/orders/${id}`), { cache: "no-store" });
   if (res.status === 404) return null;

@@ -2,17 +2,20 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { fetchOrder } from "@/lib/api";
+import { fetchOrder, retryOrderPayment } from "@/lib/api";
 import { formatTnd } from "@/lib/format";
-import { paymentMethods } from "@/lib/tunisia";
+import { paymentLabel, paymentStatusLabel } from "@/lib/tunisia";
 import { brand, whatsappHref } from "@/lib/brand";
 import { CheckoutSteps } from "@/components/Experience";
+import { useToast } from "@/components/Toast";
 
 type OrderView = {
   id: string;
   total: number;
   payment: string;
-  paymentPhone?: string;
+  paymentStatus?: string;
+  payUrl?: string;
+  status?: string;
   customer: {
     name: string;
     phone: string;
@@ -36,8 +39,10 @@ export default function OrderPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const toast = useToast();
   const [order, setOrder] = useState<OrderView | null>(null);
   const [ready, setReady] = useState(false);
+  const [paying, setPaying] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -55,6 +60,23 @@ export default function OrderPage({
       cancelled = true;
     };
   }, [id]);
+
+  async function payNow() {
+    if (!order || paying) return;
+    setPaying(true);
+    try {
+      const next = await retryOrderPayment(order.id);
+      if (next.payUrl) {
+        window.location.href = next.payUrl;
+        return;
+      }
+      toast("Lien de paiement indisponible");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Paiement impossible");
+    } finally {
+      setPaying(false);
+    }
+  }
 
   if (!ready) {
     return <p className="px-6 py-20 text-center text-sm text-[var(--muted)]">Chargement…</p>;
@@ -76,19 +98,24 @@ export default function OrderPage({
     );
   }
 
-  const pay = paymentMethods.find((p) => p.id === order.payment)?.label;
+  const online = order.payment === "online";
+  const paid = order.paymentStatus === "paid";
+  const pay = paymentLabel(order.payment);
+  const payState = paymentStatusLabel(order.paymentStatus || "", order.payment);
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <CheckoutSteps step={3} />
       <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-[#C5A059]">
-        Commande confirmée
+        {online && !paid ? "Commande enregistrée" : "Commande confirmée"}
       </p>
       <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase">
         {order.id}
       </h1>
       <p className="mt-2 text-sm text-[var(--muted)]">
-        On t’appelle au {order.customer.phone} pour confirmer avant expédition.
+        {online && !paid
+          ? "Termine le paiement Konnect pour valider la commande. On t’appelle ensuite pour l’expédition."
+          : `On t’appelle au ${order.customer.phone} pour confirmer avant expédition.`}
       </p>
 
       <div className="gold-frame mt-8 rounded-[4px] bg-[var(--panel)] p-6">
@@ -102,7 +129,7 @@ export default function OrderPage({
         </p>
         <p className="mt-4 text-sm">
           Paiement : <strong className="text-[#C5A059]">{pay}</strong>
-          {order.paymentPhone ? ` · ${order.paymentPhone}` : ""}
+          <span className="text-[var(--muted)]"> · {payState}</span>
         </p>
         <ul className="mt-6 space-y-3 border-t border-[#C5A059]/25 pt-4">
           {order.items.map((item) => (
@@ -121,6 +148,16 @@ export default function OrderPage({
       </div>
 
       <div className="mt-8 flex flex-wrap gap-3">
+        {online && !paid && (
+          <button
+            type="button"
+            disabled={paying}
+            onClick={() => void payNow()}
+            className="gold-btn inline-flex rounded-sm px-6 py-3 text-xs uppercase disabled:opacity-60"
+          >
+            {paying ? "Ouverture…" : "Payer avec Konnect"}
+          </button>
+        )}
         <Link href="/shop" className="gold-btn inline-flex rounded-sm px-6 py-3 text-xs uppercase">
           Continuer les achats
         </Link>

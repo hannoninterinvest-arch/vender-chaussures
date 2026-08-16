@@ -1,8 +1,54 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LogoMark } from "@/components/Logo";
 import { brand } from "@/lib/brand";
+import { fetchSite } from "@/lib/api";
+
+type SiteHome = {
+  heroKicker: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  coverImages: string[];
+};
+
+const fallback: SiteHome = {
+  heroKicker: "Collection",
+  heroTitle: "CUIR PREMIUM",
+  heroSubtitle: "Fabrication tunisienne, confort et design intemporel — commande sans compte.",
+  coverImages: [],
+};
 
 export function Hero() {
+  const [site, setSite] = useState<SiteHome>(fallback);
+  const [index, setIndex] = useState(0);
+  const photos = site.coverImages.filter(Boolean);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchSite()
+      .then((data) => {
+        if (!cancelled) setSite({ ...fallback, ...data, coverImages: data.coverImages || [] });
+      })
+      .catch(() => {
+        if (!cancelled) setSite(fallback);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (photos.length < 2) return;
+    const timer = window.setInterval(() => {
+      setIndex((n) => (n + 1) % photos.length);
+    }, 5200);
+    return () => window.clearInterval(timer);
+  }, [photos.length]);
+
+  const current = photos[index] || "";
+
   return (
     <section className="mx-auto max-w-[1280px] px-4 pb-6 pt-10 md:px-6">
       <div className="mb-8 grid items-end gap-6 lg:grid-cols-[1.15fr_0.85fr]">
@@ -26,22 +72,27 @@ export function Hero() {
       </div>
 
       <div className="anim-fade-up anim-d4 gold-frame relative overflow-hidden rounded-[4px] bg-[#14110C]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=1600&q=80"
-          alt="Collection ELVARO"
-          className="hero-photo h-[420px] w-full object-cover opacity-80 md:h-[560px]"
-        />
+        {current ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={current}
+            src={current}
+            alt={site.heroTitle || "Collection ELVARO"}
+            className="hero-photo h-[420px] w-full object-cover opacity-80 md:h-[560px]"
+          />
+        ) : (
+          <div className="grid h-[420px] place-items-center md:h-[560px]">
+            <LogoMark className="h-40 w-28 opacity-80" />
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" />
         <LogoMark className="pointer-events-none absolute right-8 top-8 hidden h-24 w-[72px] opacity-80 md:block" />
         <div className="absolute bottom-8 left-6 right-6 md:left-12">
-          <p className="text-[11px] tracking-[0.28em] uppercase text-[#C9A45C]">Collection</p>
+          <p className="text-[11px] tracking-[0.28em] uppercase text-[#C9A45C]">{site.heroKicker}</p>
           <p className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.14em] text-[#F3EDE2] md:text-5xl">
-            CUIR PREMIUM
+            {site.heroTitle}
           </p>
-          <p className="mt-2 max-w-md text-sm text-[#F3EDE2]/75">
-            Fabrication tunisienne, confort et design intemporel — commande sans compte.
-          </p>
+          <p className="mt-2 max-w-md text-sm text-[#F3EDE2]/75">{site.heroSubtitle}</p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link href="/shop?drop=new" className="gold-btn inline-flex rounded-sm px-8 py-3 text-xs uppercase">
               Découvrir
@@ -54,6 +105,19 @@ export function Hero() {
             </Link>
           </div>
         </div>
+        {photos.length > 1 && (
+          <div className="absolute bottom-8 right-6 flex gap-2 md:right-12">
+            {photos.map((url, i) => (
+              <button
+                key={url}
+                type="button"
+                aria-label={`Image ${i + 1}`}
+                onClick={() => setIndex(i)}
+                className={`h-2 w-2 rounded-full ${i === index ? "bg-[#C9A45C]" : "bg-white/40"}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

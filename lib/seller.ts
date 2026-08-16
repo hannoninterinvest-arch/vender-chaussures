@@ -56,6 +56,8 @@ export type SellerOrder = {
   total: number;
   payment: string;
   paymentPhone?: string;
+  paymentStatus?: string;
+  payUrl?: string;
   customer: {
     name: string;
     phone: string;
@@ -111,6 +113,7 @@ export type SellerProduct = {
   gender: "homme" | "femme" | "unisexe";
   category: string;
   isNew: boolean;
+  featured: boolean;
   colors: { name: string; hex: string }[];
   sizes: number[];
   images: string[];

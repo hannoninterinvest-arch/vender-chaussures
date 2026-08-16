@@ -36,36 +36,35 @@ export function deliveryFee(gouvernorat: Gouvernorat) {
   return 15;
 }
 
-export type PaymentMethod = "cod" | "flouci" | "d17";
+export type PaymentMethod = "cod" | "online";
 
 export const paymentMethods: {
   id: PaymentMethod;
   label: string;
   hint: string;
-  needsWallet?: boolean;
-  walletLabel?: string;
 }[] = [
+  {
+    id: "online",
+    label: "Paiement en ligne",
+    hint: "Carte bancaire, e-DINAR / D17, wallet Konnect ou Flouci — tu es redirigé vers Konnect pour payer tout de suite.",
+  },
   {
     id: "cod",
     label: "Paiement à la livraison",
     hint: "Espèces au livreur, partout en Tunisie. On confirme par téléphone avant l’envoi.",
   },
-  {
-    id: "flouci",
-    label: "Flouci",
-    hint: "Portefeuille mobile tunisien. Après confirmation, on t’envoie la demande de paiement Flouci.",
-    needsWallet: true,
-    walletLabel: "Numéro Flouci",
-  },
-  {
-    id: "d17",
-    label: "D17 (La Poste)",
-    hint: "Paiement via l’application D17 de La Poste Tunisienne. On t’envoie la demande après confirmation.",
-    needsWallet: true,
-    walletLabel: "Numéro D17",
-  },
 ];
 
 export function paymentLabel(id: string) {
+  if (id === "flouci") return "Flouci";
+  if (id === "d17") return "D17 (La Poste)";
   return paymentMethods.find((m) => m.id === id)?.label ?? id;
+}
+
+export function paymentStatusLabel(status: string, payment: string) {
+  if (payment === "cod" || status === "cod") return "À encaisser à la livraison";
+  if (status === "paid") return "Payé en ligne";
+  if (status === "failed") return "Paiement échoué";
+  if (status === "pending") return "En attente de paiement";
+  return status || "—";
 }

@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { KonnectService } from '../payments/konnect.service';
 import { ProductsService } from '../products/products.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderStatus } from './dto/update-order-status.dto';
@@ -28,17 +29,14 @@ export class OrdersService {
     @InjectRepository(OrderItem)
     private readonly items: Repository<OrderItem>,
     private readonly products: ProductsService,
+    private readonly konnect: KonnectService,
   ) {}
 
-  async create(dto: CreateOrderDto) {
-    if ((dto.payment === 'flouci' || dto.payment === 'd17') && !dto.paymentPhone?.trim()) {
-      throw new BadRequestException(
-        dto.payment === 'flouci'
-          ? 'Indique ton numéro Flouci'
-          : 'Indique ton numéro D17',
-      );
-    }
+  frontendUrl() {
+    return this.konnect.frontendUrl();
+  }
 
+  async create(dto: CreateOrderDto) {
     const lines: OrderItem[] = [];
     let subtotal = 0;
 
@@ -68,6 +66,12 @@ export class OrdersService {
     }
 
     const delivery = deliveryFee(dto.gouvernorat);
+    const online = dto.payment === 'online';
+    if (online && !this.konnect.configured()) {
+      throw new BadRequestException(
+        'Paiement en ligne indisponible. Choisis le paiement à la livraison.',
+      );
+    }
     const order = this.orders.create({
       id: await this.nextId(),
       customerName: dto.customerName,
@@ -77,15 +81,92 @@ export class OrdersService {
       address: dto.address,
       notes: dto.notes ?? '',
       payment: dto.payment,
-      paymentPhone: dto.paymentPhone?.trim() ?? '',
-      status: 'en_attente',
+      paymentPhone: '',
+      paymentRef: '',
+      paymentStatus: online ? 'pending' : 'cod',
+      payUrl: '',
+      status: online ? 'paiement_en_cours' : 'en_attente',
       subtotal,
       delivery,
       total: subtotal + delivery,
       items: lines,
     });
 
+    const saved = await this.orders.save(order);
+    if (!online) return saved;
+
+    try {
+      const payment = await this.konnect.initPayment({
+        orderId: saved.id,
+        amountTnd: Number(saved.total),
+        customerName: saved.customerName,
+        phone: saved.phone,
+      });
+      saved.paymentRef = payment.paymentRef;
+      saved.payUrl = payment.payUrl;
+      return this.orders.save(saved);
+    } catch (err) {
+      await this.orders.remove(saved);
+      throw err;
+    }
+  }
+
+  async retryPayment(id: string) {
+    const order = await this.orders.findOne({ where: { id } });
+    if (!order) throw new NotFoundException('Commande introuvable');
+    if (order.payment !== 'online') {
+      throw new BadRequestException('Cette commande se règle à la livraison');
+    }
+    if (order.paymentStatus === 'paid') {
+      throw new BadRequestException('Cette commande est déjà payée');
+    }
+    if (order.status === 'annulee') {
+      throw new BadRequestException('Commande annulée');
+    }
+    const payment = await this.konnect.initPayment({
+      orderId: order.id,
+      amountTnd: Number(order.total),
+      customerName: order.customerName,
+      phone: order.phone,
+    });
+    order.paymentRef = payment.paymentRef;
+    order.payUrl = payment.payUrl;
+    order.paymentStatus = 'pending';
+    order.status = 'paiement_en_cours';
     return this.orders.save(order);
+  }
+
+  async confirmKonnect(paymentRef: string) {
+    if (!paymentRef) return { ok: false, paid: false, orderId: '' };
+    const payment = await this.konnect.getPayment(paymentRef);
+    let order = await this.orders.findOne({ where: { paymentRef } });
+    if (!order && payment?.orderId) {
+      order = await this.orders.findOne({ where: { id: payment.orderId } });
+    }
+    if (!order) return { ok: false, paid: false, orderId: '' };
+
+    if (this.konnect.isPaid(payment)) {
+      order.paymentStatus = 'paid';
+      if (order.status === 'paiement_en_cours') order.status = 'en_attente';
+      await this.orders.save(order);
+      return { ok: true, paid: true, orderId: order.id };
+    }
+    if (this.konnect.isFailed(payment)) {
+      order.paymentStatus = 'failed';
+      await this.orders.save(order);
+      return { ok: true, paid: false, orderId: order.id };
+    }
+    return { ok: true, paid: false, orderId: order.id };
+  }
+
+  async syncPayment(order: Order) {
+    if (order.payment !== 'online' || order.paymentStatus === 'paid' || !order.paymentRef) {
+      return order;
+    }
+    const result = await this.confirmKonnect(order.paymentRef);
+    if (!result.ok) return order;
+    const fresh = await this.orders.findOne({ where: { id: order.id } });
+    return fresh ?? order;
   }
 
   async findAll() {
@@ -94,14 +175,22 @@ export class OrdersService {
   }
 
   async findOne(id: string) {
-    const order = await this.orders.findOne({ where: { id } });
+    let order = await this.orders.findOne({ where: { id } });
     if (!order) throw new NotFoundException('Commande introuvable');
+    order = await this.syncPayment(order);
     return this.toClient(order);
   }
 
   async updateStatus(id: string, status: OrderStatus) {
     const order = await this.orders.findOne({ where: { id } });
     if (!order) throw new NotFoundException('Commande introuvable');
+    if (
+      (status === 'en_livraison' || status === 'livree') &&
+      order.payment === 'online' &&
+      order.paymentStatus !== 'paid'
+    ) {
+      throw new BadRequestException('Le paiement en ligne n’est pas encore confirmé.');
+    }
     order.status = status;
     return this.toClient(await this.orders.save(order));
   }
@@ -110,7 +199,10 @@ export class OrdersService {
     const rows = await this.orders.find({ order: { createdAt: 'DESC' } });
     const delivered = rows.filter((o) => o.status === 'livree');
     const pending = rows.filter(
-      (o) => o.status === 'en_attente' || o.status === 'en_livraison',
+      (o) =>
+        o.status === 'en_attente' ||
+        o.status === 'en_livraison' ||
+        o.status === 'paiement_en_cours',
     );
     const cancelled = rows.filter((o) => o.status === 'annulee');
 
@@ -180,6 +272,8 @@ export class OrdersService {
       total: Number(order.total),
       payment: order.payment,
       paymentPhone: order.paymentPhone || '',
+      paymentStatus: order.paymentStatus || (order.payment === 'cod' ? 'cod' : 'pending'),
+      payUrl: order.payUrl || '',
       customer: {
         name: order.customerName,
         phone: order.phone,

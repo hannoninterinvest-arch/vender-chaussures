@@ -9,7 +9,19 @@ export class OrdersController {
   @Post()
   async create(@Body() dto: CreateOrderDto) {
     const order = await this.ordersService.create(dto);
-    return this.ordersService.toClient(order);
+    return {
+      ...this.ordersService.toClient(order),
+      payUrl: order.payUrl || '',
+    };
+  }
+
+  @Post(':id/pay')
+  async retryPay(@Param('id') id: string) {
+    const order = await this.ordersService.retryPayment(id);
+    return {
+      ...this.ordersService.toClient(order),
+      payUrl: order.payUrl || '',
+    };
   }
 
   @Get(':id')

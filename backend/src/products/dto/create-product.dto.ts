@@ -59,6 +59,10 @@ export class CreateProductDto {
   @IsBoolean()
   isNew?: boolean;
 
+  @IsOptional()
+  @IsBoolean()
+  featured?: boolean;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ProductColorDto)

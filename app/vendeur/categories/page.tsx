@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { isAdmin, sellerRequest, type SellerCategory } from "@/lib/seller";
+import { isAdmin, sellerRequest, sellerUploadImage, type SellerCategory } from "@/lib/seller";
 import { useToast } from "@/components/Toast";
 
 export default function SellerCategoriesPage() {
@@ -78,12 +78,28 @@ export default function SellerCategoriesPage() {
           />
         </label>
         <label className="block text-sm font-medium">
-          Image (URL)
+          Image (upload ou URL)
           <input
             value={image}
             onChange={(e) => setImage(e.target.value)}
             placeholder="https://…"
             className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#C5A059]"
+          />
+        </label>
+        <label className="inline-flex cursor-pointer rounded-sm bg-[#1A1A1B] px-4 py-2 text-xs font-bold tracking-[0.08em] uppercase text-white">
+          Uploader
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (!file) return;
+              sellerUploadImage(file)
+                .then(({ url }) => setImage(url))
+                .catch((err: Error) => toast(err.message));
+            }}
           />
         </label>
         <button
