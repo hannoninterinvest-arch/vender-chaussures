@@ -25,7 +25,7 @@ export function ProductCard({ product }: { product: Product }) {
         {product.name}
       </h3>
       <p className="mt-1 text-[11px] tracking-[0.16em] uppercase text-[#C5A059]">{product.brand}</p>
-      <div className="mt-2">
+      <div className="mt-2.5">
         <ColorDots colors={product.colors} size="sm" />
       </div>
       <Link

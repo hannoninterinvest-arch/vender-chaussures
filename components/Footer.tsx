@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { BrandLockup, LogoMark } from "@/components/Logo";
+import { BrandLockup, OfficialLockup } from "@/components/Logo";
+import { Footsteps } from "@/components/Footsteps";
 import { brand } from "@/lib/brand";
 
 export function Footer() {
@@ -8,7 +9,8 @@ export function Footer() {
       <div className="mx-auto grid max-w-[1280px] gap-10 px-4 py-16 md:grid-cols-4 md:px-6">
         <div>
           <BrandLockup light />
-          <p className="mt-4 text-[11px] tracking-[0.2em] uppercase text-[#C5A059]">
+          <p className="mt-4 flex items-center gap-3 text-[11px] tracking-[0.2em] uppercase text-[#C5A059]">
+            <Footsteps className="scale-75 origin-left" />
             {brand.slogan}
           </p>
           <p className="mt-3 text-sm leading-relaxed text-[#EDE8DE]/70">{brand.activity}.</p>
@@ -70,11 +72,8 @@ export function Footer() {
       </div>
       <div className="gold-line mx-auto max-w-[1280px]" />
       <div className="px-4 py-10 text-center">
-        <LogoMark className="mx-auto mb-4 h-16 w-12" />
-        <p className="footer-mark font-[family-name:var(--font-display)] text-[56px] font-semibold tracking-[0.28em] text-[#C9A45C] md:text-[96px]">
-          ELVARO
-        </p>
-        <p className="mt-2 text-[11px] tracking-[0.16em] uppercase text-[#EDE8DE]/50">
+        <OfficialLockup variant="white" className="mx-auto h-auto w-[220px] md:w-[300px]" />
+        <p className="mt-4 text-[11px] tracking-[0.16em] uppercase text-[#EDE8DE]/50">
           © {new Date().getFullYear()} {brand.name} {brand.byline} — Tunisie
         </p>
       </div>

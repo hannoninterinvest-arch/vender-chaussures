@@ -65,12 +65,15 @@ body::after {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-.logo-mark {
+.logo-mark,
+.elvaro-wordmark,
+.logo-lockup {
   filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.32));
   transition: transform 0.4s ease, filter 0.4s ease;
 }
 
 a:hover .logo-mark,
+a:hover .elvaro-wordmark,
 .logo-mark:hover {
   filter: drop-shadow(0 10px 18px rgba(212, 175, 55, 0.32)) brightness(1.08);
 }
@@ -394,6 +397,103 @@ html[data-theme="light"] .gold-btn-ghost:hover {
   animation: glow-text 6s ease-in-out infinite;
 }
 
+.footsteps {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.35rem;
+  height: 2.75rem;
+  color: var(--gold);
+}
+
+.footstep {
+  width: 18px;
+  height: 28px;
+  opacity: 0.18;
+  transform: translateY(8px);
+  animation: footstep-walk 1.8s ease-in-out infinite;
+}
+
+.footstep.is-right {
+  transform: scaleX(-1) translateY(8px);
+}
+
+.footstep-1 { animation-delay: 0s; }
+.footstep-2 { animation-delay: 0.22s; }
+.footstep-3 { animation-delay: 0.44s; }
+.footstep-4 { animation-delay: 0.66s; }
+
+@keyframes footstep-walk {
+  0%,
+  100% {
+    opacity: 0.12;
+    transform: translateY(8px);
+  }
+  28% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+  55% {
+    opacity: 0.45;
+    transform: translateY(3px);
+  }
+}
+
+.footstep.is-right {
+  animation-name: footstep-walk-right;
+}
+
+@keyframes footstep-walk-right {
+  0%,
+  100% {
+    opacity: 0.12;
+    transform: scaleX(-1) translateY(8px);
+  }
+  28% {
+    opacity: 1;
+    transform: scaleX(-1) translateY(-2px);
+  }
+  55% {
+    opacity: 0.45;
+    transform: scaleX(-1) translateY(3px);
+  }
+}
+
+.color-swatch {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 3.25rem;
+}
+
+.color-swatch-disc {
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--gold) 35%, transparent);
+  box-shadow: inset 0 0 0 2px var(--bg), 0 4px 10px rgba(44, 38, 28, 0.12);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.color-swatch:hover .color-swatch-disc,
+.color-swatch-disc.is-active {
+  transform: translateY(-1px) scale(1.06);
+  border-color: var(--gold);
+  box-shadow: inset 0 0 0 2px var(--bg), 0 0 0 2px var(--gold), 0 8px 16px rgba(212, 175, 55, 0.22);
+}
+
+.color-swatch-name {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.color-swatch.is-active .color-swatch-name {
+  color: var(--gold);
+}
+
 @keyframes fade-up {
   from {
     opacity: 0;
@@ -462,8 +562,8 @@ html[data-theme="light"] .gold-btn-ghost:hover {
   }
   .logo-mark,
   .logo-float,
-  .logo-mark,
-  .logo-float,
+  .elvaro-wordmark,
+  .logo-lockup,
   .gold-btn,
   .gold-btn::after,
   img,
@@ -473,7 +573,8 @@ html[data-theme="light"] .gold-btn-ghost:hover {
   .wa-fab,
   .footer-mark,
   .anim-fade-up,
-  .badge-pop {
+  .badge-pop,
+  .footstep {
     animation: none !important;
     transition: none !important;
     transform: none !important;
