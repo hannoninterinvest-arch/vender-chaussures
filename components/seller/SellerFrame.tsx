@@ -175,7 +175,7 @@ export function SellerFrame({ children }: { children: React.ReactNode }) {
         <div className="mx-auto flex max-w-[1280px] items-center justify-between px-4 py-3 md:px-6">
           <div className="flex items-center gap-3">
             <Link href="/vendeur" aria-label="ELVARO équipe">
-              <BrandLockup compact light />
+              <BrandLockup compact />
             </Link>
             <span className="hidden rounded-sm border border-[#C5A059]/40 px-3 py-1 text-[10px] font-bold tracking-[0.16em] uppercase text-[#C5A059] sm:inline">
               {user.role === "admin" ? "Admin" : "Vendeur"}

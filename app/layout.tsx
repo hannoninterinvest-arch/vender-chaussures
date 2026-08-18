@@ -19,10 +19,6 @@ export const metadata: Metadata = {
   title: "ELVARO by AIR GO SHOES — L'excellence à chaque pas",
   description:
     "Chaussures haut de gamme fabriquées en Tunisie. Commande sans compte, paiement à la livraison.",
-  icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
-  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
