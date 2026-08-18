@@ -19,11 +19,11 @@ export type CatalogProduct = {
 const shot = (file: string) => `/chaussures/${file}`;
 
 export const homepageCovers = [
-  shot('oxford-noir.jpg'),
-  shot('mocassin-cuir.jpg'),
-  shot('pexels-marron.jpg'),
-  shot('richelieu-carreaux.jpg'),
-  shot('oxford-noir-pair.jpg'),
+  shot('oxford-noir-hq.jpg'),
+  shot('loafer-or-hq.jpg'),
+  shot('derby-cognac-hq.jpg'),
+  shot('brogue-hq.jpg'),
+  shot('sandale-hq.jpg'),
 ];
 
 export const catalog: CatalogProduct[] = [
@@ -44,7 +44,7 @@ export const catalog: CatalogProduct[] = [
       { name: 'Or', hex: '#D4AF37' },
     ],
     sizes: [39, 40, 41, 42, 43, 44, 45],
-    images: [shot('oxford-noir.jpg'), shot('oxford-noir-pair.jpg'), shot('pexels-noires.jpg')],
+    images: [shot('oxford-noir-hq.jpg'), shot('oxford-noir.jpg'), shot('oxford-noir-pair.jpg')],
   },
   {
     id: 'derby-cognac',
@@ -63,7 +63,7 @@ export const catalog: CatalogProduct[] = [
       { name: 'Tabac', hex: '#6B4A2B' },
     ],
     sizes: [39, 40, 41, 42, 43, 44, 45],
-    images: [shot('derby-laces.jpg'), shot('derby-cuir.jpg'), shot('pexels-marron.jpg')],
+    images: [shot('derby-cognac-hq.jpg'), shot('derby-laces.jpg'), shot('derby-cuir.jpg')],
   },
   {
     id: 'mocassin-bit',
@@ -82,7 +82,7 @@ export const catalog: CatalogProduct[] = [
       { name: 'Or', hex: '#D4AF37' },
     ],
     sizes: [39, 40, 41, 42, 43, 44, 45],
-    images: [shot('mocassin-cuir.jpg'), shot('mocassin-or.jpg'), shot('mocassin-pair.jpg')],
+    images: [shot('loafer-or-hq.jpg'), shot('mocassin-cuir.jpg'), shot('mocassin-or.jpg')],
   },
   {
     id: 'richelieu-brogue',
@@ -101,7 +101,7 @@ export const catalog: CatalogProduct[] = [
       { name: 'Crème', hex: '#F3EDE2' },
     ],
     sizes: [39, 40, 41, 42, 43, 44, 45],
-    images: [shot('richelieu-carreaux.jpg'), shot('pexels-marron.jpg'), shot('oxford-noir-pair.jpg')],
+    images: [shot('brogue-hq.jpg'), shot('oxford-studio.jpg'), shot('richelieu-carreaux.jpg')],
   },
   {
     id: 'derby-navy',
@@ -120,7 +120,7 @@ export const catalog: CatalogProduct[] = [
       { name: 'Bordeaux', hex: '#6B1D2A' },
     ],
     sizes: [39, 40, 41, 42, 43, 44, 45],
-    images: [shot('pexels-noires.jpg'), shot('oxford-noir.jpg')],
+    images: [shot('derby-navy-hq.jpg'), shot('pexels-noires.jpg'), shot('oxford-noir.jpg')],
   },
   {
     id: 'mocassin-driver',
@@ -140,7 +140,7 @@ export const catalog: CatalogProduct[] = [
       { name: 'Or', hex: '#D4AF37' },
     ],
     sizes: [38, 39, 40, 41, 42, 43, 44],
-    images: [shot('pexels-classe.jpg'), shot('pexels-luxe.jpg'), shot('mocassin-pair.jpg')],
+    images: [shot('driver-hq.jpg'), shot('pexels-classe.jpg'), shot('mocassin-pair.jpg')],
   },
   {
     id: 'bottine-cognac',
@@ -159,7 +159,7 @@ export const catalog: CatalogProduct[] = [
       { name: 'Tabac', hex: '#6B4A2B' },
     ],
     sizes: [40, 41, 42, 43, 44, 45],
-    images: [shot('derby-cuir.jpg'), shot('derby-laces.jpg')],
+    images: [shot('bottine-hq.jpg'), shot('derby-cognac-hq.jpg'), shot('derby-cuir.jpg')],
   },
   {
     id: 'sandale-soir',
@@ -178,16 +178,16 @@ export const catalog: CatalogProduct[] = [
       { name: 'Or', hex: '#D4AF37' },
     ],
     sizes: [36, 37, 38, 39, 40, 41],
-    images: [shot('femme-talon.jpg'), shot('mocassin-or.jpg')],
+    images: [shot('sandale-hq.jpg'), shot('femme-talon.jpg')],
   },
 ];
 
 export const categorySeed: { id: string; label: string; image: string }[] = [
-  { id: 'ville', label: 'Ville', image: shot('derby-laces.jpg') },
-  { id: 'ceremonie', label: 'Cérémonie', image: shot('oxford-noir.jpg') },
-  { id: 'mocassins', label: 'Mocassins', image: shot('mocassin-cuir.jpg') },
-  { id: 'bottes', label: 'Bottes', image: shot('derby-cuir.jpg') },
-  { id: 'femme', label: 'Femme', image: shot('femme-talon.jpg') },
+  { id: 'ville', label: 'Ville', image: shot('derby-cognac-hq.jpg') },
+  { id: 'ceremonie', label: 'Cérémonie', image: shot('oxford-noir-hq.jpg') },
+  { id: 'mocassins', label: 'Mocassins', image: shot('loafer-or-hq.jpg') },
+  { id: 'bottes', label: 'Bottes', image: shot('bottine-hq.jpg') },
+  { id: 'femme', label: 'Femme', image: shot('sandale-hq.jpg') },
 ];
 
 export const legacyProductIds = [

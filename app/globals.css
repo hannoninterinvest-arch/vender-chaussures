@@ -65,12 +65,15 @@ body::after {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-.logo-mark {
+.logo-mark,
+.elvaro-wordmark,
+.logo-lockup {
   filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.32));
   transition: transform 0.4s ease, filter 0.4s ease;
 }
 
 a:hover .logo-mark,
+a:hover .elvaro-wordmark,
 .logo-mark:hover {
   filter: drop-shadow(0 10px 18px rgba(212, 175, 55, 0.32)) brightness(1.08);
 }
@@ -115,15 +118,48 @@ a {
   color: transparent;
 }
 
+html[data-theme="light"] .gold-text {
+  background: linear-gradient(180deg, #c5a059 0%, #b8943a 45%, #8a6e2f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
 .gold-btn {
   position: relative;
   overflow: hidden;
   background: linear-gradient(145deg, #f0d78c 0%, #d4af37 38%, #c9a45c 68%, #a67c2d 100%);
-  color: #2c261c;
+  color: #1a1612 !important;
   font-weight: 700;
   letter-spacing: 0.08em;
   box-shadow: 0 0 0 1px rgba(166, 124, 45, 0.35), 0 6px 18px rgba(212, 175, 55, 0.16);
   transition: filter 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.gold-btn-ghost {
+  position: relative;
+  border: 1px solid #c9a45c;
+  background: rgba(20, 17, 12, 0.78);
+  color: #f5efe4 !important;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  backdrop-filter: blur(8px);
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+.gold-btn-ghost:hover {
+  background: #c9a45c;
+  color: #1a1612 !important;
+}
+
+html[data-theme="light"] .gold-btn-ghost {
+  background: #1a1612;
+  color: #f5efe4 !important;
+  border-color: #c9a45c;
+}
+
+html[data-theme="light"] .gold-btn-ghost:hover {
+  background: #c9a45c;
+  color: #1a1612 !important;
 }
 
 .gold-btn::after {
@@ -248,8 +284,88 @@ a {
   animation: kenburns 14s ease-out both;
 }
 
-.product-card {
-  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+.shop-hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 90% 120% at 0% -10%, rgba(212, 175, 55, 0.2), transparent 52%),
+    radial-gradient(ellipse 70% 90% at 100% 120%, rgba(166, 124, 45, 0.14), transparent 48%),
+    var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+.shop-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold-light), var(--gold), var(--gold-light), transparent);
+}
+
+.shop-hero-ornament {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--gold);
+}
+
+.shop-hero-ornament::before,
+.shop-hero-ornament::after {
+  content: "";
+  width: 2.75rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.shop-toolbar {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 30;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 90%, var(--gold) 8%);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 10px 28px rgba(44, 38, 28, 0.06);
+}
+
+.shop-aside {
+  position: sticky;
+  top: calc(var(--header-h) + 58px);
+  z-index: 10;
+  align-self: flex-start;
+}
+
+.shop-filters {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - var(--header-h) - 74px);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: 0 12px 36px rgba(44, 38, 28, 0.08), inset 0 1px 0 rgba(240, 215, 140, 0.18);
+}
+
+.shop-filters-head {
+  flex-shrink: 0;
+  padding: 1rem 1.15rem 0.9rem;
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.16), transparent 78%);
+  border-bottom: 1px solid var(--line);
+}
+
+.shop-filters-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1.15rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold) transparent;
+}
+
+.shop-filters-foot {
+  flex-shrink: 0;
+  padding: 0.85rem 1.15rem 1rem;
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel) 88%, var(--gold) 12%);
 }
 
 .product-card:hover {
@@ -279,6 +395,103 @@ a {
 
 .footer-mark {
   animation: glow-text 6s ease-in-out infinite;
+}
+
+.footsteps {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.35rem;
+  height: 2.75rem;
+  color: var(--gold);
+}
+
+.footstep {
+  width: 18px;
+  height: 28px;
+  opacity: 0.18;
+  transform: translateY(8px);
+  animation: footstep-walk 1.8s ease-in-out infinite;
+}
+
+.footstep.is-right {
+  transform: scaleX(-1) translateY(8px);
+}
+
+.footstep-1 { animation-delay: 0s; }
+.footstep-2 { animation-delay: 0.22s; }
+.footstep-3 { animation-delay: 0.44s; }
+.footstep-4 { animation-delay: 0.66s; }
+
+@keyframes footstep-walk {
+  0%,
+  100% {
+    opacity: 0.12;
+    transform: translateY(8px);
+  }
+  28% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+  55% {
+    opacity: 0.45;
+    transform: translateY(3px);
+  }
+}
+
+.footstep.is-right {
+  animation-name: footstep-walk-right;
+}
+
+@keyframes footstep-walk-right {
+  0%,
+  100% {
+    opacity: 0.12;
+    transform: scaleX(-1) translateY(8px);
+  }
+  28% {
+    opacity: 1;
+    transform: scaleX(-1) translateY(-2px);
+  }
+  55% {
+    opacity: 0.45;
+    transform: scaleX(-1) translateY(3px);
+  }
+}
+
+.color-swatch {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 3.25rem;
+}
+
+.color-swatch-disc {
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--gold) 35%, transparent);
+  box-shadow: inset 0 0 0 2px var(--bg), 0 4px 10px rgba(44, 38, 28, 0.12);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.color-swatch:hover .color-swatch-disc,
+.color-swatch-disc.is-active {
+  transform: translateY(-1px) scale(1.06);
+  border-color: var(--gold);
+  box-shadow: inset 0 0 0 2px var(--bg), 0 0 0 2px var(--gold), 0 8px 16px rgba(212, 175, 55, 0.22);
+}
+
+.color-swatch-name {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.color-swatch.is-active .color-swatch-name {
+  color: var(--gold);
 }
 
 @keyframes fade-up {
@@ -349,8 +562,8 @@ a {
   }
   .logo-mark,
   .logo-float,
-  .logo-mark,
-  .logo-float,
+  .elvaro-wordmark,
+  .logo-lockup,
   .gold-btn,
   .gold-btn::after,
   img,
@@ -360,7 +573,8 @@ a {
   .wa-fab,
   .footer-mark,
   .anim-fade-up,
-  .badge-pop {
+  .badge-pop,
+  .footstep {
     animation: none !important;
     transition: none !important;
     transform: none !important;

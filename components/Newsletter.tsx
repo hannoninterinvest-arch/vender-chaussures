@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useToast } from "./Toast";
 import { Reveal } from "./Reveal";
+import { ElvaroWordmark } from "./Logo";
 
 export function Newsletter() {
   const toast = useToast();
@@ -43,9 +44,7 @@ export function Newsletter() {
             </button>
           </form>
         </div>
-        <p className="pointer-events-none absolute -bottom-4 right-6 hidden font-[family-name:var(--font-display)] text-[100px] tracking-[0.2em] text-[#C9A45C]/10 md:block">
-          ELVARO
-        </p>
+        <ElvaroWordmark className="pointer-events-none absolute -bottom-2 right-6 hidden h-16 w-auto opacity-15 md:block" />
       </div>
       </Reveal>
     </section>

@@ -103,7 +103,12 @@ export default function ProductPage({
               Couleur · {selectedColor}
             </p>
             <div className="mt-3">
-              <ColorDots colors={product.colors} selected={selectedColor} onSelect={setColor} />
+              <ColorDots
+                colors={product.colors}
+                selected={selectedColor}
+                onSelect={setColor}
+                showLabels
+              />
             </div>
           </div>
 
