@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCatalog } from "@/lib/catalog";
 import { ProductCard } from "./ProductCard";
+import { BrandMark } from "./Logo";
 import { Reveal } from "./Reveal";
 
 export function NewDrops() {
@@ -14,11 +15,14 @@ export function NewDrops() {
     <section className="mx-auto max-w-[1280px] px-4 py-16 md:px-6">
       <Reveal>
         <div className="mb-8 flex items-end justify-between gap-4">
-          <div>
+          <div className="flex items-center gap-4">
+            <BrandMark size="sm" className="hidden sm:block" />
+            <div>
             <p className="text-[11px] tracking-[0.28em] uppercase text-[#C9A45C]">Sélection</p>
             <h2 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.12em] text-[var(--fg)] md:text-5xl">
               {heading}
             </h2>
+            </div>
           </div>
           <Link href="/shop?drop=new" className="gold-btn rounded-sm px-5 py-2.5 text-[11px] uppercase">
             Voir tout

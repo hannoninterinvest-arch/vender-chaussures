@@ -68,8 +68,8 @@ export default function SellerImportPage() {
       <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase">Import CSV</h1>
       <p className="mt-2 text-sm text-[#666]">
         Ajoute plusieurs paires d’un coup. Chaque ligne = un produit. Les photos sont des{" "}
-        <strong>liens HTTPS</strong> (Cloudinary, Unsplash, etc.), jusqu’à 5 par produit, séparés par{" "}
-        <code>|</code>.
+        <strong>liens HTTPS</strong> (Cloudinary, Unsplash, etc.), séparés par{" "}
+        <code>|</code>. Une photo par couleur peut aussi être indiquée dans la colonne <code>couleurs</code>.
       </p>
 
       <div className="mt-6 space-y-3 rounded-[4px] border border-[#C5A059]/35 bg-white p-6 text-sm">
@@ -85,7 +85,8 @@ export default function SellerImportPage() {
             <strong>pointures</strong> : <code>40|41|42|43</code>
           </li>
           <li>
-            <strong>couleurs</strong> : <code>Noir:#171717|Blanc:#ffffff</code>
+            <strong>couleurs</strong> : <code>Noir:#171717@https://…/noir.jpg|Blanc:#ffffff@https://…/blanc.jpg</code>
+            — le <code>@</code> lie la photo à la couleur. Sans photo, la 1re image de la colonne <code>images</code> est utilisée.
           </li>
           <li>
             <strong>categorie</strong> : id ou nom déjà créé (ex. <code>ville</code>, <code>ceremonie</code>)

@@ -16,6 +16,7 @@ import { createOrder, fetchPaymentsConfig } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { brand } from "@/lib/brand";
 import { CheckoutSteps } from "@/components/Experience";
+import { BrandMark } from "@/components/Logo";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -80,7 +81,8 @@ export default function CheckoutPage() {
   if (lines.length === 0) {
     return (
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <p className="font-[family-name:var(--font-display)] text-3xl tracking-[0.12em] uppercase">
+        <BrandMark size="md" className="mx-auto" />
+        <p className="mt-6 font-[family-name:var(--font-display)] text-3xl tracking-[0.12em] uppercase">
           Ton panier est vide.
         </p>
         <Link href="/shop" className="gold-btn mt-6 inline-flex rounded-sm px-6 py-3 text-xs uppercase">
@@ -93,10 +95,15 @@ export default function CheckoutPage() {
   return (
     <div className="mx-auto max-w-[1100px] px-4 py-10 md:px-6">
       <CheckoutSteps step={2} />
-      <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-[#C5A059]">Paiement</p>
-      <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.12em] uppercase">
-        Checkout invité
-      </h1>
+      <div className="mb-6 flex items-center gap-4">
+        <BrandMark size="sm" />
+        <div>
+          <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-[#C5A059]">Paiement</p>
+          <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.12em] uppercase">
+            Checkout invité
+          </h1>
+        </div>
+      </div>
       <p className="mt-2 text-sm text-[var(--muted)]">
         Pas de mot de passe. On te contacte au {brand.phone} pour confirmer.
       </p>

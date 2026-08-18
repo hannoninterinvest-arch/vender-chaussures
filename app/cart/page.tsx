@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CheckoutSteps } from "@/components/Experience";
+import { BrandMark } from "@/components/Logo";
 import { useCart } from "@/lib/cart";
 import { formatTnd } from "@/lib/format";
 
@@ -30,7 +31,8 @@ export default function CartPage() {
           <ul className="mt-6 space-y-4">
             {lines.length === 0 && (
               <li className="gold-frame rounded-[4px] bg-[var(--panel)] p-10 text-center">
-                <p className="font-medium">Ton panier est vide.</p>
+                <BrandMark size="sm" className="mx-auto opacity-90" />
+                <p className="mt-4 font-medium">Ton panier est vide.</p>
                 <Link
                   href="/shop"
                   className="gold-btn mt-4 inline-flex rounded-sm px-5 py-2.5 text-xs uppercase"

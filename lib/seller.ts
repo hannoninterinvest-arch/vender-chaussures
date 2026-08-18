@@ -114,7 +114,7 @@ export type SellerProduct = {
   category: string;
   isNew: boolean;
   featured: boolean;
-  colors: { name: string; hex: string }[];
+  colors: { name: string; hex: string; image?: string }[];
   sizes: number[];
   images: string[];
 };

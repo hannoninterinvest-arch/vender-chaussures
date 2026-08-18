@@ -5,66 +5,66 @@ import { brand } from "@/lib/brand";
 
 export function Footer() {
   return (
-    <footer className="mt-8 border-t border-[#C5A059]/30 bg-[#070707] text-[#EDE8DE]">
+    <footer className="mt-8 border-t border-[var(--line)] bg-[var(--panel)] text-[var(--fg)]">
       <div className="mx-auto grid max-w-[1280px] gap-10 px-4 py-16 md:grid-cols-4 md:px-6">
         <div>
-          <BrandLockup light />
-          <p className="mt-4 flex items-center gap-3 text-[11px] tracking-[0.2em] uppercase text-[#C5A059]">
-            <Footsteps className="scale-75 origin-left" />
+          <BrandLockup />
+          <p className="mt-4 flex items-center gap-3 text-[11px] tracking-[0.2em] uppercase text-[var(--gold)]">
+            <Footsteps className="origin-left scale-75" />
             {brand.slogan}
           </p>
-          <p className="mt-3 text-sm leading-relaxed text-[#EDE8DE]/70">{brand.activity}.</p>
+          <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">{brand.activity}.</p>
         </div>
         <div>
-          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#C5A059]">Collection</p>
-          <ul className="mt-4 space-y-2 text-sm text-[#F3EDE2]/80">
+          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[var(--gold)]">Collection</p>
+          <ul className="mt-4 space-y-2 text-sm text-[var(--muted)]">
             <li>
-              <Link href="/shop?category=ville" className="transition-colors hover:text-[#C9A45C]">Ville</Link>
+              <Link href="/shop?category=ville" className="transition-colors hover:text-[var(--gold)]">Ville</Link>
             </li>
             <li>
-              <Link href="/shop?category=ceremonie" className="transition-colors hover:text-[#C9A45C]">Cérémonie</Link>
+              <Link href="/shop?category=ceremonie" className="transition-colors hover:text-[var(--gold)]">Cérémonie</Link>
             </li>
             <li>
-              <Link href="/shop?category=mocassins" className="transition-colors hover:text-[#C9A45C]">Mocassins</Link>
+              <Link href="/shop?category=mocassins" className="transition-colors hover:text-[var(--gold)]">Mocassins</Link>
             </li>
             <li>
-              <Link href="/shop?category=bottes" className="transition-colors hover:text-[#C9A45C]">Bottes</Link>
+              <Link href="/shop?category=bottes" className="transition-colors hover:text-[var(--gold)]">Bottes</Link>
             </li>
             <li>
-              <Link href="/shop?category=femme" className="transition-colors hover:text-[#C9A45C]">Femme</Link>
+              <Link href="/shop?category=femme" className="transition-colors hover:text-[var(--gold)]">Femme</Link>
             </li>
           </ul>
         </div>
         <div>
-          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#C5A059]">Boutique</p>
-          <ul className="mt-4 space-y-2 text-sm text-[#F3EDE2]/80">
+          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[var(--gold)]">Boutique</p>
+          <ul className="mt-4 space-y-2 text-sm text-[var(--muted)]">
             <li>
-              <Link href="/shop" className="transition-colors hover:text-[#C9A45C]">Toute la collection</Link>
+              <Link href="/shop" className="transition-colors hover:text-[var(--gold)]">Toute la collection</Link>
             </li>
             <li>
-              <Link href="/cart" className="transition-colors hover:text-[#C9A45C]">Panier</Link>
+              <Link href="/cart" className="transition-colors hover:text-[var(--gold)]">Panier</Link>
             </li>
             <li>
-              <Link href="/checkout" className="transition-colors hover:text-[#C9A45C]">Commander</Link>
+              <Link href="/checkout" className="transition-colors hover:text-[var(--gold)]">Commander</Link>
             </li>
             <li>
-              <Link href="/vendeur" className="transition-colors hover:text-[#C9A45C]">Espace équipe</Link>
+              <Link href="/vendeur" className="transition-colors hover:text-[var(--gold)]">Espace équipe</Link>
             </li>
           </ul>
         </div>
         <div>
-          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#C5A059]">Contact</p>
-          <ul className="mt-4 space-y-2 text-sm text-[#EDE8DE]/80">
+          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[var(--gold)]">Contact</p>
+          <ul className="mt-4 space-y-2 text-sm text-[var(--muted)]">
             <li>
-              <a href={brand.phoneHref} className="hover:text-[#C5A059]">{brand.phone}</a>
+              <a href={brand.phoneHref} className="hover:text-[var(--gold)]">{brand.phone}</a>
             </li>
             <li>
-              <a href={brand.whatsapp} target="_blank" rel="noreferrer" className="hover:text-[#C5A059]">
+              <a href={brand.whatsapp} target="_blank" rel="noreferrer" className="hover:text-[var(--gold)]">
                 WhatsApp
               </a>
             </li>
             <li>
-              <a href={`mailto:${brand.email}`} className="hover:text-[#C5A059]">{brand.email}</a>
+              <a href={`mailto:${brand.email}`} className="hover:text-[var(--gold)]">{brand.email}</a>
             </li>
             <li>{brand.address}</li>
           </ul>
@@ -72,7 +72,7 @@ export function Footer() {
       </div>
       <div className="gold-line mx-auto max-w-[1280px]" />
       <div className="px-4 py-8 text-center">
-        <p className="text-[11px] tracking-[0.16em] uppercase text-[#EDE8DE]/50">
+        <p className="text-[11px] tracking-[0.16em] uppercase text-[var(--muted)]">
           © {new Date().getFullYear()} {brand.name} {brand.byline} — Tunisie
         </p>
       </div>

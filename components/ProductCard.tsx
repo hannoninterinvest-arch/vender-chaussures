@@ -1,9 +1,16 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { formatTnd } from "@/lib/format";
+import { colorImage } from "@/lib/product-media";
 import type { Product } from "@/lib/products";
 import { ColorDots } from "./ColorDots";
 
 export function ProductCard({ product }: { product: Product }) {
+  const [color, setColor] = useState(product.colors[0]?.name ?? "");
+  const photo = colorImage(product, color);
+
   return (
     <article className="product-card group">
       <div className="gold-frame relative overflow-hidden rounded-[4px] bg-[var(--panel)]">
@@ -15,7 +22,7 @@ export function ProductCard({ product }: { product: Product }) {
         <Link href={`/products/${product.id}`} className="block aspect-square">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={product.images[0]}
+            src={photo}
             alt={product.name}
             className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.06]"
           />
@@ -24,9 +31,9 @@ export function ProductCard({ product }: { product: Product }) {
       <h3 className="mt-3 text-[13px] font-semibold tracking-[0.14em] uppercase text-[var(--fg)]">
         {product.name}
       </h3>
-      <p className="mt-1 text-[11px] tracking-[0.16em] uppercase text-[#C5A059]">{product.brand}</p>
+      <p className="mt-1 text-[11px] tracking-[0.16em] uppercase text-[var(--gold)]">{product.brand}</p>
       <div className="mt-2.5">
-        <ColorDots colors={product.colors} size="sm" />
+        <ColorDots colors={product.colors} selected={color} onSelect={setColor} size="sm" />
       </div>
       <Link
         href={`/products/${product.id}`}

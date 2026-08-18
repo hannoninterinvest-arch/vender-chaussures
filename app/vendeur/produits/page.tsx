@@ -24,9 +24,9 @@ const emptyForm = {
   isNew: true,
   featured: false,
   colorSlots: [
-    { name: "Noir", hex: "#1A1612" },
-    { name: "Or", hex: "#D4AF37" },
-    { name: "Crème", hex: "#F3EDE2" },
+    { name: "Noir", hex: "#1A1612", image: "" },
+    { name: "Or", hex: "#D4AF37", image: "" },
+    { name: "Crème", hex: "#F3EDE2", image: "" },
   ],
   sizes: [40, 41, 42, 43, 44] as number[],
   images: ["", "", "", "", ""] as string[],
@@ -39,7 +39,7 @@ export default function SellerProductsPage() {
   const [form, setForm] = useState(emptyForm);
   const [editing, setEditing] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [uploading, setUploading] = useState<number | null>(null);
+  const [uploading, setUploading] = useState<string | null>(null);
   const admin = isAdmin();
 
   async function load() {
@@ -85,10 +85,10 @@ export default function SellerProductsPage() {
       isNew: p.isNew,
       featured: Boolean(p.featured),
       colorSlots: p.colors.length
-        ? p.colors.map((c) => ({ name: c.name, hex: c.hex }))
+        ? p.colors.map((c) => ({ name: c.name, hex: c.hex, image: c.image || "" }))
         : [
-            { name: "Noir", hex: "#1A1612" },
-            { name: "Or", hex: "#D4AF37" },
+            { name: "Noir", hex: "#1A1612", image: "" },
+            { name: "Or", hex: "#D4AF37", image: "" },
           ],
       sizes: p.sizes,
       images: [0, 1, 2, 3, 4].map((i) => p.images[i] || ""),
@@ -99,18 +99,18 @@ export default function SellerProductsPage() {
   const colors = useMemo(
     () =>
       form.colorSlots
-        .map((c) => ({ name: c.name.trim(), hex: c.hex || "#1A1612" }))
+        .map((c) => ({
+          name: c.name.trim(),
+          hex: c.hex || "#1A1612",
+          image: c.image.trim(),
+        }))
         .filter((c) => c.name),
     [form.colorSlots],
   );
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    const images = form.images.map((s) => s.trim()).filter(Boolean);
-    if (!images.length) {
-      toast("Ajoute au moins une photo (Cloudinary)");
-      return;
-    }
+    const extras = form.images.map((s) => s.trim()).filter(Boolean);
     if (!form.sizes.length) {
       toast("Choisis au moins une pointure");
       return;
@@ -119,6 +119,11 @@ export default function SellerProductsPage() {
       toast("Ajoute au moins une couleur");
       return;
     }
+    if (colors.some((c) => !c.image)) {
+      toast("Ajoute une photo pour chaque couleur");
+      return;
+    }
+    const images = [...new Set([...colors.map((c) => c.image), ...extras])];
     setBusy(true);
     const body = {
       name: form.name,
@@ -176,15 +181,24 @@ export default function SellerProductsPage() {
     }));
   }
 
-  async function onUpload(index: number, file: File) {
-    setUploading(index);
+  async function onUpload(slot: string, file: File) {
+    setUploading(slot);
     try {
       const { url } = await sellerUploadImage(file);
-      setForm((f) => {
-        const images = [...f.images];
-        images[index] = url;
-        return { ...f, images };
-      });
+      if (slot.startsWith("color-")) {
+        const index = Number(slot.slice(6));
+        setForm((f) => ({
+          ...f,
+          colorSlots: f.colorSlots.map((c, idx) => (idx === index ? { ...c, image: url } : c)),
+        }));
+      } else {
+        const index = Number(slot.slice(8));
+        setForm((f) => {
+          const images = [...f.images];
+          images[index] = url;
+          return { ...f, images };
+        });
+      }
       toast("Photo enregistrée sur Cloudinary");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Upload Cloudinary impossible");
@@ -277,10 +291,40 @@ export default function SellerProductsPage() {
           />
           Afficher sur la page d’accueil
         </label>
-        <p className="text-sm font-bold">Couleurs (jusqu’à 6)</p>
-        <div className="space-y-2">
+        <p className="text-sm font-bold">Couleurs (jusqu’à 6) — une photo par couleur</p>
+        <p className="text-xs text-[#666]">
+          Sur la boutique, la photo change automatiquement selon la couleur choisie.
+        </p>
+        <div className="space-y-3">
           {form.colorSlots.map((slot, i) => (
-            <div key={i} className="grid grid-cols-[1fr_auto_auto] items-end gap-2">
+            <div
+              key={i}
+              className="grid grid-cols-[88px_1fr_auto] items-end gap-3 rounded-lg border border-[#E5E5E5] p-3"
+            >
+              <div className="space-y-1">
+                <div className="relative aspect-square overflow-hidden rounded-lg bg-[#F5F5F5]">
+                  {slot.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={slot.image} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="grid h-full place-items-center text-[10px] text-[#888]">Photo</span>
+                  )}
+                </div>
+                <label className="block cursor-pointer rounded-lg bg-[#1A1A1A] px-2 py-1.5 text-center text-[11px] font-bold text-white">
+                  {uploading === `color-${i}` ? "Envoi…" : slot.image ? "Changer" : "Upload"}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    disabled={uploading !== null}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      e.target.value = "";
+                      if (file) void onUpload(`color-${i}`, file);
+                    }}
+                  />
+                </label>
+              </div>
               <Field
                 label={`Couleur ${i + 1}`}
                 value={slot.name}
@@ -291,28 +335,32 @@ export default function SellerProductsPage() {
                   })
                 }
               />
-              <input
-                type="color"
-                value={slot.hex}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    colorSlots: form.colorSlots.map((c, idx) => (idx === i ? { ...c, hex: e.target.value } : c)),
-                  })
-                }
-                className="mb-0.5 h-10 w-14 rounded"
-              />
-              {form.colorSlots.length > 1 && (
-                <button
-                  type="button"
-                  className="mb-1 text-xs text-red-600"
-                  onClick={() =>
-                    setForm({ ...form, colorSlots: form.colorSlots.filter((_, idx) => idx !== i) })
+              <div className="flex flex-col items-center gap-2">
+                <input
+                  type="color"
+                  value={slot.hex}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      colorSlots: form.colorSlots.map((c, idx) =>
+                        idx === i ? { ...c, hex: e.target.value } : c,
+                      ),
+                    })
                   }
-                >
-                  Retirer
-                </button>
-              )}
+                  className="h-10 w-14 rounded"
+                />
+                {form.colorSlots.length > 1 && (
+                  <button
+                    type="button"
+                    className="text-xs text-red-600"
+                    onClick={() =>
+                      setForm({ ...form, colorSlots: form.colorSlots.filter((_, idx) => idx !== i) })
+                    }
+                  >
+                    Retirer
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -323,7 +371,7 @@ export default function SellerProductsPage() {
             onClick={() =>
               setForm({
                 ...form,
-                colorSlots: [...form.colorSlots, { name: "", hex: "#D4AF37" }],
+                colorSlots: [...form.colorSlots, { name: "", hex: "#D4AF37", image: "" }],
               })
             }
           >
@@ -345,9 +393,9 @@ export default function SellerProductsPage() {
             </button>
           ))}
         </div>
-        <p className="text-sm font-bold">Photos (5 max) — Cloudinary</p>
+        <p className="text-sm font-bold">Photos supplémentaires (optionnel)</p>
         <p className="text-xs text-[#666]">
-          Chaque fichier est envoyé sur Cloudinary. Le lien HTTPS est ensuite enregistré en base.
+          Galerie libre en plus des photos de couleur. Envoi Cloudinary, lien HTTPS en base.
         </p>
         <div className="grid grid-cols-5 gap-2">
           {form.images.map((url, i) => (
@@ -361,7 +409,7 @@ export default function SellerProductsPage() {
                 )}
               </div>
               <label className="block cursor-pointer rounded-lg bg-[#1A1A1A] px-2 py-1.5 text-center text-[11px] font-bold text-white">
-                {uploading === i ? "Envoi…" : url ? "Changer" : "Upload"}
+                {uploading === `gallery-${i}` ? "Envoi…" : url ? "Changer" : "Upload"}
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp,image/gif"
@@ -370,7 +418,7 @@ export default function SellerProductsPage() {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     e.target.value = "";
-                    if (file) void onUpload(i, file);
+                    if (file) void onUpload(`gallery-${i}`, file);
                   }}
                 />
               </label>
@@ -428,6 +476,19 @@ export default function SellerProductsPage() {
                   {p.brand} · {formatTnd(p.price)} · achat {formatTnd(p.cost || 0)}
                   {p.featured ? " · accueil" : ""}
                 </p>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {p.colors.map((c) => (
+                    <span key={c.name} className="inline-flex items-center gap-1 text-[10px] text-[#666]" title={c.name}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      {c.image ? (
+                        <img src={c.image} alt="" className="h-6 w-6 rounded object-cover" />
+                      ) : (
+                        <span className="h-6 w-6 rounded border" style={{ background: c.hex }} />
+                      )}
+                      {c.name}
+                    </span>
+                  ))}
+                </div>
                 <div className="mt-2 flex gap-3 text-sm">
                   <button type="button" className="font-medium text-[#C5A059]" onClick={() => startEdit(p)}>
                     Modifier

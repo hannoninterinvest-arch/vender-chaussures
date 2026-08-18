@@ -11,7 +11,7 @@ export type CatalogProduct = {
   category: Category;
   isNew: boolean;
   featured?: boolean;
-  colors: { name: string; hex: string }[];
+  colors: { name: string; hex: string; image?: string }[];
   sizes: number[];
   images: string[];
 };
@@ -26,7 +26,7 @@ export const homepageCovers = [
   shot('sandale-hq.jpg'),
 ];
 
-export const catalog: CatalogProduct[] = [
+const catalogSeed: CatalogProduct[] = [
   {
     id: 'oxford-noir',
     name: 'Oxford Noir Cap-Toe',
@@ -181,6 +181,18 @@ export const catalog: CatalogProduct[] = [
     images: [shot('sandale-hq.jpg'), shot('femme-talon.jpg')],
   },
 ];
+
+function withColorPhotos(product: CatalogProduct): CatalogProduct {
+  return {
+    ...product,
+    colors: product.colors.map((color, index) => ({
+      ...color,
+      image: color.image || product.images[index] || product.images[0],
+    })),
+  };
+}
+
+export const catalog = catalogSeed.map(withColorPhotos);
 
 export const categorySeed: { id: string; label: string; image: string }[] = [
   { id: 'ville', label: 'Ville', image: shot('derby-cognac-hq.jpg') },

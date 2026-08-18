@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Footsteps } from "@/components/Footsteps";
+import { BrandMark } from "@/components/Logo";
 import { brand } from "@/lib/brand";
 import { fetchSite } from "@/lib/api";
 import { defaultSite, type SiteHome } from "@/lib/site";
@@ -75,7 +76,7 @@ export function Hero() {
           <div className="h-[420px] bg-[#14110C] md:h-[560px]" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-        <div className="absolute bottom-8 left-6 right-6 md:left-12">
+        <div className="absolute bottom-8 left-6 right-6 md:left-12 md:right-40">
           <p className="text-[11px] tracking-[0.28em] uppercase text-[#C9A45C]">{site.heroKicker}</p>
           <p className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.14em] text-[#F3EDE2] md:text-5xl">
             {site.heroTitle}
@@ -89,6 +90,9 @@ export function Hero() {
               Toute la collection
             </Link>
           </div>
+        </div>
+        <div className="pointer-events-none absolute right-4 top-4 hidden sm:block md:right-8 md:top-8">
+          <BrandMark size="lg" className="drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)]" />
         </div>
         {photos.length > 1 && (
           <div className="absolute bottom-8 right-6 flex gap-2 md:right-12">

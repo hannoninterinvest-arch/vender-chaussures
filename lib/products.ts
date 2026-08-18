@@ -1,3 +1,5 @@
+import { withColorImages } from "@/lib/product-media";
+
 export type Gender = "homme" | "femme" | "unisexe";
 
 export type Product = {
@@ -11,7 +13,7 @@ export type Product = {
   category: string;
   isNew: boolean;
   featured?: boolean;
-  colors: { name: string; hex: string }[];
+  colors: { name: string; hex: string; image?: string }[];
   sizes: number[];
   images: string[];
 };
@@ -20,7 +22,7 @@ export type ShopCategory = { slug: string; label: string; image: string };
 
 const shot = (file: string) => `/chaussures/${file}`;
 
-export const fallbackProducts: Product[] = [
+const fallbackCatalog: Product[] = [
   {
     id: "oxford-noir",
     name: "Oxford Noir Cap-Toe",
@@ -172,6 +174,8 @@ export const fallbackProducts: Product[] = [
     images: [shot("sandale-hq.jpg"), shot("femme-talon.jpg")],
   },
 ];
+
+export const fallbackProducts: Product[] = fallbackCatalog.map(withColorImages);
 
 export const categories: ShopCategory[] = [
   { slug: "ville", label: "Ville", image: shot("derby-cognac-hq.jpg") },

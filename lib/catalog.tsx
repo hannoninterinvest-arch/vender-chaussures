@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { fetchCategories, fetchProducts } from "./api";
+import { withColorImages } from "./product-media";
 import {
   categories as fallbackCategories,
   fallbackProducts,
@@ -55,7 +56,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     Promise.allSettled([fetchProducts(), fetchCategories()]).then(([p, c]) => {
       if (cancelled) return;
       if (p.status === "fulfilled" && Array.isArray(p.value) && p.value.length) {
-        setProducts(p.value);
+        setProducts(p.value.map((item) => withColorImages(item as Product)));
       } else {
         setError("API indisponible — catalogue local");
       }

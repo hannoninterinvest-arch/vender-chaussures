@@ -3,6 +3,7 @@
 import { use, useState } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { colorImage, galleryForColor } from "@/lib/product-media";
 import { relatedProducts } from "@/lib/products";
 import { useCatalog, useProduct } from "@/lib/catalog";
 import { formatTnd } from "@/lib/format";
@@ -34,15 +35,22 @@ export default function ProductPage({
   if (!product) notFound();
 
   const selectedColor = color ?? product.colors[0]?.name ?? "";
+  const gallery = galleryForColor(product, selectedColor);
+  const mainPhoto = gallery[photo] || gallery[0] || product.images[0];
 
   const snapshot = {
     productId: product.id,
     name: product.name,
-    image: product.images[0],
+    image: colorImage(product, selectedColor),
     price: Number(product.price),
     size: size ?? 0,
     color: selectedColor,
   };
+
+  function selectColor(name: string) {
+    setColor(name);
+    setPhoto(0);
+  }
 
   function add() {
     if (!size) {
@@ -66,14 +74,14 @@ export default function ProductPage({
         <div className="space-y-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={product.images[photo]}
+            src={mainPhoto}
             alt={product.name}
             className="gold-frame aspect-square w-full rounded-[4px] object-cover"
           />
           <div className="grid grid-cols-5 gap-3">
-            {product.images.map((src, i) => (
+            {gallery.map((src, i) => (
               <button
-                key={src}
+                key={`${src}-${i}`}
                 type="button"
                 onClick={() => setPhoto(i)}
                 aria-label={`Photo ${i + 1}`}
@@ -106,7 +114,7 @@ export default function ProductPage({
               <ColorDots
                 colors={product.colors}
                 selected={selectedColor}
-                onSelect={setColor}
+                onSelect={selectColor}
                 showLabels
               />
             </div>
@@ -207,11 +215,11 @@ export default function ProductPage({
         </div>
       </section>
 
-      <div className="gold-frame fixed inset-x-3 bottom-3 z-40 rounded-[4px] bg-[#0A0A0A]/95 p-3 backdrop-blur-md lg:hidden">
+      <div className="gold-frame fixed inset-x-3 bottom-3 z-40 rounded-[4px] bg-[var(--panel)]/95 p-3 backdrop-blur-md lg:hidden">
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs text-[#EDE8DE]/70">{product.name}</p>
-            <p className="font-semibold text-[#C5A059]">{formatTnd(product.price)}</p>
+            <p className="truncate text-xs text-[var(--muted)]">{product.name}</p>
+            <p className="font-semibold text-[var(--gold)]">{formatTnd(product.price)}</p>
           </div>
           <button type="button" onClick={add} className="gold-btn h-11 shrink-0 rounded-sm px-5 text-[11px] uppercase">
             Ajouter

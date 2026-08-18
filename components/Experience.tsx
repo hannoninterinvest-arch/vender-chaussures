@@ -15,7 +15,7 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label={light ? "Passer en mode sombre" : "Passer en mode clair"}
       title={light ? "Mode sombre" : "Mode clair"}
-      className="icon-btn rounded-full p-2 text-[#C9A45C]"
+      className="icon-btn rounded-full p-2 text-[var(--gold)] ring-1 ring-[var(--gold)]/45 hover:bg-[var(--gold)]/12 hover:ring-[var(--gold)]"
     >
       {light ? (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>

@@ -61,7 +61,11 @@ export function ColorDots({
           <button
             key={c.name}
             type="button"
-            onClick={() => onSelect(c.name)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onSelect(c.name);
+            }}
             aria-label={c.name}
             aria-pressed={active}
             className={`color-swatch ${active ? "is-active" : ""}`}

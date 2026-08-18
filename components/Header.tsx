@@ -174,7 +174,7 @@ export function Header() {
       {open && (
         <div className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm" onClick={() => setOpen(false)}>
           <div
-            className="gold-frame anim-fade-up mx-auto mt-28 max-w-xl rounded-[4px] bg-[#12110F] p-5"
+            className="gold-frame anim-fade-up mx-auto mt-28 max-w-xl rounded-[4px] bg-[var(--panel)] p-5"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-label="Recherche"
@@ -186,27 +186,27 @@ export function Header() {
               placeholder="Rechercher une paire, une marque…"
               className="field"
             />
-            <p className="mt-2 text-[11px] text-[#F3EDE2]/45">Échap pour fermer</p>
+            <p className="mt-2 text-[11px] text-[var(--muted)]">Échap pour fermer</p>
             <ul className="mt-3 max-h-80 overflow-auto">
               {results.map((p) => (
                 <li key={p.id}>
                   <Link
                     href={`/products/${p.id}`}
                     onClick={() => setOpen(false)}
-                    className="flex items-center gap-3 rounded-sm px-2 py-2 transition-colors hover:bg-white/5"
+                    className="flex items-center gap-3 rounded-sm px-2 py-2 transition-colors hover:bg-[var(--gold)]/10"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.images[0]} alt="" className="h-12 w-12 rounded-sm object-cover" />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium text-[#F3EDE2]">{p.name}</span>
-                      <span className="text-xs text-[#F3EDE2]/55">{p.brand}</span>
+                      <span className="block truncate font-medium text-[var(--fg)]">{p.name}</span>
+                      <span className="text-xs text-[var(--muted)]">{p.brand}</span>
                     </span>
-                    <span className="text-[#C9A45C]">{formatTnd(p.price)}</span>
+                    <span className="text-[var(--gold)]">{formatTnd(p.price)}</span>
                   </Link>
                 </li>
               ))}
               {q.length >= 2 && results.length === 0 && (
-                <li className="px-2 py-6 text-center text-sm text-[#F3EDE2]/60">Aucun résultat</li>
+                <li className="px-2 py-6 text-center text-sm text-[var(--muted)]">Aucun résultat</li>
               )}
             </ul>
           </div>

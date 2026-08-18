@@ -16,6 +16,7 @@ import { Category } from './category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { attachProductMedia, hydrateColors, mergeGallery } from './product-media';
 import { Product } from './product.entity';
 
 export function slugify(value: string) {
@@ -57,15 +58,18 @@ export class ProductsService implements OnModuleInit {
     for (const item of catalog) {
       const exists = await this.products.findOne({ where: { id: item.id } });
       if (!exists) {
+        const media = attachProductMedia(item.colors, item.images);
         await this.products.save(
           this.products.create({
             ...item,
+            ...media,
             featured: item.featured ?? false,
             cost: Math.round(item.price * 0.62),
           }),
         );
       }
     }
+    await this.backfillColorImages();
   }
 
   async findAll() {
@@ -144,6 +148,7 @@ export class ProductsService implements OnModuleInit {
 
   async create(dto: CreateProductDto) {
     const id = await this.uniqueId(slugify(dto.id?.trim() || dto.name));
+    const media = attachProductMedia(dto.colors, dto.images);
     const product = this.products.create({
       id,
       name: dto.name.trim(),
@@ -155,9 +160,9 @@ export class ProductsService implements OnModuleInit {
       category: dto.category,
       isNew: dto.isNew ?? true,
       featured: dto.featured ?? false,
-      colors: dto.colors,
+      colors: media.colors,
       sizes: dto.sizes,
-      images: dto.images.filter(Boolean).slice(0, 5),
+      images: media.images,
     });
     return this.toSeller(await this.products.save(product));
   }
@@ -174,9 +179,15 @@ export class ProductsService implements OnModuleInit {
     if (dto.category !== undefined) product.category = dto.category;
     if (dto.isNew !== undefined) product.isNew = dto.isNew;
     if (dto.featured !== undefined) product.featured = dto.featured;
-    if (dto.colors !== undefined) product.colors = dto.colors;
     if (dto.sizes !== undefined) product.sizes = dto.sizes;
-    if (dto.images !== undefined) product.images = dto.images.filter(Boolean).slice(0, 5);
+    if (dto.colors !== undefined || dto.images !== undefined) {
+      const media = attachProductMedia(
+        dto.colors ?? product.colors,
+        dto.images ?? product.images,
+      );
+      product.colors = media.colors;
+      product.images = media.images;
+    }
     return this.toSeller(await this.products.save(product));
   }
 
@@ -185,6 +196,21 @@ export class ProductsService implements OnModuleInit {
     if (!product) throw new NotFoundException('Produit introuvable');
     await this.products.remove(product);
     return { ok: true };
+  }
+
+  private async backfillColorImages() {
+    const rows = await this.products.find();
+    for (const row of rows) {
+      const colors = hydrateColors(row.colors || [], row.images || []);
+      if (colors.some((color) => !color.image) && !(row.images || []).length) continue;
+      const images = mergeGallery(colors, row.images || []);
+      const sameColors = JSON.stringify(colors) === JSON.stringify(row.colors || []);
+      const sameImages = JSON.stringify(images) === JSON.stringify(row.images || []);
+      if (sameColors && sameImages) continue;
+      row.colors = colors;
+      row.images = images;
+      await this.products.save(row);
+    }
   }
 
   private async uniqueId(base: string) {

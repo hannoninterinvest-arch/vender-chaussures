@@ -20,6 +20,10 @@ export class ProductColorDto {
 
   @IsString()
   hex: string;
+
+  @IsOptional()
+  @IsString()
+  image?: string;
 }
 
 export class CreateProductDto {
@@ -79,6 +83,6 @@ export class CreateProductDto {
   @IsArray()
   @IsString({ each: true })
   @ArrayMinSize(1)
-  @ArrayMaxSize(5)
+  @ArrayMaxSize(16)
   images: string[];
 }

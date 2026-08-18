@@ -2,19 +2,25 @@
 
 import Link from "next/link";
 import { useCatalog } from "@/lib/catalog";
+import { BrandMark } from "./Logo";
 import { Reveal } from "./Reveal";
 
 export function Categories() {
   const { categories } = useCatalog();
 
   return (
-    <section className="border-y border-[#C5A059]/20 bg-[var(--panel)] py-16">
+    <section className="border-y border-[var(--line)] bg-[var(--panel)] py-16">
       <div className="mx-auto max-w-[1280px] px-4 md:px-6">
         <Reveal>
-          <p className="text-[11px] tracking-[0.28em] uppercase text-[#C9A45C]">Univers</p>
-          <h2 className="mb-8 mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.12em] text-[var(--fg)] md:text-5xl">
-            CATÉGORIES
-          </h2>
+          <div className="mb-8 flex items-center gap-4">
+            <BrandMark size="sm" className="hidden sm:block" />
+            <div>
+              <p className="text-[11px] tracking-[0.28em] uppercase text-[var(--gold)]">Univers</p>
+              <h2 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.12em] text-[var(--fg)] md:text-5xl">
+                CATÉGORIES
+              </h2>
+            </div>
+          </div>
         </Reveal>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {categories.map((c, i) => (

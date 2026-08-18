@@ -1,38 +1,38 @@
 @import "tailwindcss";
 
 :root {
-  --background: #12100d;
+  --background: #0e0c0a;
   --foreground: #f5efe4;
-  --bg: #12100d;
+  --bg: #0e0c0a;
   --fg: #f5efe4;
   --muted: rgba(245, 239, 228, 0.68);
-  --panel: #1c1914;
-  --line: rgba(212, 175, 55, 0.38);
+  --panel: #181510;
+  --line: rgba(212, 175, 55, 0.4);
   --gold: #d4af37;
   --gold-light: #f0d78c;
   --gold-dark: #a67c2d;
   --cream: #f5efe4;
   --ink: #2c261c;
-  --glow: #3a2e18;
-  --header-h: 96px;
-  --header-bg: rgba(18, 16, 13, 0.86);
+  --glow: #3d3118;
+  --header-h: 112px;
+  --header-bg: rgba(14, 12, 10, 0.9);
   --header-fg: #f5efe4;
 }
 
 html[data-theme="light"] {
-  --background: #f7f2e8;
-  --foreground: #2c261c;
-  --bg: #f7f2e8;
-  --fg: #2c261c;
-  --muted: rgba(44, 38, 28, 0.58);
-  --panel: #fffcf6;
-  --line: rgba(184, 148, 58, 0.42);
-  --gold: #b8943a;
-  --gold-light: #d4af37;
-  --gold-dark: #8a6e2f;
-  --glow: #e6d5a8;
-  --header-bg: rgba(247, 242, 232, 0.9);
-  --header-fg: #2c261c;
+  --background: #f4eee2;
+  --foreground: #241e16;
+  --bg: #f4eee2;
+  --fg: #241e16;
+  --muted: rgba(36, 30, 22, 0.62);
+  --panel: #fffdf8;
+  --line: rgba(158, 123, 40, 0.46);
+  --gold: #9e7b28;
+  --gold-light: #c5a059;
+  --gold-dark: #7a5e22;
+  --glow: #ead9ae;
+  --header-bg: rgba(244, 238, 226, 0.94);
+  --header-fg: #241e16;
 }
 
 @theme inline {
@@ -151,6 +151,22 @@ html[data-theme="light"] .gold-btn-ghost {
 html[data-theme="light"] .gold-btn-ghost:hover {
   background: #c9a45c;
   color: #1a1612 !important;
+}
+
+html[data-theme="light"] .product-card:hover .gold-frame {
+  box-shadow: 0 16px 32px rgba(36, 30, 22, 0.1), 0 0 0 1px rgba(158, 123, 40, 0.42);
+}
+
+html[data-theme="light"] .field {
+  background: #fffdf8;
+}
+
+html[data-theme="light"] .site-header.is-scrolled {
+  box-shadow: 0 10px 28px rgba(36, 30, 22, 0.08);
+}
+
+html[data-theme="light"] .gold-frame {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .gold-btn::after {
