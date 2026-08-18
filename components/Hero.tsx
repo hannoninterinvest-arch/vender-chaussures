@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ElvaroWordmark, LogoMark, OfficialLockup } from "@/components/Logo";
+import { OfficialLockup } from "@/components/Logo";
 import { Footsteps } from "@/components/Footsteps";
 import { brand } from "@/lib/brand";
 import { fetchSite } from "@/lib/api";
@@ -46,13 +46,7 @@ export function Hero() {
     <section className="mx-auto max-w-[1280px] px-4 pb-6 pt-10 md:px-6">
       <div className="mb-8 grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="flex flex-col items-start gap-5">
-          <div className="anim-fade-up flex items-center gap-3">
-            <LogoMark className="h-10 w-7" />
-            <span className="text-[11px] tracking-[0.32em] uppercase text-[var(--gold)]">{brand.byline}</span>
-          </div>
-          <div className="anim-fade-up anim-d1">
-            <ElvaroWordmark className="h-10 w-auto sm:h-12 md:h-14" />
-          </div>
+          <p className="anim-fade-up text-[11px] tracking-[0.32em] uppercase text-[var(--gold)]">{brand.byline}</p>
           <h1 className="font-[family-name:var(--font-display)] leading-[0.92] tracking-[0.12em]">
             <span className="anim-fade-up anim-d2 block text-[36px] text-[var(--fg)] sm:text-[56px] md:text-[72px]">
               L&apos;EXCELLENCE
@@ -68,8 +62,8 @@ export function Hero() {
           <Footsteps className="anim-fade-up anim-d4 sm:hidden" />
         </div>
         <div className="anim-fade-up anim-d3 mx-auto w-full max-w-md lg:justify-self-end">
-          <div className="gold-frame overflow-hidden rounded-[4px] bg-[#0a0908]">
-            <OfficialLockup variant="gold" className="logo-float h-auto w-full" />
+          <div className="gold-frame overflow-hidden rounded-[4px] bg-black">
+            <OfficialLockup className="logo-float h-auto w-full" />
           </div>
         </div>
       </div>
@@ -85,11 +79,11 @@ export function Hero() {
           />
         ) : (
           <div className="grid h-[420px] place-items-center md:h-[560px]">
-            <OfficialLockup variant="svg" className="h-48 w-auto" />
+            <OfficialLockup className="h-48 w-auto" />
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-        <LogoMark className="pointer-events-none absolute right-8 top-8 hidden h-16 w-12 opacity-90 md:block" />
+        <OfficialLockup className="pointer-events-none absolute right-6 top-6 hidden h-24 w-24 md:block" />
         <div className="absolute bottom-8 left-6 right-6 md:left-12">
           <p className="text-[11px] tracking-[0.28em] uppercase text-[#C9A45C]">{site.heroKicker}</p>
           <p className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.14em] text-[#F3EDE2] md:text-5xl">

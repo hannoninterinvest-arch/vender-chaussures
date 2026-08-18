@@ -14,7 +14,7 @@
   --cream: #f5efe4;
   --ink: #2c261c;
   --glow: #3a2e18;
-  --header-h: 80px;
+  --header-h: 88px;
   --header-bg: rgba(18, 16, 13, 0.86);
   --header-fg: #f5efe4;
 }
@@ -65,17 +65,8 @@ body::after {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-.logo-mark,
-.elvaro-wordmark,
-.logo-lockup {
-  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.32));
-  transition: transform 0.4s ease, filter 0.4s ease;
-}
-
-a:hover .logo-mark,
-a:hover .elvaro-wordmark,
-.logo-mark:hover {
-  filter: drop-shadow(0 10px 18px rgba(212, 175, 55, 0.32)) brightness(1.08);
+.logo-direct {
+  display: block;
 }
 
 .logo-float {
