@@ -131,7 +131,7 @@ export function ShopClient() {
       <section className="shop-hero">
         <div className="relative mx-auto max-w-[1280px] px-4 py-12 md:px-6 md:py-16">
           <div className="shop-hero-ornament">
-            <ElvaroWordmark className="h-4 w-auto" />
+            <ElvaroWordmark className="h-12 w-auto" />
           </div>
           <p className="mt-4 text-[11px] font-semibold tracking-[0.36em] uppercase text-[#C5A059]">Boutique</p>
           <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.14em] uppercase text-[var(--fg)] md:text-6xl">

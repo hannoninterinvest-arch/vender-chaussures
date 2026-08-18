@@ -20,8 +20,8 @@ export const metadata: Metadata = {
   description:
     "Chaussures haut de gamme fabriquées en Tunisie. Commande sans compte, paiement à la livraison.",
   icons: {
-    icon: "/logo.svg",
-    apple: "/logo.svg",
+    icon: "/brand/elvaro-logo.png",
+    apple: "/brand/elvaro-logo.png",
   },
 };
 

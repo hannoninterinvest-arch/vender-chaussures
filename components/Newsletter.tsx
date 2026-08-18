@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useToast } from "./Toast";
 import { Reveal } from "./Reveal";
-import { ElvaroWordmark } from "./Logo";
+import { OfficialLockup } from "./Logo";
 
 export function Newsletter() {
   const toast = useToast();
@@ -44,7 +44,7 @@ export function Newsletter() {
             </button>
           </form>
         </div>
-        <ElvaroWordmark className="pointer-events-none absolute -bottom-2 right-6 hidden h-16 w-auto opacity-15 md:block" />
+        <OfficialLockup className="pointer-events-none absolute -bottom-2 right-6 hidden h-28 w-28 opacity-30 md:block" />
       </div>
       </Reveal>
     </section>
