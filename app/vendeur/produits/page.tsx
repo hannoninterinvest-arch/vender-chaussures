@@ -479,8 +479,8 @@ export default function SellerProductsPage() {
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                   {p.colors.map((c) => (
                     <span key={c.name} className="inline-flex items-center gap-1 text-[10px] text-[#666]" title={c.name}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       {c.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={c.image} alt="" className="h-6 w-6 rounded object-cover" />
                       ) : (
                         <span className="h-6 w-6 rounded border" style={{ background: c.hex }} />
