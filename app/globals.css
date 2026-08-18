@@ -551,10 +551,7 @@ html[data-theme="light"] .gold-btn-ghost:hover {
   html {
     scroll-behavior: auto;
   }
-  .logo-mark,
   .logo-float,
-  .elvaro-wordmark,
-  .logo-lockup,
   .gold-btn,
   .gold-btn::after,
   img,

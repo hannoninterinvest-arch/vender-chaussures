@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BrandLockup, OfficialLockup } from "@/components/Logo";
+import { BrandLockup } from "@/components/Logo";
 import { Footsteps } from "@/components/Footsteps";
 import { brand } from "@/lib/brand";
 
@@ -71,9 +71,8 @@ export function Footer() {
         </div>
       </div>
       <div className="gold-line mx-auto max-w-[1280px]" />
-      <div className="px-4 py-10 text-center">
-        <OfficialLockup className="mx-auto h-auto w-[240px] md:w-[320px]" />
-        <p className="mt-4 text-[11px] tracking-[0.16em] uppercase text-[#EDE8DE]/50">
+      <div className="px-4 py-8 text-center">
+        <p className="text-[11px] tracking-[0.16em] uppercase text-[#EDE8DE]/50">
           © {new Date().getFullYear()} {brand.name} {brand.byline} — Tunisie
         </p>
       </div>
