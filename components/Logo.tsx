@@ -1,14 +1,20 @@
 type Props = { className?: string; compact?: boolean };
 
+/* public/logo-mark.png is the uploaded logo trimmed to its artwork (1096x700)
+   with the white backdrop keyed out, so it sits on both themes. */
 export default function Logo({ className = "", compact }: Props) {
   return (
-    <span
-      className={`logo-crop ${
-        compact ? "h-[38px] sm:h-[42px]" : "h-[44px] sm:h-[52px]"
-      } ${className}`}
-    >
+    <span className={`inline-flex items-center ${className}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo.png" alt="ELVARO by AIR GO SHOES" />
+      <img
+        src="/logo-mark.png"
+        alt="ELVARO by AIR GO SHOES"
+        width={1096}
+        height={700}
+        className={`w-auto max-w-none object-contain ${
+          compact ? "h-[40px] sm:h-[44px]" : "h-[46px] sm:h-[54px]"
+        }`}
+      />
     </span>
   );
 }
@@ -26,14 +32,18 @@ export function BrandMark({
 }) {
   const height =
     size === "lg"
-      ? "h-[76px] sm:h-[96px]"
+      ? "h-[80px] sm:h-[104px]"
       : size === "sm"
-        ? "h-[40px] sm:h-[46px]"
-        : "h-[54px] sm:h-[64px]";
+        ? "h-[42px] sm:h-[48px]"
+        : "h-[56px] sm:h-[68px]";
   return (
-    <span className={`logo-crop ${height} ${className}`}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo.png" alt="ELVARO by AIR GO SHOES" />
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/logo-mark.png"
+      alt="ELVARO by AIR GO SHOES"
+      width={1096}
+      height={700}
+      className={`w-auto max-w-none object-contain ${height} ${className}`}
+    />
   );
 }

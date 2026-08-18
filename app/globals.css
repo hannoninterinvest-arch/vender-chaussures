@@ -69,28 +69,6 @@ body::after {
   display: block;
 }
 
-/* The source PNG is a 2048px square whose artwork only fills 1096x699 in the
-   middle, so the frame is clipped to that box to avoid huge empty margins.
-   Kept in the components layer so Tailwind display utilities still win. */
-@layer components {
-  .logo-crop {
-    position: relative;
-    display: inline-block;
-    overflow: hidden;
-    aspect-ratio: 1096 / 699;
-  }
-
-  .logo-crop img {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    height: 293%;
-    width: auto;
-    max-width: none;
-    transform: translate(-50%, -50%);
-  }
-}
-
 .logo-float {
   animation: logo-float 7s ease-in-out infinite;
 }
