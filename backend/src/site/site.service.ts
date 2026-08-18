@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { UpdateSiteDto } from './dto/update-site.dto';
 import { SiteSettings } from './site-settings.entity';
 import { homepageCovers } from '../products/catalog';
+import { isSeedMedia } from '../products/product-media';
 
 const HOME_ID = 'home';
 const DEFAULT_SUBTITLE =
@@ -32,9 +33,10 @@ export class SiteService implements OnModuleInit {
       );
     } else {
       let dirty = false;
-      if (!Array.isArray(exists.coverImages) || exists.coverImages.length === 0) {
+      const covers = Array.isArray(exists.coverImages) ? exists.coverImages : [];
+      if (covers.length === 0 || isSeedMedia(covers)) {
         exists.coverImages = homepageCovers;
-        dirty = true;
+        dirty = covers.join('|') !== homepageCovers.join('|');
       }
       if (!exists.heroSubtitle || exists.heroSubtitle === OLD_SUBTITLE) {
         exists.heroSubtitle = DEFAULT_SUBTITLE;

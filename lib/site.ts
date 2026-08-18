@@ -10,10 +10,10 @@ export const defaultSite: SiteHome = {
   heroTitle: "CUIR PREMIUM",
   heroSubtitle: "L'élégance du cuir, pensée pour la ville et la cérémonie.",
   coverImages: [
-    "/chaussures/oxford-noir-hq.jpg",
-    "/chaussures/loafer-or-hq.jpg",
-    "/chaussures/derby-cognac-hq.jpg",
-    "/chaussures/brogue-hq.jpg",
-    "/chaussures/sandale-hq.jpg",
+    "/chaussures/hero-oxford.jpg",
+    "/chaussures/hero-navy.jpg",
+    "/chaussures/hero-mocassin.jpg",
+    "/chaussures/hero-bottine.jpg",
+    "/chaussures/hero-sandale.jpg",
   ],
 };

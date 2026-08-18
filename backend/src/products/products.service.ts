@@ -16,7 +16,12 @@ import { Category } from './category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { attachProductMedia, hydrateColors, mergeGallery } from './product-media';
+import {
+  attachProductMedia,
+  hydrateColors,
+  isSeedMedia,
+  mergeGallery,
+} from './product-media';
 import { Product } from './product.entity';
 
 export function slugify(value: string) {
@@ -49,7 +54,7 @@ export class ProductsService implements OnModuleInit {
       const exists = await this.categories.findOne({ where: { id: item.id } });
       if (!exists) {
         await this.categories.save(this.categories.create(item));
-      } else if (!exists.image) {
+      } else if (!exists.image || isSeedMedia([exists.image])) {
         exists.image = item.image;
         exists.label = item.label;
         await this.categories.save(exists);
@@ -69,7 +74,22 @@ export class ProductsService implements OnModuleInit {
         );
       }
     }
+    await this.refreshSeedMedia();
     await this.backfillColorImages();
+  }
+
+  /** Bring seeded products up to the current catalog photos, unless the shop
+   *  replaced them with its own uploads. */
+  private async refreshSeedMedia() {
+    for (const item of catalog) {
+      const row = await this.products.findOne({ where: { id: item.id } });
+      if (!row || !isSeedMedia(row.images)) continue;
+      const media = attachProductMedia(item.colors, item.images);
+      if (JSON.stringify(media.images) === JSON.stringify(row.images)) continue;
+      row.colors = media.colors;
+      row.images = media.images;
+      await this.products.save(row);
+    }
   }
 
   async findAll() {

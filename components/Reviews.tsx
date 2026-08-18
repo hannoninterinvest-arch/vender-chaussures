@@ -7,22 +7,19 @@ const reviews = [
     title: "Qualité rare",
     text: "Le cuir et la finition ELVARO tiennent vraiment la promesse haut de gamme.",
     rating: "5.0",
-    image:
-      "/chaussures/oxford-noir-hq.jpg",
+    image: "/chaussures/oxford-cognac.jpg",
   },
   {
     title: "Pointures justes",
     text: "Taille habituelle, nickel. Le paiement à la livraison rassure.",
     rating: "5.0",
-    image:
-      "/chaussures/derby-cognac-hq.jpg",
+    image: "/chaussures/derby-navy.jpg",
   },
   {
     title: "Service soigné",
     text: "Commande sans compte, confirmation WhatsApp, reçu le lendemain à Ariana.",
     rating: "5.0",
-    image:
-      "/chaussures/loafer-or-hq.jpg",
+    image: "/chaussures/mocassin-or.jpg",
   },
 ];
 

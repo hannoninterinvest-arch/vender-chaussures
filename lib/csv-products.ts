@@ -214,6 +214,6 @@ export function parseProductCsv(text: string): { products: CsvProduct[]; errors:
 }
 
 export const CSV_TEMPLATE = `nom;marque;prix;achat;description;genre;categorie;nouveau;couleurs;pointures;images
-Oxford Noir;ELVARO;489;280;Richelieu cuir lustré;homme;ceremonie;oui;Noir:#1A1612@/chaussures/oxford-noir-hq.jpg|Bordeaux:#6B1D2A@/chaussures/oxford-noir.jpg;40|41|42|43|44;/chaussures/oxford-noir-hq.jpg|/chaussures/oxford-noir-pair.jpg
-Derby Cognac;ELVARO;459;260;Derby ville en cuir;homme;ville;oui;Cognac:#8B5A2B@/chaussures/derby-cognac-hq.jpg;40|41|42|43;/chaussures/derby-cognac-hq.jpg|/chaussures/derby-laces.jpg
+Oxford Noir;ELVARO;489;280;Richelieu cuir lustré;homme;ceremonie;oui;Noir:#141210@/chaussures/oxford-noir.jpg|Cognac:#B5763A@/chaussures/oxford-cognac.jpg;40|41|42|43|44;/chaussures/oxford-noir.jpg|/chaussures/oxford-cognac.jpg
+Derby Cognac;ELVARO;459;260;Derby ville en cuir;homme;ville;oui;Cognac:#8B5A2B@/chaussures/derby-cognac.jpg;40|41|42|43;/chaussures/derby-cognac.jpg|/chaussures/derby-tabac.jpg
 `;
