@@ -77,14 +77,33 @@ export type SellerOrder = {
   }[];
 };
 
+export type MonthStat = {
+  key: string;
+  label: string;
+  orders: number;
+  pairs: number;
+  revenue: number;
+  profit: number;
+};
+
 export type SellerStats = {
   orders: number;
   pending: number;
   delivered: number;
   cancelled: number;
+  paid: number;
+  unpaid: number;
+  paidOnline: number;
+  paidCod: number;
+  pairs: number;
+  averageOrder: number;
   revenue: number;
+  deliveryFees: number;
   cost: number;
   profit: number;
+  thisMonth: MonthStat;
+  lastMonth: MonthStat;
+  months: MonthStat[];
   bestProduct: {
     productId: string;
     name: string;
