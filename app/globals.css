@@ -71,6 +71,79 @@ body::after {
   display: block;
 }
 
+/* public/logo.png garde des marges transparentes autour du dessin : la fenêtre
+   est calée sur l'illustration (906x613 dans une image de 1376x768) pour que la
+   typographie de la carte de visite vienne se coller dessous.
+   Dans la couche components pour que « hidden » de Tailwind reste prioritaire. */
+@layer components {
+  .brand-signature {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .logo-art {
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+    aspect-ratio: 906 / 613;
+  }
+
+  .logo-art img {
+    position: absolute;
+    left: -27.37%;
+    top: -11.09%;
+    width: 151.87%;
+    height: auto;
+    max-width: none;
+  }
+}
+
+.brand-byline {
+  margin-top: 0.5em;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: var(--gold);
+  white-space: nowrap;
+  /* Le tracking large décale le bloc : on le recentre. */
+  text-indent: 0.36em;
+}
+
+.brand-byline-by {
+  text-transform: lowercase;
+  font-style: italic;
+  letter-spacing: 0.08em;
+}
+
+.brand-rule {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 8rem;
+  height: 1px;
+  margin: 0.75em 0;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.brand-rule::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--gold);
+}
+
+.brand-slogan {
+  font-weight: 400;
+  text-transform: uppercase;
+  color: var(--gold);
+  white-space: nowrap;
+  text-indent: 0.3em;
+}
+
 .logo-float {
   animation: logo-float 7s ease-in-out infinite;
 }

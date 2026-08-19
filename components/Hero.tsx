@@ -91,8 +91,11 @@ export function Hero() {
             </Link>
           </div>
         </div>
-        <div className="pointer-events-none absolute right-4 top-4 hidden sm:block md:right-8 md:top-8">
-          <BrandMark size="lg" className="drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)]" />
+        <div className="pointer-events-none absolute right-4 top-4 md:right-8 md:top-8">
+          <BrandMark
+            size="xl"
+            className="hidden drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)] sm:inline-flex"
+          />
         </div>
         {photos.length > 1 && (
           <div className="absolute bottom-8 right-6 flex gap-2 md:right-12">

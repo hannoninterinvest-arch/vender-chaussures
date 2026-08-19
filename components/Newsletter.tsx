@@ -24,7 +24,7 @@ export function Newsletter() {
       <Reveal>
       <div className="gold-frame relative overflow-hidden rounded-[4px] bg-[var(--panel)] px-6 py-12 md:px-12 md:py-16">
         <div className="pointer-events-none absolute right-4 top-4 opacity-90 sm:right-8 sm:top-6">
-          <BrandMark size="md" className="hidden sm:block" />
+          <BrandMark size="md" className="hidden sm:inline-flex" />
         </div>
         <div className="max-w-xl">
           <p className="text-[11px] tracking-[0.28em] uppercase text-[#C9A45C]">Cercle ELVARO</p>

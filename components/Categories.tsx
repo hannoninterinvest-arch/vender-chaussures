@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCatalog } from "@/lib/catalog";
-import { BrandMark } from "./Logo";
+import { BrandSignature } from "./Logo";
 import { Reveal } from "./Reveal";
 
 export function Categories() {
@@ -13,7 +13,7 @@ export function Categories() {
       <div className="mx-auto max-w-[1280px] px-4 md:px-6">
         <Reveal>
           <div className="mb-8 flex items-center gap-4">
-            <BrandMark size="sm" className="hidden sm:block" />
+            <BrandSignature size="sm" slogan={false} className="hidden sm:inline-flex" />
             <div>
               <p className="text-[11px] tracking-[0.28em] uppercase text-[var(--gold)]">Univers</p>
               <h2 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.12em] text-[var(--fg)] md:text-5xl">

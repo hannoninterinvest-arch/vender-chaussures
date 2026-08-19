@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCatalog } from "@/lib/catalog";
 import { ProductCard } from "./ProductCard";
-import { BrandMark } from "./Logo";
+import { BrandSignature } from "./Logo";
 import { Reveal } from "./Reveal";
 
 export function NewDrops() {
@@ -16,7 +16,7 @@ export function NewDrops() {
       <Reveal>
         <div className="mb-8 flex items-end justify-between gap-4">
           <div className="flex items-center gap-4">
-            <BrandMark size="sm" className="hidden sm:block" />
+            <BrandSignature size="sm" slogan={false} className="hidden sm:inline-flex" />
             <div>
             <p className="text-[11px] tracking-[0.28em] uppercase text-[#C9A45C]">Sélection</p>
             <h2 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.12em] text-[var(--fg)] md:text-5xl">

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BrandLockup } from "@/components/Logo";
+import { BrandSignature } from "@/components/Logo";
 import { Footsteps } from "@/components/Footsteps";
 import { brand } from "@/lib/brand";
 
@@ -8,11 +8,8 @@ export function Footer() {
     <footer className="mt-8 border-t border-[var(--line)] bg-[var(--panel)] text-[var(--fg)]">
       <div className="mx-auto grid max-w-[1280px] gap-10 px-4 py-16 md:grid-cols-4 md:px-6">
         <div>
-          <BrandLockup />
-          <p className="mt-4 flex items-center gap-3 text-[11px] tracking-[0.2em] uppercase text-[var(--gold)]">
-            <Footsteps className="origin-left scale-75" />
-            {brand.slogan}
-          </p>
+          <BrandSignature size="lg" className="items-start" />
+          <Footsteps className="mt-4 origin-left scale-75" />
           <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">{brand.activity}.</p>
         </div>
         <div>

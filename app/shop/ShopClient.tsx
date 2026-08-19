@@ -131,7 +131,7 @@ export function ShopClient() {
       <section className="shop-hero">
         <div className="relative mx-auto max-w-[1280px] px-4 py-12 md:px-6 md:py-16">
           <div className="pointer-events-none absolute right-4 top-4 sm:right-6 sm:top-6">
-            <BrandMark size="md" />
+            <BrandMark size="md" className="hidden sm:inline-flex" />
           </div>
           <div className="shop-hero-ornament">
             <span className="h-1.5 w-1.5 rounded-full bg-[#C5A059]" />
