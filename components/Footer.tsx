@@ -48,6 +48,11 @@ export function Footer() {
               <Link href="/checkout" className="transition-colors hover:text-[var(--gold)]">Commander</Link>
             </li>
             <li>
+              <Link href="/grossiste" className="transition-colors hover:text-[var(--gold)]">
+                Achat en gros
+              </Link>
+            </li>
+            <li>
               <Link href="/vendeur" className="transition-colors hover:text-[var(--gold)]">Espace équipe</Link>
             </li>
           </ul>

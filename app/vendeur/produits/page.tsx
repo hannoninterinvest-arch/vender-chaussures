@@ -17,6 +17,7 @@ const emptyForm = {
   name: "",
   brand: "",
   price: "",
+  promoPrice: "",
   cost: "",
   description: "",
   gender: "unisexe" as SellerProduct["gender"],
@@ -78,6 +79,7 @@ export default function SellerProductsPage() {
       name: p.name,
       brand: p.brand,
       price: String(p.price),
+      promoPrice: p.promoPrice ? String(p.promoPrice) : "",
       cost: String(p.cost ?? 0),
       description: p.description,
       gender: p.gender,
@@ -95,6 +97,17 @@ export default function SellerProductsPage() {
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+
+  const promoPreview = useMemo(() => {
+    const price = Number(form.price);
+    const promo = Number(form.promoPrice);
+    if (!price || !promo || promo <= 0 || promo >= price) return null;
+    return {
+      promo,
+      old: price,
+      percent: Math.round(((price - promo) / price) * 100),
+    };
+  }, [form.price, form.promoPrice]);
 
   const colors = useMemo(
     () =>
@@ -123,12 +136,18 @@ export default function SellerProductsPage() {
       toast("Ajoute une photo pour chaque couleur");
       return;
     }
+    const promo = Number(form.promoPrice || 0);
+    if (promo > 0 && promo >= Number(form.price)) {
+      toast("Le prix promo doit être inférieur au prix normal");
+      return;
+    }
     const images = [...new Set([...colors.map((c) => c.image), ...extras])];
     setBusy(true);
     const body = {
       name: form.name,
       brand: form.brand,
       price: Number(form.price),
+      promoPrice: promo,
       cost: Number(form.cost || 0),
       description: form.description,
       gender: form.gender,
@@ -237,6 +256,17 @@ export default function SellerProductsPage() {
             onChange={(v) => setForm({ ...form, cost: v })}
           />
         </div>
+        <Field
+          label="Prix promo (DT) — vide = pas de promo"
+          type="number"
+          value={form.promoPrice}
+          onChange={(v) => setForm({ ...form, promoPrice: v })}
+        />
+        <p className="text-xs text-[#666]">
+          {promoPreview
+            ? `En boutique : ${promoPreview.promo} DT affiché, ${promoPreview.old} DT barré (−${promoPreview.percent} %).`
+            : "Renseigne un prix promo inférieur au prix de vente : la boutique barrera l’ancien prix."}
+        </p>
         <label className="block text-sm font-medium">
           Description
           <textarea
@@ -473,7 +503,16 @@ export default function SellerProductsPage() {
               <div className="min-w-0 flex-1">
                 <p className="font-bold">{p.name}</p>
                 <p className="text-sm text-[#666]">
-                  {p.brand} · {formatTnd(p.price)} · achat {formatTnd(p.cost || 0)}
+                  {p.brand} ·{" "}
+                  {p.promoPrice ? (
+                    <>
+                      <span className="font-bold text-[#C0271B]">{formatTnd(p.promoPrice)}</span>{" "}
+                      <span className="line-through">{formatTnd(p.price)}</span>
+                    </>
+                  ) : (
+                    formatTnd(p.price)
+                  )}{" "}
+                  · achat {formatTnd(p.cost || 0)}
                   {p.featured ? " · accueil" : ""}
                 </p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">

@@ -11,6 +11,7 @@ import { useCart } from "@/lib/cart";
 import { useToast } from "@/components/Toast";
 import { ProductCard } from "@/components/ProductCard";
 import { ColorDots } from "@/components/ColorDots";
+import { hasPromo, Price, PromoBadge } from "@/components/Price";
 import { whatsappHref } from "@/lib/brand";
 
 export default function ProductPage({
@@ -103,7 +104,15 @@ export default function ProductPage({
           <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase md:text-4xl">
             {product.name}
           </h1>
-          <p className="mt-3 text-2xl font-semibold text-[#C5A059]">{formatTnd(product.price)}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <Price product={product} size="lg" />
+            <PromoBadge product={product} />
+          </div>
+          {hasPromo(product) && product.oldPrice ? (
+            <p className="mt-1 text-sm text-[var(--promo)]">
+              Tu économises {formatTnd(product.oldPrice - product.price)} sur cette paire.
+            </p>
+          ) : null}
           <p className="mt-1 text-sm text-[var(--muted)]">Livraison calculée au checkout · Échange 7 jours</p>
 
           <div className="mt-8">
@@ -219,7 +228,7 @@ export default function ProductPage({
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs text-[var(--muted)]">{product.name}</p>
-            <p className="font-semibold text-[var(--gold)]">{formatTnd(product.price)}</p>
+            <Price product={product} />
           </div>
           <button type="button" onClick={add} className="gold-btn h-11 shrink-0 rounded-sm px-5 text-[11px] uppercase">
             Ajouter

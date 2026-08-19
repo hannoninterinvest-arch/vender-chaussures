@@ -15,6 +15,7 @@ const NAV = [
   { href: "/shop?gender=homme", label: "Hommes" },
   { href: "/shop?gender=femme", label: "Femmes" },
   { href: "/shop", label: "Collection" },
+  { href: "/grossiste", label: "Grossistes" },
 ];
 
 function IconSearch() {

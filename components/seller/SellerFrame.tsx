@@ -20,6 +20,7 @@ const NAV = [
   { href: "/vendeur/vitrine", label: "Page d’accueil", adminOnly: false },
   { href: "/vendeur/categories", label: "Catégories", adminOnly: false },
   { href: "/vendeur/commandes", label: "Commandes", adminOnly: false },
+  { href: "/vendeur/grossistes", label: "Grossistes", adminOnly: false },
   { href: "/vendeur/import", label: "Import CSV", adminOnly: false },
   { href: "/vendeur/equipe", label: "Équipe", adminOnly: true },
 ];

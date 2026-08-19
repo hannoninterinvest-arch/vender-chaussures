@@ -2,6 +2,7 @@ export type CsvProduct = {
   name: string;
   brand: string;
   price: number;
+  promoPrice: number;
   cost: number;
   description: string;
   gender: "homme" | "femme" | "unisexe";
@@ -23,6 +24,10 @@ const HEADERS: Record<string, string> = {
   price: "price",
   achat: "cost",
   cost: "cost",
+  promo: "promoPrice",
+  promotion: "promoPrice",
+  "prix promo": "promoPrice",
+  solde: "promoPrice",
   "prix dachat": "cost",
   "prix achat": "cost",
   description: "description",
@@ -186,10 +191,13 @@ export function parseProductCsv(text: string): { products: CsvProduct[]; errors:
       const price = Number(get("price").replace(",", "."));
       if (!Number.isFinite(price) || price < 0) throw new Error("Prix invalide");
       const costRaw = get("cost").replace(",", ".");
+      const promoRaw = Number(get("promoPrice").replace(",", "."));
+      const promoPrice = Number.isFinite(promoRaw) && promoRaw > 0 && promoRaw < price ? promoRaw : 0;
       products.push({
         name,
         brand: get("brand") || "ELVARO",
         price,
+        promoPrice,
         cost: Number.isFinite(Number(costRaw)) ? Number(costRaw) : 0,
         description: get("description") || name,
         gender: parseGender(get("gender")),
@@ -213,7 +221,7 @@ export function parseProductCsv(text: string): { products: CsvProduct[]; errors:
   return { products, errors };
 }
 
-export const CSV_TEMPLATE = `nom;marque;prix;achat;description;genre;categorie;nouveau;couleurs;pointures;images
-Oxford Noir;ELVARO;489;280;Richelieu cuir lustré;homme;ceremonie;oui;Noir:#141210@/chaussures/oxford-noir.jpg|Cognac:#B5763A@/chaussures/oxford-cognac.jpg;40|41|42|43|44;/chaussures/oxford-noir.jpg|/chaussures/oxford-cognac.jpg
-Derby Cognac;ELVARO;459;260;Derby ville en cuir;homme;ville;oui;Cognac:#8B5A2B@/chaussures/derby-cognac.jpg;40|41|42|43;/chaussures/derby-cognac.jpg|/chaussures/derby-tabac.jpg
+export const CSV_TEMPLATE = `nom;marque;prix;promo;achat;description;genre;categorie;nouveau;couleurs;pointures;images
+Oxford Noir;ELVARO;489;399;280;Richelieu cuir lustré;homme;ceremonie;oui;Noir:#141210@/chaussures/oxford-noir.jpg|Cognac:#B5763A@/chaussures/oxford-cognac.jpg;40|41|42|43|44;/chaussures/oxford-noir.jpg|/chaussures/oxford-cognac.jpg
+Derby Cognac;ELVARO;459;;260;Derby ville en cuir;homme;ville;oui;Cognac:#8B5A2B@/chaussures/derby-cognac.jpg;40|41|42|43;/chaussures/derby-cognac.jpg|/chaussures/derby-tabac.jpg
 `;

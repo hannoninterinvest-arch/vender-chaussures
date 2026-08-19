@@ -14,6 +14,10 @@ export class Product {
   @Column('decimal', { precision: 10, scale: 2 })
   price: number;
 
+  /** Prix promotionnel. 0 (ou >= price) signifie aucune promotion en cours. */
+  @Column('decimal', { precision: 10, scale: 2, default: 0 })
+  promoPrice: number;
+
   @Column('decimal', { precision: 10, scale: 2, default: 0 })
   cost: number;
 

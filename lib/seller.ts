@@ -108,6 +108,9 @@ export type SellerProduct = {
   name: string;
   brand: string;
   price: number;
+  promoPrice: number;
+  oldPrice?: number | null;
+  discount?: number;
   cost: number;
   description: string;
   gender: "homme" | "femme" | "unisexe";

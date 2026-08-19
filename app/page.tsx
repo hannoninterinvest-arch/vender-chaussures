@@ -5,6 +5,7 @@ import { NewDrops } from "@/components/NewDrops";
 import { Newsletter } from "@/components/Newsletter";
 import { Pillars } from "@/components/Pillars";
 import { Reviews } from "@/components/Reviews";
+import { WholesaleBanner } from "@/components/WholesaleBanner";
 
 export default function HomePage() {
   return (
@@ -15,6 +16,7 @@ export default function HomePage() {
       <NewDrops />
       <Categories />
       <Reviews />
+      <WholesaleBanner />
       <Newsletter />
     </>
   );

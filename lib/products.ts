@@ -6,7 +6,11 @@ export type Product = {
   id: string;
   name: string;
   brand: string;
+  /** Prix à payer : déjà remisé quand une promo est active. */
   price: number;
+  /** Prix avant promotion, affiché barré. */
+  oldPrice?: number | null;
+  discount?: number;
   cost?: number;
   description: string;
   gender: Gender;

@@ -14,6 +14,7 @@
   --cream: #f5efe4;
   --ink: #2c261c;
   --glow: #3d3118;
+  --promo: #e0483c;
   --header-h: 84px;
   --header-bg: rgba(14, 12, 10, 0.9);
   --header-fg: #f5efe4;
@@ -31,6 +32,7 @@ html[data-theme="light"] {
   --gold-light: #c5a059;
   --gold-dark: #7a5e22;
   --glow: #ead9ae;
+  --promo: #c0271b;
   --header-bg: rgba(244, 238, 226, 0.94);
   --header-fg: #241e16;
 }
@@ -188,6 +190,19 @@ html[data-theme="light"] .gold-frame {
 
 .gold-btn:active {
   transform: translateY(1px);
+}
+
+.promo-badge {
+  display: inline-block;
+  border-radius: 2px;
+  background: var(--promo);
+  padding: 0.25rem 0.5rem;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(224, 72, 60, 0.28);
 }
 
 .gold-frame {

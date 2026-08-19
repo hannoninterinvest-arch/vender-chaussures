@@ -22,7 +22,14 @@ import {
   isSeedMedia,
   mergeGallery,
 } from './product-media';
+import { discountPercent, promoActive, sellingPrice } from './pricing';
 import { Product } from './product.entity';
+
+/** Une promo au-dessus du prix normal n'a pas de sens : on l'annule. */
+function normalizePromo(promo: number | undefined, price: number) {
+  const value = Number(promo) || 0;
+  return value > 0 && value < price ? value : 0;
+}
 
 export function slugify(value: string) {
   const slug = value
@@ -180,6 +187,7 @@ export class ProductsService implements OnModuleInit {
       category: dto.category,
       isNew: dto.isNew ?? true,
       featured: dto.featured ?? false,
+      promoPrice: normalizePromo(dto.promoPrice, dto.price),
       colors: media.colors,
       sizes: dto.sizes,
       images: media.images,
@@ -200,6 +208,12 @@ export class ProductsService implements OnModuleInit {
     if (dto.isNew !== undefined) product.isNew = dto.isNew;
     if (dto.featured !== undefined) product.featured = dto.featured;
     if (dto.sizes !== undefined) product.sizes = dto.sizes;
+    if (dto.promoPrice !== undefined || dto.price !== undefined) {
+      product.promoPrice = normalizePromo(
+        dto.promoPrice ?? product.promoPrice,
+        Number(product.price),
+      );
+    }
     if (dto.colors !== undefined || dto.images !== undefined) {
       const media = attachProductMedia(
         dto.colors ?? product.colors,
@@ -242,12 +256,16 @@ export class ProductsService implements OnModuleInit {
     return id;
   }
 
+  /** `price` est toujours le prix à payer ; `oldPrice` n'existe qu'en promo. */
   toPublic(product: Product) {
+    const onPromo = promoActive(product);
     return {
       id: product.id,
       name: product.name,
       brand: product.brand,
-      price: Number(product.price),
+      price: sellingPrice(product),
+      oldPrice: onPromo ? Number(product.price) : null,
+      discount: discountPercent(product),
       description: product.description,
       gender: product.gender,
       category: product.category,
@@ -259,7 +277,13 @@ export class ProductsService implements OnModuleInit {
     };
   }
 
+  /** Le vendeur édite le prix normal et la promo séparément. */
   toSeller(product: Product) {
-    return { ...this.toPublic(product), cost: Number(product.cost) || 0 };
+    return {
+      ...this.toPublic(product),
+      price: Number(product.price),
+      promoPrice: Number(product.promoPrice) || 0,
+      cost: Number(product.cost) || 0,
+    };
   }
 }

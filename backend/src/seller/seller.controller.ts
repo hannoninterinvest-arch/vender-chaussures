@@ -25,6 +25,8 @@ import { UpdateOrderStatusDto } from '../orders/dto/update-order-status.dto';
 import { OrdersService } from '../orders/orders.service';
 import { SiteService } from '../site/site.service';
 import { UpdateSiteDto } from '../site/dto/update-site.dto';
+import { UpdateWholesaleRequestDto } from '../wholesale/dto/update-wholesale-request.dto';
+import { WholesaleService } from '../wholesale/wholesale.service';
 import { CloudinaryService } from './cloudinary.service';
 
 @Controller('seller')
@@ -35,6 +37,7 @@ export class SellerController {
     private readonly orders: OrdersService,
     private readonly uploads: CloudinaryService,
     private readonly site: SiteService,
+    private readonly wholesale: WholesaleService,
   ) {}
 
   @Post('uploads')
@@ -105,6 +108,27 @@ export class SellerController {
   @Roles('admin')
   removeCategory(@Param('id') id: string) {
     return this.products.removeCategory(id);
+  }
+
+  @Get('wholesale')
+  wholesaleList() {
+    return this.wholesale.findAll();
+  }
+
+  @Get('wholesale/stats')
+  wholesaleStats() {
+    return this.wholesale.stats();
+  }
+
+  @Patch('wholesale/:id')
+  updateWholesale(@Param('id') id: string, @Body() dto: UpdateWholesaleRequestDto) {
+    return this.wholesale.update(id, dto);
+  }
+
+  @Delete('wholesale/:id')
+  @Roles('admin')
+  removeWholesale(@Param('id') id: string) {
+    return this.wholesale.remove(id);
   }
 
   @Get('site')

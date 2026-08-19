@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { KonnectService } from '../payments/konnect.service';
+import { sellingPrice } from '../products/pricing';
 import { ProductsService } from '../products/products.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderStatus } from './dto/update-order-status.dto';
@@ -48,7 +49,7 @@ export class OrdersService {
       if (!product.sizes.includes(line.size)) {
         throw new BadRequestException(`Pointure indisponible pour ${product.name}`);
       }
-      const price = Number(product.price);
+      const price = sellingPrice(product);
       const cost = Number(product.cost) || 0;
       subtotal += price * line.qty;
       lines.push(

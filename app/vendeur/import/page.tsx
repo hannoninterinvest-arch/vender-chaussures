@@ -75,11 +75,15 @@ export default function SellerImportPage() {
       <div className="mt-6 space-y-3 rounded-[4px] border border-[#C5A059]/35 bg-white p-6 text-sm">
         <p className="font-bold">Colonnes (Excel : séparateur point-virgule)</p>
         <p>
-          <code>nom;marque;prix;achat;description;genre;categorie;nouveau;couleurs;pointures;images</code>
+          <code>nom;marque;prix;promo;achat;description;genre;categorie;nouveau;couleurs;pointures;images</code>
         </p>
         <ul className="list-disc space-y-1 pl-5 text-[#666]">
           <li>
             <strong>images</strong> : <code>https://…/photo1.jpg|https://…/photo2.jpg</code>
+          </li>
+          <li>
+            <strong>promo</strong> : prix promotionnel, à laisser vide s’il n’y a pas de promo. La
+            boutique barre alors le prix normal.
           </li>
           <li>
             <strong>pointures</strong> : <code>40|41|42|43</code>
