@@ -43,50 +43,49 @@ export function Hero() {
   const current = photos[index] || "";
 
   return (
-    <section className="mx-auto max-w-[1280px] px-4 pb-6 pt-10 md:px-6">
-      <div className="mb-8">
-        <div className="flex max-w-3xl flex-col items-start gap-5">
+    <section className="mx-auto max-w-[1280px] px-4 pb-6 pt-6 md:px-6 md:pt-10">
+      <div className="mb-6 md:mb-8">
+        <div className="flex max-w-3xl flex-col items-start gap-4 md:gap-5">
           <p className="anim-fade-up text-[11px] tracking-[0.32em] uppercase text-[var(--gold)]">{brand.byline}</p>
           <h1 className="font-[family-name:var(--font-display)] leading-[0.92] tracking-[0.12em]">
-            <span className="anim-fade-up anim-d2 block text-[36px] text-[var(--fg)] sm:text-[56px] md:text-[72px]">
+            <span className="anim-fade-up anim-d2 block text-[32px] text-[var(--fg)] sm:text-[56px] md:text-[72px]">
               L&apos;EXCELLENCE
             </span>
-            <span className="anim-fade-up anim-d3 mt-2 flex flex-wrap items-center gap-4">
-              <span className="gold-text block text-[36px] sm:text-[56px] md:text-[72px]">À CHAQUE PAS</span>
-              <Footsteps className="hidden sm:inline-flex" />
+            <span className="anim-fade-up anim-d3 mt-2 flex flex-wrap items-center gap-3 sm:gap-4">
+              <span className="gold-text block text-[32px] sm:text-[56px] md:text-[72px]">À CHAQUE PAS</span>
+              <Footsteps />
             </span>
           </h1>
           <p className="anim-fade-up anim-d4 max-w-md text-sm leading-relaxed text-[var(--muted)]">
             {brand.slogan} — cuir premium, allure de ville et de cérémonie.
           </p>
-          <Footsteps className="anim-fade-up anim-d4 sm:hidden" />
         </div>
       </div>
 
-      <div className="anim-fade-up anim-d4 gold-frame relative overflow-hidden rounded-[4px] bg-[#14110C]">
+      <div className="anim-fade-up anim-d4 gold-frame relative overflow-hidden rounded-[4px] bg-[var(--panel)]">
         {current ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             key={current}
             src={current}
             alt={site.heroTitle || "Collection ELVARO"}
-            className="hero-photo h-[420px] w-full object-cover opacity-90 md:h-[560px]"
+            className="hero-photo h-[300px] w-full object-cover opacity-90 sm:h-[420px] md:h-[560px]"
           />
         ) : (
-          <div className="h-[420px] bg-[#14110C] md:h-[560px]" />
+          <div className="h-[300px] bg-[var(--panel)] sm:h-[420px] md:h-[560px]" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-        <div className="absolute bottom-8 left-6 right-6 md:left-12 md:right-40">
-          <p className="text-[11px] tracking-[0.28em] uppercase text-[#C9A45C]">{site.heroKicker}</p>
-          <p className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.14em] text-[#F3EDE2] md:text-5xl">
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-black/30 to-transparent" />
+        <div className="absolute inset-x-4 bottom-5 sm:left-6 sm:right-6 md:left-12 md:right-40 md:bottom-8">
+          <p className="text-[11px] tracking-[0.28em] uppercase text-[var(--gold)]">{site.heroKicker}</p>
+          <p className="mt-2 font-[family-name:var(--font-display)] text-[28px] tracking-[0.14em] text-[var(--cream)] sm:text-4xl md:text-5xl">
             {site.heroTitle}
           </p>
-          <p className="mt-2 max-w-md text-sm text-[#F3EDE2]/75">{site.heroSubtitle}</p>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Link href="/shop?drop=new" className="gold-btn inline-flex rounded-sm px-8 py-3 text-xs uppercase">
+          <p className="mt-2 max-w-md text-sm text-[var(--cream)]/75">{site.heroSubtitle}</p>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <Link href="/shop?drop=new" className="gold-btn inline-flex items-center justify-center rounded-sm px-8 py-3 text-xs uppercase">
               Découvrir
             </Link>
-            <Link href="/shop" className="gold-btn-ghost inline-flex rounded-sm px-8 py-3 text-xs uppercase">
+            <Link href="/shop" className="gold-btn-ghost inline-flex items-center justify-center rounded-sm px-8 py-3 text-xs uppercase">
               Toute la collection
             </Link>
           </div>
@@ -105,7 +104,7 @@ export function Hero() {
                 type="button"
                 aria-label={`Image ${i + 1}`}
                 onClick={() => setIndex(i)}
-                className={`h-2 w-2 rounded-full ${i === index ? "bg-[#C9A45C]" : "bg-white/40"}`}
+                className={`h-2 w-2 rounded-full ${i === index ? "bg-[var(--gold)]" : "bg-[var(--cream)]/40"}`}
               />
             ))}
           </div>

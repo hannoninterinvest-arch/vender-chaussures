@@ -106,7 +106,7 @@ export default function OrderPage({
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <CheckoutSteps step={3} />
-      <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-[#C5A059]">
+      <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-[var(--gold)]">
         {online && !paid ? "Commande enregistrée" : "Commande confirmée"}
       </p>
       <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase">
@@ -128,22 +128,22 @@ export default function OrderPage({
           {order.customer.gouvernorat}
         </p>
         <p className="mt-4 text-sm">
-          Paiement : <strong className="text-[#C5A059]">{pay}</strong>
+          Paiement : <strong className="text-[var(--gold)]">{pay}</strong>
           <span className="text-[var(--muted)]"> · {payState}</span>
         </p>
-        <ul className="mt-6 space-y-3 border-t border-[#C5A059]/25 pt-4">
+        <ul className="mt-6 space-y-3 border-t border-[var(--gold)]/25 pt-4">
           {order.items.map((item) => (
             <li key={`${item.productId}-${item.size}`} className="flex justify-between text-sm">
               <span>
                 {item.name} · {item.color} · {item.size} × {item.qty}
               </span>
-              <span className="text-[#C5A059]">{formatTnd(Number(item.price) * item.qty)}</span>
+              <span className="text-[var(--gold)]">{formatTnd(Number(item.price) * item.qty)}</span>
             </li>
           ))}
         </ul>
         <div className="mt-4 flex justify-between font-bold">
           <span>Total</span>
-          <span className="text-[#C5A059]">{formatTnd(Number(order.total))}</span>
+          <span className="text-[var(--gold)]">{formatTnd(Number(order.total))}</span>
         </div>
       </div>
 
@@ -165,7 +165,7 @@ export default function OrderPage({
           href={whatsappHref(`Bonjour ELVARO, ma commande ${order.id}.`)}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center rounded-sm border border-[#C5A059] px-6 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-[#C5A059]"
+          className="inline-flex items-center rounded-sm border border-[var(--gold)] px-6 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--gold)]"
         >
           WhatsApp
         </a>

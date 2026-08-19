@@ -17,7 +17,7 @@ export function ProductCard({ product }: { product: Product }) {
         <div className="absolute left-3 top-3 z-10 flex flex-col items-start gap-1.5">
           <PromoBadge product={product} />
           {product.isNew && (
-            <span className="rounded-sm bg-[#C9A45C] px-2.5 py-1 text-[10px] font-bold tracking-[0.16em] uppercase text-[#14110C]">
+            <span className="rounded-sm bg-[var(--gold)] px-2.5 py-1 text-[10px] font-bold tracking-[0.16em] uppercase text-[var(--on-gold)]">
               New
             </span>
           )}
@@ -41,7 +41,7 @@ export function ProductCard({ product }: { product: Product }) {
       </div>
       <Link
         href={`/products/${product.id}`}
-        className="gold-btn mt-3 flex w-full items-center justify-center rounded-sm px-3 py-3.5 text-xs uppercase"
+        className="gold-btn mt-3 flex w-full min-h-11 items-center justify-center rounded-sm px-3 py-3 text-xs uppercase"
       >
         Voir le produit
       </Link>
