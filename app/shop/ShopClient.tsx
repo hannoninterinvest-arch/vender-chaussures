@@ -75,7 +75,7 @@ export function ShopClient() {
     : "Chargement…";
 
   const sortControl = (
-    <label className="flex items-center gap-2 text-[11px] font-semibold tracking-[0.16em] uppercase text-[#C5A059]">
+    <label className="flex items-center gap-2 text-[11px] font-semibold tracking-[0.16em] uppercase text-[var(--gold)]">
       Trier
       <select
         value={sort}
@@ -134,17 +134,17 @@ export function ShopClient() {
             <BrandMark size="md" className="hidden sm:inline-flex" />
           </div>
           <div className="shop-hero-ornament">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#C5A059]" />
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--gold)]" />
           </div>
-          <p className="mt-4 text-[11px] font-semibold tracking-[0.36em] uppercase text-[#C5A059]">Boutique</p>
-          <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.14em] uppercase text-[var(--fg)] md:text-6xl">
+          <p className="mt-4 text-[11px] font-semibold tracking-[0.36em] uppercase text-[var(--gold)]">Boutique</p>
+          <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl tracking-[0.14em] uppercase text-[var(--fg)] sm:text-4xl md:text-6xl">
             {title}
           </h1>
           <p className="mt-4 max-w-xl text-sm leading-relaxed text-[var(--muted)]">
             Cuir premium, allure de ville et de cérémonie. Choisis ta paire — commande sans compte.
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <span className="rounded-sm border border-[#C5A059]/50 bg-[#C5A059]/12 px-3 py-1.5 text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">
+            <span className="rounded-sm border border-[var(--gold)]/50 bg-[var(--gold)]/12 px-3 py-1.5 text-[11px] font-semibold tracking-[0.18em] uppercase text-[var(--gold)]">
               {pairLabel}
             </span>
             <Link href="/shop" className="gold-btn-ghost rounded-sm px-4 py-2 text-[11px] uppercase">
@@ -157,14 +157,14 @@ export function ShopClient() {
       <div className="shop-toolbar">
         <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-3 px-4 py-3 md:px-6">
           <div className="flex min-w-0 items-center gap-3">
-            <p className="hidden text-[11px] font-semibold tracking-[0.22em] uppercase text-[#C5A059] sm:block">
+            <p className="hidden text-[11px] font-semibold tracking-[0.22em] uppercase text-[var(--gold)] sm:block">
               Boutique
             </p>
-            <span className="hidden h-3 w-px bg-[#C5A059]/40 sm:block" />
+            <span className="hidden h-3 w-px bg-[var(--gold)]/40 sm:block" />
             <p className="truncate font-[family-name:var(--font-display)] text-sm tracking-[0.16em] uppercase text-[var(--fg)]">
               {title}
             </p>
-            <span className="rounded-sm bg-[#C5A059] px-2 py-0.5 text-[10px] font-bold tracking-[0.12em] uppercase text-[#1A1612]">
+            <span className="rounded-sm bg-[var(--gold)] px-2 py-0.5 text-[10px] font-bold tracking-[0.12em] uppercase text-[var(--on-gold)]">
               {pairLabel}
             </span>
           </div>
@@ -186,7 +186,7 @@ export function ShopClient() {
           <aside className={`shop-aside w-full shrink-0 md:w-[17.5rem] ${filtersOpen ? "block" : "hidden md:block"}`}>
             <div className="shop-filters rounded-[4px]">
               <div className="shop-filters-head">
-                <p className="font-[family-name:var(--font-display)] text-sm tracking-[0.2em] uppercase text-[#C5A059]">
+                <p className="font-[family-name:var(--font-display)] text-sm tracking-[0.2em] uppercase text-[var(--gold)]">
                   Filtres
                 </p>
                 <p className="mt-1 text-[11px] tracking-[0.08em] text-[var(--muted)]">
@@ -200,7 +200,7 @@ export function ShopClient() {
                       <Link
                         key={chip.href + chip.label}
                         href={chip.href}
-                        className="rounded-sm bg-[#C5A059] px-3 py-1 text-[11px] font-semibold tracking-[0.12em] uppercase text-[#1A1612]"
+                        className="rounded-sm bg-[var(--gold)] px-3 py-1 text-[11px] font-semibold tracking-[0.12em] uppercase text-[var(--on-gold)]"
                       >
                         {chip.label} ×
                       </Link>
@@ -220,7 +220,7 @@ export function ShopClient() {
             </div>
           </aside>
 
-          <div className="grid flex-1 grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid flex-1 grid-cols-2 gap-3 sm:gap-7 lg:grid-cols-3">
             {filtered.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
@@ -250,7 +250,7 @@ function FilterGroup({
 }) {
   return (
     <div>
-      <p className="mb-2.5 text-[11px] font-bold tracking-[0.2em] uppercase text-[#C5A059]">{title}</p>
+      <p className="mb-2.5 text-[11px] font-bold tracking-[0.2em] uppercase text-[var(--gold)]">{title}</p>
       <div className="flex flex-wrap gap-2">{children}</div>
     </div>
   );
@@ -270,8 +270,8 @@ function Chip({
       href={href}
       className={`rounded-sm px-3 py-1.5 text-sm transition-colors ${
         active
-          ? "bg-[#C5A059] font-semibold text-[#1A1612]"
-          : "border border-[#C5A059]/45 text-[var(--fg)] hover:border-[#C5A059] hover:bg-[#C5A059]/12"
+          ? "bg-[var(--gold)] font-semibold text-[var(--on-gold)]"
+          : "border border-[var(--gold)]/45 text-[var(--fg)] hover:border-[var(--gold)] hover:bg-[var(--gold)]/12"
       }`}
     >
       {children}

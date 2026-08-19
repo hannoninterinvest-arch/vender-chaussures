@@ -66,7 +66,7 @@ export default function ProductPage({
   return (
     <div className="mx-auto max-w-[1280px] px-4 py-10 pb-28 md:px-6 lg:pb-10">
       <p className="mb-6 text-[11px] tracking-[0.16em] uppercase text-[var(--muted)]">
-        <Link href="/shop" className="hover:text-[#C5A059]">
+        <Link href="/shop" className="hover:text-[var(--gold)]">
           Boutique
         </Link>{" "}
         / {product.brand} / {product.name}
@@ -97,7 +97,7 @@ export default function ProductPage({
 
         <div>
           {product.isNew && (
-            <span className="inline-block rounded-sm bg-[#C5A059] px-2.5 py-1 text-[10px] font-bold tracking-[0.16em] uppercase text-[#1A1A1B]">
+            <span className="inline-block rounded-sm bg-[var(--gold)] px-2.5 py-1 text-[10px] font-bold tracking-[0.16em] uppercase text-[var(--on-gold)]">
               New release
             </span>
           )}
@@ -116,7 +116,7 @@ export default function ProductPage({
           <p className="mt-1 text-sm text-[var(--muted)]">Livraison calculée au checkout · Échange 7 jours</p>
 
           <div className="mt-8">
-            <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">
+            <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[var(--gold)]">
               Couleur · {selectedColor}
             </p>
             <div className="mt-3">
@@ -130,7 +130,7 @@ export default function ProductPage({
           </div>
 
           <div className="mt-6">
-            <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">
+            <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[var(--gold)]">
               Pointure EU
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -144,8 +144,8 @@ export default function ProductPage({
                   }}
                   className={`h-12 w-12 rounded-sm text-sm font-medium ${
                     size === s
-                      ? "bg-[#C5A059] text-[#1A1A1B]"
-                      : "border border-[#C5A059]/35 text-[var(--fg)]"
+                      ? "bg-[var(--gold)] text-[var(--on-gold)]"
+                      : "border border-[var(--gold)]/35 text-[var(--fg)]"
                   }`}
                 >
                   {s}
@@ -153,13 +153,13 @@ export default function ProductPage({
               ))}
             </div>
             {sizeHint ? (
-              <p className="mt-2 text-sm text-[#C5A059]">Choisis une pointure pour continuer.</p>
+              <p className="mt-2 text-sm text-[var(--gold)]">Choisis une pointure pour continuer.</p>
             ) : null}
           </div>
 
           <div className="mt-6">
-            <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">Quantité</p>
-            <div className="mt-3 inline-flex items-center rounded-sm border border-[#C5A059]/35">
+            <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[var(--gold)]">Quantité</p>
+            <div className="mt-3 inline-flex items-center rounded-sm border border-[var(--gold)]/35">
               <button type="button" className="px-4 py-2" onClick={() => setQty((n) => Math.max(1, n - 1))} aria-label="Moins">
                 −
               </button>
@@ -185,7 +185,7 @@ export default function ProductPage({
                 }
                 cart.add({ ...snapshot, size, qty });
               }}
-              className="flex h-12 w-full items-center justify-center rounded-sm border border-[#C5A059] text-xs font-semibold tracking-[0.08em] uppercase text-[#C5A059] hover:bg-[#C5A059]/10"
+              className="flex h-12 w-full items-center justify-center rounded-sm border border-[var(--gold)] text-xs font-semibold tracking-[0.08em] uppercase text-[var(--gold)] hover:bg-[var(--gold)]/10"
             >
               Acheter maintenant
             </Link>
@@ -193,7 +193,7 @@ export default function ProductPage({
               href={whatsappHref(`Bonjour ELVARO, je m’intéresse à ${product.name} (${selectedColor}).`)}
               target="_blank"
               rel="noreferrer"
-              className="block text-center text-sm text-[var(--muted)] underline hover:text-[#C5A059]"
+              className="block text-center text-sm text-[var(--muted)] underline hover:text-[var(--gold)]"
             >
               Demander conseil sur WhatsApp
             </a>
@@ -217,14 +217,14 @@ export default function ProductPage({
         <h2 className="mb-6 font-[family-name:var(--font-display)] text-3xl tracking-[0.12em] uppercase">
           Tu pourrais aussi aimer
         </h2>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
           {relatedProducts(products, product.id).map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
         </div>
       </section>
 
-      <div className="gold-frame fixed inset-x-3 bottom-3 z-40 rounded-[4px] bg-[var(--panel)]/95 p-3 backdrop-blur-md lg:hidden">
+      <div className="gold-frame fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] z-40 rounded-[4px] bg-[var(--panel)]/95 p-3 backdrop-blur-md lg:hidden">
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs text-[var(--muted)]">{product.name}</p>

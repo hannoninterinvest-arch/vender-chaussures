@@ -55,14 +55,14 @@ export function TrustBar() {
           {items.map((item) => {
             const inner = (
               <>
-                <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C9A45C]">
+                <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[var(--gold)]">
                   {item.title}
                 </p>
                 <p className="mt-1 text-sm text-[var(--muted)]">{item.text}</p>
               </>
             );
             return item.href ? (
-              <a key={item.title} href={item.href} target="_blank" rel="noreferrer" className="text-center transition-colors hover:text-[#C9A45C]">
+              <a key={item.title} href={item.href} target="_blank" rel="noreferrer" className="text-center transition-colors hover:text-[var(--gold)]">
                 {inner}
               </a>
             ) : (
@@ -88,15 +88,15 @@ export function CheckoutSteps({ step }: { step: 1 | 2 | 3 }) {
       {steps.map((s, i) => (
         <li key={s.n} className="flex items-center gap-2">
           {s.href && step > s.n ? (
-            <Link href={s.href} className="text-[#C5A059] hover:underline">
+            <Link href={s.href} className="text-[var(--gold)] hover:underline">
               {s.n}. {s.label}
             </Link>
           ) : (
-            <span className={step === s.n ? "text-[#C5A059]" : "text-[var(--muted)]"}>
+            <span className={step === s.n ? "text-[var(--gold)]" : "text-[var(--muted)]"}>
               {s.n}. {s.label}
             </span>
           )}
-          {i < steps.length - 1 ? <span className="text-[#C5A059]/40">—</span> : null}
+          {i < steps.length - 1 ? <span className="text-[var(--gold)]/40">—</span> : null}
         </li>
       ))}
     </ol>
@@ -111,8 +111,10 @@ export function WhatsAppFab() {
       target="_blank"
       rel="noreferrer"
       aria-label="Écrire sur WhatsApp"
-      className={`wa-fab fixed left-5 z-40 grid h-12 w-12 place-items-center rounded-full bg-[#C9A45C] text-[#14110C] transition-transform hover:scale-105 ${
-        path.startsWith("/products") ? "bottom-24 lg:bottom-5" : "bottom-5"
+      className={`wa-fab fixed z-40 grid h-12 w-12 place-items-center rounded-full bg-[var(--gold)] text-[var(--on-gold)] transition-transform hover:scale-105 ${
+        path.startsWith("/products")
+          ? "bottom-[calc(6.5rem+env(safe-area-inset-bottom,0px))] lg:bottom-5"
+          : "bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))]"
       }`}
     >
       <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>

@@ -278,7 +278,7 @@ export default function GrossistePage() {
             </ul>
           </div>
 
-          <div className="gold-frame rounded-[4px] bg-[var(--panel)] p-6 lg:sticky lg:top-[calc(var(--header-h)+1rem)]">
+          <div className="gold-frame rounded-[4px] bg-[var(--panel)] p-6 lg:sticky lg:top-[calc(var(--header-offset)+1rem)]">
             <h2 className="font-[family-name:var(--font-display)] text-2xl tracking-[0.12em] uppercase">
               2 · Vos coordonnées
             </h2>

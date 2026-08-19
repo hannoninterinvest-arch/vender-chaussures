@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { ToastProvider } from "./Toast";
+import { WalkingTrail } from "./Footsteps";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { WhatsAppFab } from "./Experience";
@@ -23,11 +24,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <ToastProvider>
         <CatalogProvider>
           <Header />
-          <main id="contenu" className="flex-1 pt-[var(--header-h)]">
-            {children}
-          </main>
-          <Footer />
-          {!wholesale && <WhatsAppFab />}
+          <div className="flex flex-1 flex-col pt-[var(--header-offset)]">
+            <WalkingTrail />
+            <main id="contenu" className="flex-1">
+              {children}
+            </main>
+            <Footer />
+            {!wholesale && <WhatsAppFab />}
+          </div>
         </CatalogProvider>
       </ToastProvider>
     </ThemeProvider>
