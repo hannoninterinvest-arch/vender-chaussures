@@ -4,15 +4,17 @@ import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import { BrandMark } from "@/components/Logo";
 import { useToast } from "@/components/Toast";
-import { brand, whatsappHref } from "@/lib/brand";
+import { brand } from "@/lib/brand";
 import { useCatalog } from "@/lib/catalog";
 import { formatTnd } from "@/lib/format";
 import { gouvernorats } from "@/lib/tunisia";
 import {
   createWholesaleRequest,
   WHOLESALE_MIN_QTY,
+  wholesaleStatusLabels,
   type WholesaleRequest,
 } from "@/lib/wholesale";
+import { clearLastRequest, saveLastRequest, useLastRequest } from "@/lib/wholesale-store";
 
 export default function GrossistePage() {
   const toast = useToast();
@@ -20,6 +22,7 @@ export default function GrossistePage() {
   const [qty, setQty] = useState<Record<string, number>>({});
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState<WholesaleRequest | null>(null);
+  const saved = useLastRequest();
 
   const lines = useMemo(
     () =>
@@ -61,6 +64,7 @@ export default function GrossistePage() {
         message: String(data.get("message") || ""),
         items: lines.map((line) => ({ productId: line.product.id, qty: line.qty })),
       });
+      saveLastRequest(request);
       setSent(request);
       setQty({});
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -73,47 +77,29 @@ export default function GrossistePage() {
 
   if (sent) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center md:px-6">
-        <BrandMark size="md" className="mx-auto" />
-        <p className="mt-8 text-[11px] font-semibold tracking-[0.28em] uppercase text-[var(--gold)]">
-          Demande enregistrée
-        </p>
-        <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase md:text-4xl">
-          On vous rappelle
-        </h1>
-        <p className="mt-4 text-[var(--muted)]">
-          Référence <span className="font-semibold text-[var(--fg)]">{sent.id}</span> ·{" "}
-          {sent.totalQty} paires. Notre équipe appelle le{" "}
-          <span className="font-semibold text-[var(--fg)]">{sent.phone}</span> pour convenir du
-          prix de gros et du délai de fabrication.
-        </p>
-        <div className="gold-frame mt-8 rounded-[4px] bg-[var(--panel)] p-6 text-left">
-          <p className="text-[11px] font-semibold tracking-[0.2em] uppercase text-[var(--gold)]">
-            Votre sélection
+      <div className="mx-auto max-w-3xl px-4 py-14 md:px-6">
+        <div className="text-center">
+          <BrandMark size="md" className="mx-auto" />
+          <p className="mt-8 text-[11px] font-semibold tracking-[0.28em] uppercase text-[var(--gold)]">
+            Demande enregistrée sur le site
           </p>
-          <ul className="mt-3 space-y-1.5 text-sm text-[var(--muted)]">
-            {sent.items.map((item) => (
-              <li key={item.productId} className="flex justify-between gap-4">
-                <span>
-                  {item.qty}× {item.name}
-                </span>
-                <span>{formatTnd(item.retailPrice * item.qty)} au détail</span>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-3 text-xs text-[var(--muted)]">
-            Montant indiqué au tarif boutique — le prix de gros est négocié par téléphone.
+          <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase md:text-4xl">
+            On vous rappelle
+          </h1>
+          <p className="mt-4 text-[var(--muted)]">
+            Référence <span className="font-semibold text-[var(--fg)]">{sent.id}</span>. Notre
+            équipe appelle le{" "}
+            <span className="font-semibold text-[var(--fg)]">{sent.phone}</span> pour fixer le prix
+            de gros et le délai de fabrication. Rien d’autre à envoyer.
           </p>
         </div>
+
+        <RequestRecap request={sent} />
+
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <a
-            href={whatsappHref(`Bonjour ${brand.name}, ma demande de gros ${sent.id}.`)}
-            target="_blank"
-            rel="noreferrer"
-            className="gold-btn rounded-sm px-6 py-3 text-xs uppercase"
-          >
-            Écrire sur WhatsApp
-          </a>
+          <Link href="/shop" className="gold-btn rounded-sm px-6 py-3 text-xs uppercase">
+            Voir la collection
+          </Link>
           <button
             type="button"
             onClick={() => setSent(null)}
@@ -122,6 +108,14 @@ export default function GrossistePage() {
             Nouvelle demande
           </button>
         </div>
+        <p className="mt-6 text-center text-xs text-[var(--muted)]">
+          Cette demande reste affichée sur cette page depuis votre appareil. Besoin de parler tout
+          de suite ? Appelez le{" "}
+          <a href={brand.phoneHref} className="text-[var(--gold)]">
+            {brand.phone}
+          </a>
+          .
+        </p>
       </div>
     );
   }
@@ -143,9 +137,10 @@ export default function GrossistePage() {
             Acheter en gros
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[var(--muted)]">
-            Revendeurs, boutiques et sociétés : composez votre commande, laissez votre numéro,
-            nous vous appelons pour fixer le prix de gros. Fabrication dans notre atelier de Sidi
-            Thabet, à partir de {WHOLESALE_MIN_QTY} paires.
+            Revendeurs, boutiques et sociétés : tout se passe ici, sur le site. Composez votre
+            commande, laissez votre numéro et validez — nous vous appelons pour fixer le prix de
+            gros. Fabrication dans notre atelier de Sidi Thabet, à partir de {WHOLESALE_MIN_QTY}{" "}
+            paires.
           </p>
           <div className="mt-6 flex flex-wrap gap-3 text-[11px] font-semibold tracking-[0.16em] uppercase">
             <span className="rounded-sm border border-[var(--gold)]/50 bg-[var(--gold)]/12 px-3 py-1.5 text-[var(--gold)]">
@@ -160,6 +155,44 @@ export default function GrossistePage() {
           </div>
         </div>
       </section>
+
+      {saved && (
+        <section className="mx-auto max-w-[1280px] px-4 pt-8 md:px-6">
+          <div className="gold-frame rounded-[4px] bg-[var(--panel)] p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-semibold tracking-[0.2em] uppercase text-[var(--gold)]">
+                  Votre dernière demande
+                </p>
+                <p className="mt-1 text-sm text-[var(--fg)]">
+                  {saved.id} · {saved.company} · {saved.totalQty} paires ·{" "}
+                  {wholesaleStatusLabels[saved.status] || saved.status}
+                </p>
+                <p className="text-xs text-[var(--muted)]">
+                  Envoyée le {new Date(saved.createdAt).toLocaleDateString("fr-TN")} — nous
+                  appelons le {saved.phone}.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSent(saved)}
+                  className="gold-btn-ghost rounded-sm px-4 py-2.5 text-[11px] uppercase"
+                >
+                  Voir le détail
+                </button>
+                <button
+                  type="button"
+                  onClick={() => clearLastRequest()}
+                  className="rounded-sm px-3 py-2.5 text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] hover:text-[var(--promo)]"
+                >
+                  Masquer
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       <form onSubmit={onSubmit} className="mx-auto max-w-[1280px] px-4 py-10 md:px-6">
         <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-start">
@@ -313,7 +346,8 @@ export default function GrossistePage() {
               </p>
             )}
             <p className="mt-4 text-center text-xs text-[var(--muted)]">
-              Ou appelez directement le{" "}
+              La demande part directement sur le site : pas besoin de WhatsApp ni d’e-mail. Vous
+              pouvez aussi nous appeler au{" "}
               <a href={brand.phoneHref} className="text-[var(--gold)]">
                 {brand.phone}
               </a>
@@ -321,6 +355,72 @@ export default function GrossistePage() {
           </div>
         </div>
       </form>
+    </div>
+  );
+}
+
+/** Le grossiste retrouve sur le site tout ce qu'il a envoyé. */
+function RequestRecap({ request }: { request: WholesaleRequest }) {
+  const infos = [
+    { label: "Société / boutique", value: request.company },
+    { label: "Responsable", value: request.contactName },
+    { label: "Téléphone", value: request.phone },
+    { label: "E-mail", value: request.email },
+    {
+      label: "Adresse",
+      value: [request.city, request.gouvernorat].filter(Boolean).join(", "),
+    },
+    { label: "Paires demandées", value: `${request.totalQty}` },
+    {
+      label: "Suivi",
+      value: wholesaleStatusLabels[request.status] || request.status,
+    },
+  ].filter((info) => info.value);
+
+  return (
+    <div className="gold-frame mt-8 rounded-[4px] bg-[var(--panel)] p-6">
+      <p className="text-[11px] font-semibold tracking-[0.2em] uppercase text-[var(--gold)]">
+        Vos informations
+      </p>
+      <dl className="mt-3 grid gap-x-8 gap-y-2 sm:grid-cols-2">
+        {infos.map((info) => (
+          <div key={info.label} className="flex justify-between gap-4 border-b border-[var(--line)] py-1.5">
+            <dt className="text-xs uppercase tracking-[0.12em] text-[var(--muted)]">{info.label}</dt>
+            <dd className="text-right text-sm font-medium text-[var(--fg)]">{info.value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {request.message && (
+        <p className="mt-4 rounded-sm bg-[var(--bg)] p-3 text-sm text-[var(--muted)]">
+          « {request.message} »
+        </p>
+      )}
+
+      <p className="mt-6 text-[11px] font-semibold tracking-[0.2em] uppercase text-[var(--gold)]">
+        Votre sélection
+      </p>
+      <ul className="mt-3 space-y-2">
+        {request.items.map((item) => (
+          <li key={item.productId} className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={item.image} alt="" className="h-12 w-12 rounded-sm object-cover" />
+            <span className="flex-1 text-sm">
+              {item.qty}× {item.name}
+            </span>
+            <span className="text-sm text-[var(--muted)]">
+              {formatTnd(item.retailPrice * item.qty)}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-3 flex justify-between border-t border-[var(--line)] pt-3 text-sm">
+        <span className="text-[var(--muted)]">Total au tarif boutique</span>
+        <span className="font-semibold">{formatTnd(request.retailTotal)}</span>
+      </div>
+      <p className="mt-2 text-xs text-[var(--muted)]">
+        Ce montant n’est qu’un repère : le tarif grossiste est fixé pendant l’appel.
+      </p>
     </div>
   );
 }

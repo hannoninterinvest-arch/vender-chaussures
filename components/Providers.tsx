@@ -11,6 +11,8 @@ import { ThemeProvider } from "@/lib/theme";
 export function Providers({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const seller = path.startsWith("/vendeur");
+  /* L'espace grossistes se traite par le formulaire du site, pas par WhatsApp. */
+  const wholesale = path.startsWith("/grossiste");
 
   if (seller) {
     return <ToastProvider>{children}</ToastProvider>;
@@ -25,7 +27,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             {children}
           </main>
           <Footer />
-          <WhatsAppFab />
+          {!wholesale && <WhatsAppFab />}
         </CatalogProvider>
       </ToastProvider>
     </ThemeProvider>

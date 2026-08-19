@@ -73,8 +73,3 @@ export function phoneHref(phone: string) {
   return `tel:${phone.replace(/[^0-9+]/g, "")}`;
 }
 
-export function whatsappForPhone(phone: string, message: string) {
-  const digits = phone.replace(/[^0-9]/g, "");
-  const international = digits.startsWith("216") ? digits : `216${digits}`;
-  return `https://wa.me/${international}?text=${encodeURIComponent(message)}`;
-}

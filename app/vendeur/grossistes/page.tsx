@@ -4,12 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useToast } from "@/components/Toast";
 import { formatTnd } from "@/lib/format";
 import { isAdmin, sellerRequest } from "@/lib/seller";
-import {
-  phoneHref,
-  whatsappForPhone,
-  wholesaleStatusLabels,
-  type WholesaleRequest,
-} from "@/lib/wholesale";
+import { phoneHref, wholesaleStatusLabels, type WholesaleRequest } from "@/lib/wholesale";
 
 const FILTERS = [
   { id: "all", label: "Toutes" },
@@ -87,8 +82,8 @@ export default function SellerWholesalePage() {
         Grossistes
       </h1>
       <p className="mt-1 text-sm text-[#666]">
-        Demandes d’achat en gros envoyées depuis la page « Grossistes ». Appelez le numéro laissé
-        par le client pour négocier le prix, puis notez l’avancement.
+        Demandes reçues via le formulaire du site. Toutes les coordonnées sont affichées ici :
+        appelez le numéro laissé par le grossiste pour négocier le prix, puis notez l’avancement.
       </p>
 
       <div className="mt-5 flex flex-wrap gap-2">
@@ -119,19 +114,8 @@ export default function SellerWholesalePage() {
                   {row.id} · {row.company}
                 </p>
                 <p className="text-sm text-[#666]">
-                  {new Date(row.createdAt).toLocaleString("fr-TN")} · {row.contactName}
+                  Reçue sur le site le {new Date(row.createdAt).toLocaleString("fr-TN")}
                 </p>
-                <p className="text-sm text-[#666]">
-                  {row.city ? `${row.city}, ` : ""}
-                  {row.gouvernorat || "—"}
-                  {row.email ? ` · ${row.email}` : ""}
-                </p>
-                <a
-                  href={phoneHref(row.phone)}
-                  className="mt-1 inline-block text-lg font-bold text-[#1A1A1B] hover:text-[#C5A059]"
-                >
-                  {row.phone}
-                </a>
               </div>
               <div className="text-right">
                 <p className="text-lg font-black">{row.totalQty} paires</p>
@@ -146,23 +130,28 @@ export default function SellerWholesalePage() {
               </div>
             </div>
 
+            <dl className="mt-4 grid gap-x-8 gap-y-2 rounded-lg bg-[#F9F7F2] p-4 sm:grid-cols-2">
+              <Info label="Responsable" value={row.contactName} />
+              <Info label="Téléphone" value={row.phone} href={phoneHref(row.phone)} strong />
+              <Info label="E-mail" value={row.email} href={row.email ? `mailto:${row.email}` : undefined} />
+              <Info
+                label="Adresse"
+                value={[row.city, row.gouvernorat].filter(Boolean).join(", ")}
+              />
+            </dl>
+
+            {row.message && (
+              <p className="mt-3 rounded-lg border border-[#EEE] p-3 text-sm text-[#444]">
+                « {row.message} »
+              </p>
+            )}
+
             <div className="mt-4 flex flex-wrap gap-2">
               <a
                 href={phoneHref(row.phone)}
                 className="gold-btn rounded-sm px-4 py-2 text-xs uppercase"
               >
-                Appeler
-              </a>
-              <a
-                href={whatsappForPhone(
-                  row.phone,
-                  `Bonjour ${row.contactName}, ELVARO by AIR GO SHOES au sujet de votre demande de gros ${row.id}.`,
-                )}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-lg bg-[#F5F5F5] px-4 py-2 text-sm font-medium"
-              >
-                WhatsApp
+                Appeler {row.phone}
               </a>
               {row.status === "nouveau" && (
                 <button
@@ -205,7 +194,7 @@ export default function SellerWholesalePage() {
                 className="rounded-lg px-3 py-2 text-sm text-[#666]"
                 onClick={() => setOpen(open === row.id ? null : row.id)}
               >
-                {open === row.id ? "Masquer" : "Détail"}
+                {open === row.id ? "Masquer" : `Modèles (${row.items.length}) & note`}
               </button>
               {admin && (
                 <button
@@ -238,11 +227,6 @@ export default function SellerWholesalePage() {
                     </li>
                   ))}
                 </ul>
-                {row.message && (
-                  <p className="rounded-lg bg-[#F9F7F2] p-3 text-sm text-[#444]">
-                    « {row.message} »
-                  </p>
-                )}
                 <label className="block text-sm font-medium">
                   Note interne (prix négocié, rappel…)
                   <textarea
@@ -270,6 +254,37 @@ export default function SellerWholesalePage() {
           </li>
         )}
       </ul>
+    </div>
+  );
+}
+
+function Info({
+  label,
+  value,
+  href,
+  strong,
+}: {
+  label: string;
+  value: string;
+  href?: string;
+  strong?: boolean;
+}) {
+  return (
+    <div className="flex justify-between gap-4 border-b border-[#EDE7D9] py-1.5 last:border-0">
+      <dt className="text-xs uppercase tracking-[0.12em] text-[#8A8377]">{label}</dt>
+      <dd className={`text-right text-sm ${strong ? "font-bold" : "font-medium"}`}>
+        {value ? (
+          href ? (
+            <a href={href} className="hover:text-[#C5A059]">
+              {value}
+            </a>
+          ) : (
+            value
+          )
+        ) : (
+          <span className="text-[#AAA]">—</span>
+        )}
+      </dd>
     </div>
   );
 }

@@ -5,8 +5,16 @@ import Link from "next/link";
 import { formatTnd } from "@/lib/format";
 import { sellerRequest, type SellerStats } from "@/lib/seller";
 
+type WholesaleStats = {
+  total: number;
+  nouveau: number;
+  enCours: number;
+  conclu: number;
+};
+
 export default function SellerHomePage() {
   const [stats, setStats] = useState<SellerStats | null>(null);
+  const [wholesale, setWholesale] = useState<WholesaleStats | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -17,6 +25,13 @@ export default function SellerHomePage() {
       })
       .catch((err: Error) => {
         if (!cancelled) setError(err.message);
+      });
+    sellerRequest<WholesaleStats>("/seller/wholesale/stats")
+      .then((data) => {
+        if (!cancelled) setWholesale(data);
+      })
+      .catch(() => {
+        /* l'API n'a pas encore le module gros */
       });
     return () => {
       cancelled = true;
@@ -54,6 +69,29 @@ export default function SellerHomePage() {
           </div>
         ))}
       </div>
+
+      {wholesale && wholesale.total > 0 && (
+        <div className="mt-6 rounded-[4px] border border-[#C5A059]/35 bg-white p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold">Demandes de grossistes</h2>
+              <p className="mt-1 text-sm text-[#666]">
+                {wholesale.nouveau > 0
+                  ? `${wholesale.nouveau} grossiste${wholesale.nouveau > 1 ? "s" : ""} à rappeler`
+                  : "Aucun rappel en attente"}
+                {wholesale.enCours > 0 ? ` · ${wholesale.enCours} en négociation` : ""}
+                {wholesale.conclu > 0 ? ` · ${wholesale.conclu} conclu(es)` : ""}
+              </p>
+            </div>
+            <Link
+              href="/vendeur/grossistes"
+              className="gold-btn rounded-sm px-4 py-3 text-xs uppercase"
+            >
+              Voir les {wholesale.total} demande{wholesale.total > 1 ? "s" : ""}
+            </Link>
+          </div>
+        </div>
+      )}
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <div className="rounded-[4px] border border-[#C5A059]/35 bg-white p-6">
@@ -111,6 +149,9 @@ export default function SellerHomePage() {
         </Link>
         <Link href="/vendeur/commandes" className="rounded-sm border border-[#C5A059]/50 bg-white px-4 py-3 text-sm font-bold">
           Voir les commandes
+        </Link>
+        <Link href="/vendeur/grossistes" className="rounded-sm border border-[#C5A059]/50 bg-white px-4 py-3 text-sm font-bold">
+          Demandes de gros
         </Link>
       </div>
     </div>
