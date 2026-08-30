@@ -12,7 +12,7 @@ export function Reveal({
   delay?: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [on, setOn] = useState(false);
+  const [on, setOn] = useState(true);
 
   useEffect(() => {
     const el = ref.current;
