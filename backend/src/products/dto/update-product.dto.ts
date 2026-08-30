@@ -80,4 +80,12 @@ export class UpdateProductDto {
   @IsString({ each: true })
   @ArrayMaxSize(16)
   images?: string[];
+
+  @IsOptional()
+  @IsString()
+  video?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  showVideoOnHome?: boolean;
 }

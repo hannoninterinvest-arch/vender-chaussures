@@ -64,8 +64,12 @@ export function SellerFrame({ children }: { children: React.ReactNode }) {
       }
     }
     void boot();
+    const failSafe = window.setTimeout(() => {
+      if (!cancelled) setReady(true);
+    }, 4000);
     return () => {
       cancelled = true;
+      window.clearTimeout(failSafe);
     };
   }, []);
 

@@ -63,8 +63,12 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       if (c.status === "fulfilled") setCategories(mapCategories(c.value));
       setReady(true);
     });
+    const failSafe = window.setTimeout(() => {
+      if (!cancelled) setReady(true);
+    }, 9000);
     return () => {
       cancelled = true;
+      window.clearTimeout(failSafe);
     };
   }, [tick]);
 

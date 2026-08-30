@@ -10,7 +10,8 @@ Boutique **ELVARO** (noir, crème, or) — commande **sans compte**.
 - Commandes et produits en base
 - Paiement : **en ligne (Konnect)** ou **à la livraison**
 - Photos produit : jusqu’à 5 images via Cloudinary, URL en PostgreSQL
-- Page d’accueil : l’admin choisit les photos de garde (pas d’images statiques)
+- Vidéo 3D par produit (Cloudinary) : galerie fiche produit + option d’affichage sur l’accueil
+- Page d’accueil : l’admin choisit les photos **et vidéos** de garde (pas d’images statiques)
 - Espace vendeur : produits, vitrine, catégories, livraisons, bénéfices
 
 ## Lancer
@@ -71,7 +72,7 @@ Onglet **Import CSV** : fichier `.csv` avec les liens photos (`https://…|https
 | GET/POST/DELETE | `/api/seller/categories` | Catégories (clé requise) |
 | GET/PATCH | `/api/seller/site` | Photos et textes de la page d’accueil |
 | GET/PATCH | `/api/seller/orders` | Commandes + statut livraison |
-| POST | `/api/seller/uploads` | Upload image Cloudinary (clé requise) |
+| POST | `/api/seller/uploads` | Upload image ou vidéo Cloudinary (JWT) |
 | GET | `/api/seller/stats` | Bénéfices et meilleur produit |
 
 Les tables sont créées au démarrage (`synchronize: true`) et le catalogue est seedé s’il est vide.
@@ -156,9 +157,9 @@ Ensuite l’admin crée d’autres comptes dans `/vendeur/equipe`.
 - **Admin** : tout + équipe + suppression catalogue
 - **Vendeur** : commandes, produits (sans supprimer), catégories en lecture
 
-### Cloudinary (photos produit)
+### Cloudinary (photos et vidéos)
 
-Sans ces 3 variables, le catalogue marche, mais l’upload d’images dans `/vendeur` renvoie 503.
+Sans ces 3 variables, le catalogue marche, mais l’upload d’images / vidéos dans `/vendeur` renvoie 503.
 
 1. Compte gratuit : [cloudinary.com](https://cloudinary.com/users/register/free)
 2. Une fois connecté, le **Dashboard** affiche **API Keys** (ou **Settings** → **API Keys**) :
@@ -167,7 +168,12 @@ Sans ces 3 variables, le catalogue marche, mais l’upload d’images dans `/ven
    - **API Secret** → **Reveal** → `CLOUDINARY_API_SECRET` (ne le publie jamais)
 3. Colle les 3 sur Render, **exactement** ces noms de variables.
 
-Les photos vont dans le dossier Cloudinary `kicks/products` ; l’URL HTTPS est stockée en Postgres.
+Les photos vont dans le dossier Cloudinary `kicks/products` ; les vidéos 3D dans `kicks/videos`. L’URL HTTPS est stockée en Postgres.
+
+- Images : JPG, PNG, WebP, GIF — max 6 Mo
+- Vidéos 3D (fiche produit ou accueil) : MP4, WebM, MOV — max 40 Mo
+
+Sur Vercel, les uploads trop lourds (> ~4,5 Mo) peuvent échouer : passe par l’API Render pour les vidéos.
 
 ### Konnect (paiement en ligne)
 

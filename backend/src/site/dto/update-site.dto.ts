@@ -29,4 +29,11 @@ export class UpdateSiteDto {
   @ArrayMaxSize(8)
   @Type(() => String)
   coverImages?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @ArrayMaxSize(6)
+  @Type(() => String)
+  coverVideos?: string[];
 }
