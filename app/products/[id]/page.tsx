@@ -3,13 +3,14 @@
 import { use, useState } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { colorImage, galleryForColor } from "@/lib/product-media";
+import { colorImage } from "@/lib/product-media";
 import { relatedProducts } from "@/lib/products";
 import { useCatalog, useProduct } from "@/lib/catalog";
 import { formatTnd } from "@/lib/format";
 import { useCart } from "@/lib/cart";
 import { useToast } from "@/components/Toast";
 import { ProductCard } from "@/components/ProductCard";
+import { ProductGallery } from "@/components/ProductGallery";
 import { ColorDots } from "@/components/ColorDots";
 import { hasPromo, Price, PromoBadge } from "@/components/Price";
 import { whatsappHref } from "@/lib/brand";
@@ -27,7 +28,6 @@ export default function ProductPage({
   const [color, setColor] = useState<string | null>(null);
   const [size, setSize] = useState<number | null>(null);
   const [qty, setQty] = useState(1);
-  const [photo, setPhoto] = useState(0);
   const [sizeHint, setSizeHint] = useState(false);
 
   if (!ready) {
@@ -36,8 +36,6 @@ export default function ProductPage({
   if (!product) notFound();
 
   const selectedColor = color ?? product.colors[0]?.name ?? "";
-  const gallery = galleryForColor(product, selectedColor);
-  const mainPhoto = gallery[photo] || gallery[0] || product.images[0];
 
   const snapshot = {
     productId: product.id,
@@ -50,7 +48,6 @@ export default function ProductPage({
 
   function selectColor(name: string) {
     setColor(name);
-    setPhoto(0);
   }
 
   function add() {
@@ -72,28 +69,7 @@ export default function ProductPage({
         / {product.brand} / {product.name}
       </p>
       <div className="grid gap-10 lg:grid-cols-2">
-        <div className="space-y-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={mainPhoto}
-            alt={product.name}
-            className="gold-frame aspect-square w-full rounded-[4px] object-cover"
-          />
-          <div className="grid grid-cols-5 gap-3">
-            {gallery.map((src, i) => (
-              <button
-                key={`${src}-${i}`}
-                type="button"
-                onClick={() => setPhoto(i)}
-                aria-label={`Photo ${i + 1}`}
-                className={`overflow-hidden rounded-sm ${photo === i ? "gold-frame" : "opacity-70"}`}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} alt="" className="aspect-square w-full object-cover" />
-              </button>
-            ))}
-          </div>
-        </div>
+        <ProductGallery key={`${product.id}-${selectedColor}`} product={product} color={selectedColor} />
 
         <div>
           {product.isNew && (
@@ -101,9 +77,13 @@ export default function ProductPage({
               New release
             </span>
           )}
+          {product.video ? (
+            <span className="badge-3d ml-2 align-middle">Vue 3D</span>
+          ) : null}
           <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase md:text-4xl">
             {product.name}
           </h1>
+          <p className="mt-1 text-[11px] tracking-[0.18em] uppercase text-[var(--gold)]">{product.brand}</p>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <Price product={product} size="lg" />
             <PromoBadge product={product} />
@@ -133,6 +113,7 @@ export default function ProductPage({
             <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">
               Pointure EU
             </p>
+            <p className="mt-1 text-[11px] text-[var(--muted)]">Tailles disponibles</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {product.sizes.map((s) => (
                 <button
@@ -208,6 +189,7 @@ export default function ProductPage({
               <li>Commande sans compte</li>
               <li>Paiement à la livraison en Tunisie</li>
               <li>Échange 7 jours si non portées</li>
+              {product.video ? <li>Vue 3D du modèle disponible dans la galerie</li> : null}
             </ul>
           </div>
         </div>

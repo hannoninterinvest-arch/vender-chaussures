@@ -44,12 +44,12 @@ export class SellerController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: memoryStorage(),
-      limits: { fileSize: 6 * 1024 * 1024 },
+      limits: { fileSize: 40 * 1024 * 1024 },
     }),
   )
-  uploadImage(@UploadedFile() file: Express.Multer.File) {
-    if (!file) throw new BadRequestException('Choisis une image');
-    return this.uploads.uploadImage(file);
+  uploadMedia(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Choisis une image ou une vidéo');
+    return this.uploads.uploadMedia(file);
   }
 
   @Get('stats')

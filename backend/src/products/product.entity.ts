@@ -44,4 +44,12 @@ export class Product {
 
   @Column({ type: 'jsonb' })
   images: string[];
+
+  /** Vidéo 3D / 360° du produit (URL Cloudinary). */
+  @Column({ default: '' })
+  video: string;
+
+  /** Afficher cette vidéo aussi sur la page d’accueil. */
+  @Column({ default: false })
+  showVideoOnHome: boolean;
 }

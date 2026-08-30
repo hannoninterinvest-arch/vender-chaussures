@@ -65,6 +65,7 @@ export async function fetchSite() {
     heroTitle: string;
     heroSubtitle: string;
     coverImages: string[];
+    coverVideos?: string[];
   }>;
 }
 

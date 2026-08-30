@@ -3,6 +3,7 @@ export type SiteHome = {
   heroTitle: string;
   heroSubtitle: string;
   coverImages: string[];
+  coverVideos: string[];
 };
 
 export const defaultSite: SiteHome = {
@@ -16,4 +17,5 @@ export const defaultSite: SiteHome = {
     "/chaussures/hero-bottine.jpg",
     "/chaussures/hero-sandale.jpg",
   ],
+  coverVideos: [],
 };

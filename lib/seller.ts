@@ -120,6 +120,8 @@ export type SellerProduct = {
   colors: { name: string; hex: string; image?: string }[];
   sizes: number[];
   images: string[];
+  video?: string;
+  showVideoOnHome?: boolean;
 };
 
 export type SellerCategory = { id: string; label: string; image: string };
@@ -199,7 +201,13 @@ export async function fetchStaffMe() {
   return user;
 }
 
-export async function sellerUploadImage(file: File): Promise<{ url: string }> {
+export async function sellerUploadImage(file: File): Promise<{ url: string; resourceType?: string }> {
+  return sellerUploadMedia(file);
+}
+
+export async function sellerUploadMedia(
+  file: File,
+): Promise<{ url: string; publicId?: string; resourceType?: "image" | "video" }> {
   const body = new FormData();
   body.append("file", file);
   const res = await fetch(apiUrl("/seller/uploads"), {
@@ -208,5 +216,5 @@ export async function sellerUploadImage(file: File): Promise<{ url: string }> {
     body,
   });
   if (!res.ok) await parseError(res);
-  return res.json() as Promise<{ url: string }>;
+  return res.json() as Promise<{ url: string; publicId?: string; resourceType?: "image" | "video" }>;
 }
