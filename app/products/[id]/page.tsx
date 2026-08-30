@@ -30,10 +30,12 @@ export default function ProductPage({
   const [qty, setQty] = useState(1);
   const [sizeHint, setSizeHint] = useState(false);
 
-  if (!ready) {
-    return <p className="px-6 py-20 text-center text-sm text-[var(--muted)]">Chargement…</p>;
+  if (!product) {
+    if (!ready) {
+      return <p className="px-6 py-20 text-center text-sm text-[var(--muted)]">Chargement…</p>;
+    }
+    notFound();
   }
-  if (!product) notFound();
 
   const selectedColor = color ?? product.colors[0]?.name ?? "";
 

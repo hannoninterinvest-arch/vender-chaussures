@@ -150,7 +150,7 @@ export async function sellerRequest<T>(path: string, init: RequestInit = {}): Pr
 }
 
 export async function fetchSetupNeeded() {
-  const res = await fetch(apiUrl("/auth/setup"), { cache: "no-store" });
+  const res = await fetch(apiUrl("/auth/setup"), { cache: "no-store", signal: AbortSignal.timeout(8000) });
   if (!res.ok) return { needed: false };
   return res.json() as Promise<{ needed: boolean }>;
 }

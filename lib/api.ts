@@ -14,7 +14,7 @@ export function apiUrl(path: string) {
 }
 
 export async function fetchProducts() {
-  const res = await fetch(apiUrl("/products"), { cache: "no-store" });
+  const res = await fetch(apiUrl("/products"), { cache: "no-store", signal: AbortSignal.timeout(8000) });
   if (!res.ok) throw new Error("Impossible de charger les produits");
   return res.json();
 }
@@ -83,7 +83,7 @@ export async function fetchOrder(id: string) {
 }
 
 export async function fetchCategories() {
-  const res = await fetch(apiUrl("/categories"), { cache: "no-store" });
+  const res = await fetch(apiUrl("/categories"), { cache: "no-store", signal: AbortSignal.timeout(8000) });
   if (!res.ok) throw new Error("Impossible de charger les catégories");
   return res.json();
 }
