@@ -14,7 +14,7 @@ export function apiUrl(path: string) {
 }
 
 export async function fetchProducts() {
-  const res = await fetch(apiUrl("/products"), { cache: "no-store" });
+  const res = await fetch(apiUrl("/products"), { cache: "no-store", signal: AbortSignal.timeout(5000) });
   if (!res.ok) throw new Error("Impossible de charger les produits");
   return res.json();
 }
@@ -75,13 +75,13 @@ export async function fetchPaymentsConfig() {
 }
 
 export async function fetchGeoCountry() {
-  const res = await fetch(apiUrl("/geo"), { cache: "no-store" });
+  const res = await fetch(apiUrl("/geo"), { cache: "no-store", signal: AbortSignal.timeout(4000) });
   if (!res.ok) return { country: "TN" as const, source: "default" };
   return res.json() as Promise<{ country?: string; source?: string }>;
 }
 
 export async function fetchFxRates() {
-  const res = await fetch(apiUrl("/fx"), { cache: "no-store" });
+  const res = await fetch(apiUrl("/fx"), { cache: "no-store", signal: AbortSignal.timeout(4000) });
   if (!res.ok) {
     return { available: false, base: "TND" as const, rates: { TND: 1 }, fetchedAt: null };
   }
@@ -101,7 +101,7 @@ export async function fetchOrder(id: string) {
 }
 
 export async function fetchCategories() {
-  const res = await fetch(apiUrl("/categories"), { cache: "no-store" });
+  const res = await fetch(apiUrl("/categories"), { cache: "no-store", signal: AbortSignal.timeout(5000) });
   if (!res.ok) throw new Error("Impossible de charger les catégories");
   return res.json();
 }
