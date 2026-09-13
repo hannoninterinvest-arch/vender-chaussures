@@ -140,35 +140,52 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     async function detect() {
+      const finish = () => {
+        if (!cancelled) patch({ geoReady: true });
+      };
       try {
+        if (snapshot.locked) {
+          finish();
+          return;
+        }
         const geo = await fetchGeoCountry();
-        if (cancelled) return;
+        if (cancelled || snapshot.locked) {
+          finish();
+          return;
+        }
         const next = normalizeCountry(geo.country || "TN");
         const fromIp = geo.source === "ip" || geo.source === "cache";
-        if (!snapshot.locked) {
-          if (fromIp) {
-            setLocaleCountry(next, { source: "ip" });
-          } else {
-            const browser = await detectBrowserCountry();
-            if (cancelled) return;
-            if (browser) setLocaleCountry(browser, { source: "ip" });
-            else {
-              patch({ geoReady: true, source: snapshot.source === "saved" ? "saved" : "default" });
-            }
-          }
-        } else {
-          patch({ geoReady: true });
+        if (fromIp) {
+          setLocaleCountry(next, { source: "ip" });
+          return;
         }
+        if (snapshot.source === "saved" || snapshot.source === "manual") {
+          finish();
+          return;
+        }
+        const browser = await detectBrowserCountry();
+        if (cancelled || snapshot.locked) {
+          finish();
+          return;
+        }
+        if (browser) setLocaleCountry(browser, { source: "ip" });
+        else finish();
       } catch {
-        if (cancelled) return;
-        if (!snapshot.locked) {
-          const browser = await detectBrowserCountry();
-          if (cancelled) return;
-          if (browser) setLocaleCountry(browser, { source: "ip" });
-          else patch({ geoReady: true });
-        } else {
-          patch({ geoReady: true });
+        if (cancelled || snapshot.locked) {
+          finish();
+          return;
         }
+        if (snapshot.source === "saved" || snapshot.source === "manual") {
+          finish();
+          return;
+        }
+        const browser = await detectBrowserCountry();
+        if (cancelled || snapshot.locked) {
+          finish();
+          return;
+        }
+        if (browser) setLocaleCountry(browser, { source: "ip" });
+        else finish();
       }
     }
     void detect();
