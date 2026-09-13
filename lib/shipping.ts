@@ -399,3 +399,19 @@ export function formatMoney(amount: number, currency: string) {
   if (symbol === "$" || symbol === "£") return `${symbol}${formatted}`;
   return `${formatted} ${symbol}`;
 }
+
+export function displayPrice(
+  amountDt: number,
+  currency: string,
+  rates: Record<string, number> | null | undefined,
+) {
+  const code = currency || "TND";
+  const converted = convertFromTnd(amountDt, code, rates);
+  const showFx = code !== "TND" && converted.converted;
+  return {
+    primary: formatMoney(showFx ? converted.amount : amountDt, showFx ? code : "TND"),
+    approxDt: showFx ? formatMoney(amountDt, "TND") : null,
+    converted: showFx,
+    currency: showFx ? code : "TND",
+  };
+}

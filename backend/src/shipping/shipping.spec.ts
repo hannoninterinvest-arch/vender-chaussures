@@ -1,4 +1,4 @@
-import { currencyForCountry, quoteShipping } from './shipping';
+import { currencyForCountry, displayPrice, quoteShipping } from './shipping';
 
 describe('quoteShipping', () => {
   it('applique 7 DT fixes en Tunisie, quel que soit le poids', () => {
@@ -61,5 +61,19 @@ describe('quoteShipping', () => {
   it('prend la borne 500 g dans le premier palier', () => {
     expect(quoteShipping('FR', 500).deliveryDt).toBe(45);
     expect(quoteShipping('FR', 501).deliveryDt).toBe(62);
+  });
+
+  it('convertit un prix DT vers l’euro', () => {
+    const shown = displayPrice(489, 'EUR', { EUR: 0.3, TND: 1 });
+    expect(shown.converted).toBe(true);
+    expect(shown.primary).toBe('146.70 €');
+    expect(shown.approxDt).toBe('489 DT');
+  });
+
+  it('reste en DT si le taux manque', () => {
+    const shown = displayPrice(489, 'EUR', { TND: 1 });
+    expect(shown.converted).toBe(false);
+    expect(shown.primary).toBe('489 DT');
+    expect(shown.approxDt).toBeNull();
   });
 });

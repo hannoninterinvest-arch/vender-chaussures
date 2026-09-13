@@ -6,12 +6,11 @@ import { notFound } from "next/navigation";
 import { colorImage, galleryForColor } from "@/lib/product-media";
 import { relatedProducts } from "@/lib/products";
 import { useCatalog, useProduct } from "@/lib/catalog";
-import { formatTnd } from "@/lib/format";
 import { useCart } from "@/lib/cart";
+import { hasPromo, Money, Price, PromoBadge } from "@/components/Price";
 import { useToast } from "@/components/Toast";
 import { ProductCard } from "@/components/ProductCard";
 import { ColorDots } from "@/components/ColorDots";
-import { hasPromo, Price, PromoBadge } from "@/components/Price";
 import { whatsappHref } from "@/lib/brand";
 
 export default function ProductPage({
@@ -112,7 +111,7 @@ export default function ProductPage({
           </div>
           {hasPromo(product) && product.oldPrice ? (
             <p className="mt-1 text-sm text-[var(--promo)]">
-              Tu économises {formatTnd(product.oldPrice - product.price)} sur cette paire.
+              Tu économises <Money amountDt={product.oldPrice - product.price} approx={false} className="inline" /> sur cette paire.
             </p>
           ) : null}
           <p className="mt-1 text-sm text-[var(--muted)]">Livraison calculée au checkout · Échange 7 jours</p>

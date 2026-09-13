@@ -3,10 +3,11 @@
 import { FormEvent, Suspense, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { Money } from "@/components/Price";
+import { brand, whatsappHref } from "@/lib/brand";
 import { useCart } from "@/lib/cart";
 import { useCatalog } from "@/lib/catalog";
-import { formatTnd } from "@/lib/format";
-import { brand, whatsappHref } from "@/lib/brand";
+import { useLocale } from "@/lib/locale";
 import { countryName, quoteShipping } from "@/lib/shipping";
 
 export default function ContactPage() {
@@ -24,9 +25,11 @@ export default function ContactPage() {
 function ContactForm() {
   const params = useSearchParams();
   const quoteMode = params.get("devis") === "1";
-  const pays = (params.get("pays") || "TN").toUpperCase();
+  const paysParam = (params.get("pays") || "").toUpperCase();
   const { lines, subtotal } = useCart();
   const { products } = useCatalog();
+  const { country, display } = useLocale();
+  const pays = /^[A-Z]{2}$/.test(paysParam) ? paysParam : country;
   const [sent, setSent] = useState(false);
 
   const totalWeight = useMemo(
@@ -50,6 +53,7 @@ function ContactForm() {
     const items = lines
       .map((l) => `- ${l.qty}× ${l.name} (${l.color}, ${l.size})`)
       .join("\n");
+    const shown = display(subtotal);
     const body = [
       `Bonjour ELVARO,`,
       quoteMode
@@ -59,7 +63,9 @@ function ContactForm() {
       phone && `Tél : ${phone}`,
       email && `E-mail : ${email}`,
       items && `Panier :\n${items}`,
-      quoteMode ? `Sous-total : ${formatTnd(subtotal)}` : "",
+      quoteMode
+        ? `Sous-total : ${shown.primary}${shown.approxDt ? ` (≈ ${shown.approxDt})` : ""}`
+        : "",
       message ? `Message : ${message}` : "",
     ]
       .filter(Boolean)
@@ -92,12 +98,14 @@ function ContactForm() {
             <ul className="mt-3 space-y-1">
               {lines.map((l) => (
                 <li key={`${l.productId}-${l.size}-${l.color}`}>
-                  {l.qty}× {l.name} · {l.color} · {l.size} — {formatTnd(Number(l.price) * l.qty)}
+                  {l.qty}× {l.name} · {l.color} · {l.size} — <Money amountDt={Number(l.price) * l.qty} className="inline" />
                 </li>
               ))}
             </ul>
           )}
-          <p className="mt-3 font-semibold">Sous-total produits : {formatTnd(subtotal)}</p>
+          <p className="mt-3 font-semibold">
+            Sous-total produits : <Money amountDt={subtotal} className="inline" />
+          </p>
         </div>
       )}
 

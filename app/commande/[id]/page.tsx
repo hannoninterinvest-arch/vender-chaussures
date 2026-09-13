@@ -3,8 +3,7 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchOrder, retryOrderPayment } from "@/lib/api";
-import { formatTnd } from "@/lib/format";
-import { countryName } from "@/lib/shipping";
+import { countryName, displayPrice } from "@/lib/shipping";
 import { paymentLabel, paymentStatusLabel } from "@/lib/tunisia";
 import { brand, whatsappHref } from "@/lib/brand";
 import { CheckoutSteps } from "@/components/Experience";
@@ -28,6 +27,7 @@ type OrderView = {
   };
   totalWeightGrams?: number;
   currency?: string;
+  exchangeRate?: number;
   items: {
     productId: string;
     name: string;
@@ -107,6 +107,22 @@ export default function OrderPage({
   const paid = order.paymentStatus === "paid";
   const pay = paymentLabel(order.payment);
   const payState = paymentStatusLabel(order.paymentStatus || "", order.payment);
+  const rates =
+    order.currency && order.exchangeRate
+      ? { TND: 1, [order.currency]: order.exchangeRate }
+      : { TND: 1 };
+
+  function Amount({ amountDt }: { amountDt: number }) {
+    const shown = displayPrice(amountDt, order.currency || "TND", rates);
+    return (
+      <span className="inline-flex flex-col items-end text-right">
+        <span>{shown.primary}</span>
+        {shown.approxDt ? (
+          <span className="text-[10px] font-normal text-[var(--muted)]">≈ {shown.approxDt}</span>
+        ) : null}
+      </span>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
@@ -148,13 +164,17 @@ export default function OrderPage({
               <span>
                 {item.name} · {item.color} · {item.size} × {item.qty}
               </span>
-              <span className="text-[#C5A059]">{formatTnd(Number(item.price) * item.qty)}</span>
+              <span className="text-[#C5A059]">
+                <Amount amountDt={Number(item.price) * item.qty} />
+              </span>
             </li>
           ))}
         </ul>
         <div className="mt-4 flex justify-between font-bold">
           <span>Total</span>
-          <span className="text-[#C5A059]">{formatTnd(Number(order.total))}</span>
+          <span className="text-[#C5A059]">
+            <Amount amountDt={Number(order.total)} />
+          </span>
         </div>
       </div>
 

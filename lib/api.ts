@@ -74,23 +74,54 @@ export async function fetchPaymentsConfig() {
   return res.json() as Promise<{ online: boolean }>;
 }
 
+type GeoPayload = { country?: string; source?: string };
+
+async function readGeo(url: string) {
+  const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(4000) });
+  if (!res.ok) return null;
+  return res.json() as Promise<GeoPayload>;
+}
+
 export async function fetchGeoCountry() {
-  const res = await fetch(apiUrl("/geo"), { cache: "no-store", signal: AbortSignal.timeout(4000) });
-  if (!res.ok) return { country: "TN" as const, source: "default" };
-  return res.json() as Promise<{ country?: string; source?: string }>;
+  const [nest, local] = await Promise.all([
+    readGeo(apiUrl("/geo")).catch(() => null),
+    readGeo("/api/geo").catch(() => null),
+  ]);
+  if (nest?.source === "ip" || nest?.source === "cache") return nest;
+  if (local?.source === "ip" || local?.source === "cache") return local;
+  if (nest?.country) return nest;
+  if (local?.country) return local;
+  return { country: "TN" as const, source: "default" };
+}
+
+type FxPayload = {
+  available: boolean;
+  base: "TND";
+  rates: Record<string, number>;
+  fetchedAt: string | null;
+};
+
+const FX_FALLBACK: FxPayload = {
+  available: false,
+  base: "TND",
+  rates: { TND: 1 },
+  fetchedAt: null,
+};
+
+async function readFx(url: string) {
+  const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(4000) });
+  if (!res.ok) return null;
+  return res.json() as Promise<FxPayload>;
 }
 
 export async function fetchFxRates() {
-  const res = await fetch(apiUrl("/fx"), { cache: "no-store", signal: AbortSignal.timeout(4000) });
-  if (!res.ok) {
-    return { available: false, base: "TND" as const, rates: { TND: 1 }, fetchedAt: null };
-  }
-  return res.json() as Promise<{
-    available: boolean;
-    base: "TND";
-    rates: Record<string, number>;
-    fetchedAt: string | null;
-  }>;
+  const [local, nest] = await Promise.all([
+    readFx("/api/fx").catch(() => null),
+    readFx(apiUrl("/fx")).catch(() => null),
+  ]);
+  if (local?.available) return local;
+  if (nest?.available) return nest;
+  return local || nest || FX_FALLBACK;
 }
 
 export async function fetchOrder(id: string) {

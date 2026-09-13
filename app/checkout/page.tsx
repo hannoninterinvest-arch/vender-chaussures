@@ -3,15 +3,19 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { CheckoutSteps } from "@/components/Experience";
+import { BrandMark } from "@/components/Logo";
+import { Money } from "@/components/Price";
+import { useToast } from "@/components/Toast";
+import { createOrder, fetchPaymentsConfig } from "@/lib/api";
+import { brand } from "@/lib/brand";
 import { useCart } from "@/lib/cart";
 import { useCatalog } from "@/lib/catalog";
-import { formatMoney } from "@/lib/format";
+import { useLocale } from "@/lib/locale";
 import {
-  convertFromTnd,
   countryName,
   quoteShipping,
   SHIPPING_COUNTRIES,
-  type ShippingQuote,
 } from "@/lib/shipping";
 import {
   gouvernorats,
@@ -19,48 +23,17 @@ import {
   type Gouvernorat,
   type PaymentMethod,
 } from "@/lib/tunisia";
-import { createOrder, fetchFxRates, fetchGeoCountry, fetchPaymentsConfig } from "@/lib/api";
-import { useToast } from "@/components/Toast";
-import { brand } from "@/lib/brand";
-import { CheckoutSteps } from "@/components/Experience";
-import { BrandMark } from "@/components/Logo";
-
-function PriceLine({
-  amountDt,
-  quote,
-  rates,
-  fxAvailable,
-}: {
-  amountDt: number;
-  quote: ShippingQuote;
-  rates: Record<string, number> | null;
-  fxAvailable: boolean;
-}) {
-  const converted = convertFromTnd(amountDt, quote.currency, rates);
-  const showFx = quote.currency !== "TND" && fxAvailable && converted.converted;
-  return (
-    <span className="text-right">
-      <span className="block">{formatMoney(showFx ? converted.amount : amountDt, showFx ? quote.currency : "TND")}</span>
-      {showFx && (
-        <span className="block text-[11px] font-normal text-[var(--muted)]">≈ {formatMoney(amountDt, "TND")}</span>
-      )}
-    </span>
-  );
-}
 
 export default function CheckoutPage() {
   const router = useRouter();
   const toast = useToast();
   const { lines, subtotal, clear } = useCart();
   const { products } = useCatalog();
+  const { country, setCountry, geoReady, fxMissing } = useLocale();
   const [payment, setPayment] = useState<PaymentMethod>("cod");
   const [onlineReady, setOnlineReady] = useState(false);
   const [gouvernorat, setGouvernorat] = useState<Gouvernorat>("Tunis");
-  const [country, setCountry] = useState("TN");
-  const [geoReady, setGeoReady] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [fxAvailable, setFxAvailable] = useState(true);
-  const [rates, setRates] = useState<Record<string, number> | null>({ TND: 1 });
 
   const weightsByProduct = useMemo(() => {
     const map = new Map<string, number>();
@@ -95,7 +68,6 @@ export default function CheckoutPage() {
   const quote = useMemo(() => quoteShipping(country, totalWeight), [country, totalWeight]);
   const total = subtotal + quote.deliveryDt;
   const tunisia = quote.country === "TN";
-  const fxMissing = quote.currency !== "TND" && (!fxAvailable || !rates?.[quote.currency]);
 
   useEffect(() => {
     let cancelled = false;
@@ -107,44 +79,6 @@ export default function CheckoutPage() {
       })
       .catch(() => {
         if (!cancelled) setOnlineReady(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchGeoCountry()
-      .then((geo) => {
-        if (cancelled) return;
-        const next = (geo.country || "TN").toUpperCase();
-        setCountry(/^[A-Z]{2}$/.test(next) ? next : "TN");
-      })
-      .catch(() => {
-        if (!cancelled) setCountry("TN");
-      })
-      .finally(() => {
-        if (!cancelled) setGeoReady(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchFxRates()
-      .then((fx) => {
-        if (cancelled) return;
-        setFxAvailable(Boolean(fx.available));
-        setRates(fx.rates || { TND: 1 });
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setFxAvailable(false);
-          setRates({ TND: 1 });
-        }
       });
     return () => {
       cancelled = true;
@@ -238,7 +172,7 @@ export default function CheckoutPage() {
             </label>
             <select
               value={country}
-              onChange={(e) => setCountry(e.target.value)}
+              onChange={(e) => setCountry(e.target.value, { manual: true })}
               className="field mt-1.5"
             >
               {SHIPPING_COUNTRIES.map((c) => (
@@ -350,7 +284,7 @@ export default function CheckoutPage() {
                     {l.color} · {l.size} · x{l.qty}
                   </p>
                 </div>
-                <PriceLine amountDt={Number(l.price) * l.qty} quote={quote} rates={rates} fxAvailable={!fxMissing} />
+                <Money amountDt={Number(l.price) * l.qty} align="end" />
               </li>
             ))}
           </ul>
@@ -358,7 +292,7 @@ export default function CheckoutPage() {
           <div className="space-y-1 text-sm">
             <div className="flex justify-between text-[var(--muted)]">
               <span>Sous-total</span>
-              <PriceLine amountDt={subtotal} quote={quote} rates={rates} fxAvailable={!fxMissing} />
+              <Money amountDt={subtotal} align="end" />
             </div>
             <div className="flex justify-between text-[var(--muted)]">
               <span>
@@ -368,7 +302,7 @@ export default function CheckoutPage() {
               </span>
               <span>
                 {quote.needsQuote ? "—" : (
-                  <PriceLine amountDt={quote.deliveryDt} quote={quote} rates={rates} fxAvailable={!fxMissing} />
+                  <Money amountDt={quote.deliveryDt} align="end" />
                 )}
               </span>
             </div>
@@ -381,7 +315,7 @@ export default function CheckoutPage() {
                 {quote.needsQuote ? (
                   "Sur devis"
                 ) : (
-                  <PriceLine amountDt={total} quote={quote} rates={rates} fxAvailable={!fxMissing} />
+                  <Money amountDt={total} align="end" />
                 )}
               </span>
             </div>
