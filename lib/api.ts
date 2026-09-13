@@ -74,6 +74,25 @@ export async function fetchPaymentsConfig() {
   return res.json() as Promise<{ online: boolean }>;
 }
 
+export async function fetchGeoCountry() {
+  const res = await fetch(apiUrl("/geo"), { cache: "no-store" });
+  if (!res.ok) return { country: "TN" as const, source: "default" };
+  return res.json() as Promise<{ country?: string; source?: string }>;
+}
+
+export async function fetchFxRates() {
+  const res = await fetch(apiUrl("/fx"), { cache: "no-store" });
+  if (!res.ok) {
+    return { available: false, base: "TND" as const, rates: { TND: 1 }, fetchedAt: null };
+  }
+  return res.json() as Promise<{
+    available: boolean;
+    base: "TND";
+    rates: Record<string, number>;
+    fetchedAt: string | null;
+  }>;
+}
+
 export async function fetchOrder(id: string) {
   const res = await fetch(apiUrl(`/orders/${id}`), { cache: "no-store" });
   if (res.status === 404) return null;

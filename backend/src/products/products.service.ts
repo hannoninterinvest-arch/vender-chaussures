@@ -24,6 +24,7 @@ import {
 } from './product-media';
 import { discountPercent, promoActive, sellingPrice } from './pricing';
 import { Product } from './product.entity';
+import { DEFAULT_PRODUCT_WEIGHT_G } from '../shipping/shipping';
 
 /** Une promo au-dessus du prix normal n'a pas de sens : on l'annule. */
 function normalizePromo(promo: number | undefined, price: number) {
@@ -83,6 +84,7 @@ export class ProductsService implements OnModuleInit {
     }
     await this.refreshSeedMedia();
     await this.backfillColorImages();
+    await this.backfillWeights();
   }
 
   /** Bring seeded products up to the current catalog photos, unless the shop
@@ -191,6 +193,7 @@ export class ProductsService implements OnModuleInit {
       colors: media.colors,
       sizes: dto.sizes,
       images: media.images,
+      weightGrams: dto.weightGrams && dto.weightGrams > 0 ? dto.weightGrams : DEFAULT_PRODUCT_WEIGHT_G,
     });
     return this.toSeller(await this.products.save(product));
   }
@@ -222,6 +225,9 @@ export class ProductsService implements OnModuleInit {
       product.colors = media.colors;
       product.images = media.images;
     }
+    if (dto.weightGrams !== undefined) {
+      product.weightGrams = dto.weightGrams > 0 ? dto.weightGrams : DEFAULT_PRODUCT_WEIGHT_G;
+    }
     return this.toSeller(await this.products.save(product));
   }
 
@@ -243,6 +249,16 @@ export class ProductsService implements OnModuleInit {
       if (sameColors && sameImages) continue;
       row.colors = colors;
       row.images = images;
+      await this.products.save(row);
+    }
+  }
+
+  private async backfillWeights() {
+    const rows = await this.products.find();
+    for (const row of rows) {
+      if (Number(row.weightGrams) >= 1) continue;
+      const seed = catalog.find((item) => item.id === row.id);
+      row.weightGrams = seed?.weightGrams || DEFAULT_PRODUCT_WEIGHT_G;
       await this.products.save(row);
     }
   }
@@ -274,6 +290,7 @@ export class ProductsService implements OnModuleInit {
       colors: product.colors,
       sizes: product.sizes,
       images: product.images,
+      weightGrams: Number(product.weightGrams) > 0 ? Number(product.weightGrams) : DEFAULT_PRODUCT_WEIGHT_G,
     };
   }
 
@@ -284,6 +301,7 @@ export class ProductsService implements OnModuleInit {
       price: Number(product.price),
       promoPrice: Number(product.promoPrice) || 0,
       cost: Number(product.cost) || 0,
+      weightGrams: Number(product.weightGrams) > 0 ? Number(product.weightGrams) : DEFAULT_PRODUCT_WEIGHT_G,
     };
   }
 }

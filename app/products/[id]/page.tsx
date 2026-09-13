@@ -59,7 +59,7 @@ export default function ProductPage({
       toast("Choisis une pointure.");
       return;
     }
-    cart.add({ ...snapshot, size, qty });
+    cart.add({ ...snapshot, size, qty, weightGrams: Number(product?.weightGrams) || 0 });
     toast(qty > 1 ? `${qty} paires ajoutées.` : "Ajouté au panier.");
   }
 
@@ -183,7 +183,7 @@ export default function ProductPage({
                   toast("Choisis une pointure.");
                   return;
                 }
-                cart.add({ ...snapshot, size, qty });
+                cart.add({ ...snapshot, size, qty, weightGrams: Number(product?.weightGrams) || 0 });
               }}
               className="flex h-12 w-full items-center justify-center rounded-sm border border-[#C5A059] text-xs font-semibold tracking-[0.08em] uppercase text-[#C5A059] hover:bg-[#C5A059]/10"
             >

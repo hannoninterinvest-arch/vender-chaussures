@@ -10,6 +10,7 @@ export type CartLine = {
   size: number;
   color: string;
   qty: number;
+  weightGrams?: number;
 };
 
 type CartContextValue = {

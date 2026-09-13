@@ -24,6 +24,7 @@ const emptyForm = {
   category: "",
   isNew: true,
   featured: false,
+  weightGrams: "900",
   colorSlots: [
     { name: "Noir", hex: "#1A1612", image: "" },
     { name: "Or", hex: "#D4AF37", image: "" },
@@ -86,6 +87,7 @@ export default function SellerProductsPage() {
       category: p.category,
       isNew: p.isNew,
       featured: Boolean(p.featured),
+      weightGrams: String(p.weightGrams || 900),
       colorSlots: p.colors.length
         ? p.colors.map((c) => ({ name: c.name, hex: c.hex, image: c.image || "" }))
         : [
@@ -141,6 +143,10 @@ export default function SellerProductsPage() {
       toast("Le prix promo doit être inférieur au prix normal");
       return;
     }
+    if (!Number(form.weightGrams) || Number(form.weightGrams) < 1) {
+      toast("Indique le poids d’une paire en grammes");
+      return;
+    }
     const images = [...new Set([...colors.map((c) => c.image), ...extras])];
     setBusy(true);
     const body = {
@@ -154,6 +160,7 @@ export default function SellerProductsPage() {
       category: form.category,
       isNew: form.isNew,
       featured: form.featured,
+      weightGrams: Number(form.weightGrams || 0),
       colors,
       sizes: form.sizes,
       images,
@@ -305,6 +312,16 @@ export default function SellerProductsPage() {
             </select>
           </label>
         </div>
+        <Field
+          label="Poids d’une paire (grammes)"
+          type="number"
+          value={form.weightGrams}
+          onChange={(v) => setForm({ ...form, weightGrams: v })}
+          required
+        />
+        <p className="text-xs text-[#666]">
+          Sert au calcul du port international (Aramex / DHL). Une paire ville ≈ 800–1000 g, bottine ≈ 1100 g.
+        </p>
         <label className="flex items-center gap-2 text-sm font-medium">
           <input
             type="checkbox"
@@ -513,6 +530,7 @@ export default function SellerProductsPage() {
                     formatTnd(p.price)
                   )}{" "}
                   · achat {formatTnd(p.cost || 0)}
+                  {p.weightGrams ? ` · ${p.weightGrams} g` : ""}
                   {p.featured ? " · accueil" : ""}
                 </p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">

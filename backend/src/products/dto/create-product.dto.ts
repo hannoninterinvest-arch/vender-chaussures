@@ -91,4 +91,10 @@ export class CreateProductDto {
   @ArrayMinSize(1)
   @ArrayMaxSize(16)
   images: string[];
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  weightGrams?: number;
 }

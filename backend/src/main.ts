@@ -4,6 +4,8 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const http = app.getHttpAdapter().getInstance() as { set?: (k: string, v: unknown) => void };
+  http.set?.('trust proxy', true);
   app.use((req: { url?: string }, _res: unknown, next: () => void) => {
     const url = req.url ?? '';
     if (url.startsWith('/api/') || url === '/api') {
@@ -20,7 +22,10 @@ async function bootstrap() {
       path.startsWith('/categories') ||
       path.startsWith('/orders') ||
       path.startsWith('/payments') ||
-      path.startsWith('/site')
+      path.startsWith('/site') ||
+      path.startsWith('/geo') ||
+      path.startsWith('/fx') ||
+      path.startsWith('/shipping')
     ) {
       req.url = `/api${url}`;
     }

@@ -4,6 +4,7 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchOrder, retryOrderPayment } from "@/lib/api";
 import { formatTnd } from "@/lib/format";
+import { countryName } from "@/lib/shipping";
 import { paymentLabel, paymentStatusLabel } from "@/lib/tunisia";
 import { brand, whatsappHref } from "@/lib/brand";
 import { CheckoutSteps } from "@/components/Experience";
@@ -19,10 +20,14 @@ type OrderView = {
   customer: {
     name: string;
     phone: string;
+    shippingCountry?: string;
+    shippingCarrier?: string;
     gouvernorat: string;
     city: string;
     address: string;
   };
+  totalWeightGrams?: number;
+  currency?: string;
   items: {
     productId: string;
     name: string;
@@ -125,7 +130,13 @@ export default function OrderPage({
           <br />
           {order.customer.address}, {order.customer.city}
           <br />
-          {order.customer.gouvernorat}
+          {order.customer.shippingCountry
+            ? countryName(order.customer.shippingCountry)
+            : order.customer.gouvernorat}
+          {order.customer.shippingCountry === "TN" && order.customer.gouvernorat
+            ? ` · ${order.customer.gouvernorat}`
+            : ""}
+          {order.customer.shippingCarrier ? ` · ${order.customer.shippingCarrier}` : ""}
         </p>
         <p className="mt-4 text-sm">
           Paiement : <strong className="text-[#C5A059]">{pay}</strong>
