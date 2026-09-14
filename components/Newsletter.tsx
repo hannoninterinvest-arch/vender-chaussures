@@ -27,8 +27,8 @@ export function Newsletter() {
           <BrandMark size="md" className="hidden sm:inline-flex" />
         </div>
         <div className="max-w-xl">
-          <p className="text-[11px] tracking-[0.28em] uppercase text-[#C9A45C]">Cercle ELVARO</p>
-          <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] text-[var(--fg)] md:text-4xl">
+          <p className="text-[11px] tracking-[0.28em] uppercase text-[var(--gold)]">Cercle ELVARO</p>
+          <h2 className="mt-3 font-[family-name:var(--font-display)] text-[28px] tracking-[0.1em] text-[var(--fg)] sm:text-3xl md:text-4xl">
             REJOINS-NOUS ET OBTIENS 15%
           </h2>
           <p className="mt-3 text-[var(--muted)]">

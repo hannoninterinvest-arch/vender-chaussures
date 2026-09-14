@@ -18,18 +18,18 @@ export function NewDrops() {
           <div className="flex items-center gap-4">
             <BrandSignature size="sm" slogan={false} className="hidden sm:inline-flex" />
             <div>
-            <p className="text-[11px] tracking-[0.28em] uppercase text-[#C9A45C]">Sélection</p>
-            <h2 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.12em] text-[var(--fg)] md:text-5xl">
+            <p className="text-[11px] tracking-[0.28em] uppercase text-[var(--gold)]">Sélection</p>
+            <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl tracking-[0.12em] text-[var(--fg)] sm:text-4xl md:text-5xl">
               {heading}
             </h2>
             </div>
           </div>
-          <Link href="/shop?drop=new" className="gold-btn rounded-sm px-5 py-2.5 text-[11px] uppercase">
+          <Link href="/shop?drop=new" className="gold-btn shrink-0 rounded-sm px-4 py-2.5 text-[11px] uppercase sm:px-5">
             Voir tout
           </Link>
         </div>
       </Reveal>
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
         {drops.map((p, i) => (
           <Reveal key={p.id} delay={i * 80}>
             <ProductCard product={p} />

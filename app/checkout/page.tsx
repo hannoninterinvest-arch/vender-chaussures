@@ -98,7 +98,7 @@ export default function CheckoutPage() {
       <div className="mb-6 flex items-center gap-4">
         <BrandMark size="sm" />
         <div>
-          <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-[#C5A059]">Paiement</p>
+          <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-[var(--gold)]">Paiement</p>
           <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.12em] uppercase">
             Checkout invité
           </h1>
@@ -123,7 +123,7 @@ export default function CheckoutPage() {
             autoComplete="tel"
           />
           <div>
-            <label className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#C5A059]">
+            <label className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[var(--gold)]">
               Gouvernorat
             </label>
             <select
@@ -153,8 +153,8 @@ export default function CheckoutPage() {
                   disabled ? "cursor-not-allowed opacity-55" : "cursor-pointer"
                 } ${
                   payment === m.id
-                    ? "border-[#C5A059] bg-[#C5A059]/10"
-                    : "border-[#C5A059]/25"
+                    ? "border-[var(--gold)] bg-[var(--gold)]/10"
+                    : "border-[var(--gold)]/25"
                 }`}
               >
                 <input
@@ -163,7 +163,7 @@ export default function CheckoutPage() {
                   checked={payment === m.id}
                   disabled={disabled}
                   onChange={() => setPayment(m.id)}
-                  className="mt-1 accent-[#C5A059]"
+                  className="mt-1 accent-[var(--gold)]"
                 />
                 <span>
                   <span className="block font-semibold">{m.label}</span>
@@ -194,7 +194,7 @@ export default function CheckoutPage() {
                     {l.color} · {l.size} · x{l.qty}
                   </p>
                 </div>
-                <span className="text-[#C5A059]">{formatTnd(Number(l.price) * l.qty)}</span>
+                <span className="text-[var(--gold)]">{formatTnd(Number(l.price) * l.qty)}</span>
               </li>
             ))}
           </ul>
@@ -210,7 +210,7 @@ export default function CheckoutPage() {
             </div>
             <div className="flex justify-between pt-2 text-lg font-bold">
               <span>Total</span>
-              <span className="text-[#C5A059]">{formatTnd(total)}</span>
+              <span className="text-[var(--gold)]">{formatTnd(total)}</span>
             </div>
           </div>
           <button type="submit" disabled={busy} className="gold-btn mt-6 h-12 w-full rounded-sm text-xs uppercase disabled:opacity-60">
@@ -242,7 +242,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#C5A059]">{label}</span>
+      <span className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[var(--gold)]">{label}</span>
       <input
         name={name}
         type={type}

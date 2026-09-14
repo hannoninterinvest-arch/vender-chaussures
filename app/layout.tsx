@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cinzel, Montserrat } from "next/font/google";
 import { Providers } from "@/components/Providers";
 import "./globals.css";
@@ -14,6 +14,11 @@ const body = Montserrat({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
+
+export const viewport: Viewport = {
+  themeColor: "#0e0c0a",
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: "ELVARO by AIR GO SHOES — L'excellence à chaque pas",

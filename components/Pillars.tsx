@@ -68,10 +68,10 @@ export function Pillars() {
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
         {items.map((item, i) => (
           <Reveal key={item.title} delay={i * 70} className="text-center">
-            <svg className="mx-auto h-8 w-8 text-[#C9A45C]" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <svg className="mx-auto h-8 w-8 text-[var(--gold)]" viewBox="0 0 24 24" fill="none" aria-hidden>
               {item.icon}
             </svg>
-            <p className="mt-3 text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C9A45C]">
+            <p className="mt-3 text-[11px] font-semibold tracking-[0.18em] uppercase text-[var(--gold)]">
               {item.title}
             </p>
             <p className="mt-2 text-sm text-[var(--muted)]">{item.text}</p>

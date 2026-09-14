@@ -45,32 +45,32 @@ export default function CartPage() {
               return (
                 <li
                   key={`${line.productId}-${line.size}-${line.color}`}
-                  className="gold-frame flex gap-4 rounded-[4px] bg-[var(--panel)] p-4"
+                  className="gold-frame flex gap-3 rounded-[4px] bg-[var(--panel)] p-3 sm:gap-4 sm:p-4"
                 >
                   <Link href={`/products/${line.productId}`} className="shrink-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={line.image}
                       alt={line.name}
-                      className="h-28 w-28 rounded-sm object-cover"
+                      className="h-20 w-20 rounded-sm object-cover sm:h-28 sm:w-28"
                     />
                   </Link>
                   <div className="flex flex-1 flex-col">
                     <div className="flex justify-between gap-3">
                       <div>
-                        <Link href={`/products/${line.productId}`} className="font-bold hover:text-[#C5A059]">
+                        <Link href={`/products/${line.productId}`} className="font-bold hover:text-[var(--gold)]">
                           {line.name}
                         </Link>
                         <p className="text-sm text-[var(--muted)]">
                           {line.color} · EU {line.size}
                         </p>
                       </div>
-                      <p className="font-bold text-[#C5A059]">
+                      <p className="font-bold text-[var(--gold)]">
                         {formatTnd(Number(line.price) * line.qty)}
                       </p>
                     </div>
                     <div className="mt-auto flex items-center justify-between pt-3">
-                      <div className="flex items-center rounded-sm border border-[#C5A059]/30">
+                      <div className="flex items-center rounded-sm border border-[var(--gold)]/30">
                         <button
                           type="button"
                           className="px-3 py-1.5"
@@ -91,7 +91,7 @@ export default function CartPage() {
                       </div>
                       <button
                         type="button"
-                        className="text-sm text-[var(--muted)] underline hover:text-[#C5A059]"
+                        className="text-sm text-[var(--muted)] underline hover:text-[var(--gold)]"
                         onClick={() => remove(line)}
                       >
                         Retirer
@@ -104,15 +104,15 @@ export default function CartPage() {
           </ul>
         </div>
 
-        <aside className="gold-frame h-fit rounded-[4px] bg-[var(--panel)] p-6 lg:sticky lg:top-28">
+        <aside className="gold-frame h-fit rounded-[4px] bg-[var(--panel)] p-6 lg:sticky lg:top-[calc(var(--header-offset)+1rem)]">
           <h2 className="text-xl font-bold">Récapitulatif</h2>
           <div className="mt-4 space-y-2 text-sm">
             <Row label="Sous-total" value={formatTnd(subtotal)} />
             <Row label="Livraison" value="Calculée à l’étape suivante" />
           </div>
-          <div className="mt-4 flex justify-between border-t border-[#C5A059]/30 pt-4 text-lg font-bold">
+          <div className="mt-4 flex justify-between border-t border-[var(--gold)]/30 pt-4 text-lg font-bold">
             <span>Total</span>
-            <span className="text-[#C5A059]">{formatTnd(subtotal)}</span>
+            <span className="text-[var(--gold)]">{formatTnd(subtotal)}</span>
           </div>
           <Link
             href="/checkout"
@@ -122,7 +122,7 @@ export default function CartPage() {
           >
             Commander
           </Link>
-          <Link href="/shop" className="mt-3 block text-center text-sm text-[var(--muted)] underline hover:text-[#C5A059]">
+          <Link href="/shop" className="mt-3 block text-center text-sm text-[var(--muted)] underline hover:text-[var(--gold)]">
             Continuer les achats
           </Link>
           <p className="mt-3 text-center text-xs text-[var(--muted)]">Aucun login requis</p>

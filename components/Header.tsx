@@ -91,7 +91,7 @@ export function Header() {
       <div className="header-hairline" />
       <a
         href="#contenu"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[80] focus:bg-[#C9A45C] focus:px-3 focus:py-2 focus:text-[#14110C]"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[80] focus:bg-[var(--gold)] focus:px-3 focus:py-2 focus:text-[var(--on-gold)]"
       >
         Aller au contenu
       </a>
@@ -134,7 +134,7 @@ export function Header() {
           >
             <IconBag />
             {count > 0 && (
-              <span className="badge-pop absolute right-0.5 top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-[var(--gold)] px-1 text-[10px] font-bold text-[#2C261C]">
+              <span className="badge-pop absolute right-0.5 top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-[var(--gold)] px-1 text-[10px] font-bold text-[var(--on-gold)]">
                 {count}
               </span>
             )}
@@ -158,14 +158,24 @@ export function Header() {
       </div>
 
       {menu && (
-        <div className="absolute inset-x-0 top-[var(--header-h)] border-b border-[var(--line)] bg-[var(--header-bg)] px-6 py-6 backdrop-blur-md md:hidden">
-          <nav className="mx-auto flex max-w-[1280px] flex-col gap-5 text-xs font-medium tracking-[0.2em] uppercase text-[var(--header-fg)]">
+        <div className="mobile-menu absolute inset-x-0 top-full border-b border-[var(--line)] bg-[var(--header-bg)] px-5 py-7 backdrop-blur-md md:hidden">
+          <nav className="mx-auto flex max-w-[1280px] flex-col gap-1 text-xs font-medium tracking-[0.2em] uppercase text-[var(--header-fg)]">
             {NAV.map((item) => (
-              <Link key={item.href} href={item.href} onClick={() => setMenu(false)} className="nav-link w-fit">
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMenu(false)}
+                className="nav-link min-h-11 w-full border-b border-[var(--line)] py-3"
+              >
                 {item.label}
               </Link>
             ))}
-            <a href={whatsappHref()} target="_blank" rel="noreferrer" className="gold-text font-semibold">
+            <a
+              href={whatsappHref()}
+              target="_blank"
+              rel="noreferrer"
+              className="gold-btn mt-4 flex min-h-11 items-center justify-center rounded-sm px-4 text-xs uppercase"
+            >
               WhatsApp
             </a>
           </nav>
@@ -175,7 +185,7 @@ export function Header() {
       {open && (
         <div className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm" onClick={() => setOpen(false)}>
           <div
-            className="gold-frame anim-fade-up mx-auto mt-28 max-w-xl rounded-[4px] bg-[var(--panel)] p-5"
+            className="gold-frame anim-fade-up mx-auto mt-24 max-w-xl rounded-[4px] bg-[var(--panel)] p-4 sm:mt-28 sm:p-5"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-label="Recherche"
