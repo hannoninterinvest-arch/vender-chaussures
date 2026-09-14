@@ -3,31 +3,71 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { CheckoutSteps } from "@/components/Experience";
+import { BrandMark } from "@/components/Logo";
+import { Money } from "@/components/Price";
+import { useToast } from "@/components/Toast";
+import { createOrder, fetchPaymentsConfig } from "@/lib/api";
+import { brand } from "@/lib/brand";
 import { useCart } from "@/lib/cart";
-import { formatTnd } from "@/lib/format";
+import { useCatalog } from "@/lib/catalog";
+import { useLocale } from "@/lib/locale";
 import {
-  deliveryFee,
+  countryName,
+  quoteShipping,
+  SHIPPING_COUNTRIES,
+} from "@/lib/shipping";
+import {
   gouvernorats,
   paymentMethods,
   type Gouvernorat,
   type PaymentMethod,
 } from "@/lib/tunisia";
-import { createOrder, fetchPaymentsConfig } from "@/lib/api";
-import { useToast } from "@/components/Toast";
-import { brand } from "@/lib/brand";
-import { CheckoutSteps } from "@/components/Experience";
-import { BrandMark } from "@/components/Logo";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const toast = useToast();
   const { lines, subtotal, clear } = useCart();
+  const { products } = useCatalog();
+  const { country, setCountry, geoReady, fxMissing } = useLocale();
   const [payment, setPayment] = useState<PaymentMethod>("cod");
   const [onlineReady, setOnlineReady] = useState(false);
   const [gouvernorat, setGouvernorat] = useState<Gouvernorat>("Tunis");
   const [busy, setBusy] = useState(false);
-  const fee = useMemo(() => deliveryFee(gouvernorat), [gouvernorat]);
-  const total = subtotal + fee;
+
+  const weightsByProduct = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const product of products) {
+      const grams = Number(product.weightGrams);
+      if (grams > 0) map.set(product.id, grams);
+    }
+    return map;
+  }, [products]);
+
+  const totalWeight = useMemo(
+    () =>
+      lines.reduce((sum, line) => {
+        const grams =
+          weightsByProduct.get(line.productId) ||
+          Number(line.weightGrams) ||
+          0;
+        return sum + grams * line.qty;
+      }, 0),
+    [lines, weightsByProduct],
+  );
+
+  const missingWeight = useMemo(
+    () =>
+      lines.some((line) => {
+        const grams = weightsByProduct.get(line.productId) || Number(line.weightGrams) || 0;
+        return grams < 1;
+      }),
+    [lines, weightsByProduct],
+  );
+
+  const quote = useMemo(() => quoteShipping(country, totalWeight), [country, totalWeight]);
+  const total = subtotal + quote.deliveryDt;
+  const tunisia = quote.country === "TN";
 
   useEffect(() => {
     let cancelled = false;
@@ -48,13 +88,22 @@ export default function CheckoutPage() {
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (lines.length === 0 || busy) return;
+    if (missingWeight || quote.invalidWeight) {
+      toast("Poids manquant sur un article. Impossible de valider la commande.");
+      return;
+    }
+    if (quote.needsQuote) {
+      toast("Livraison sur devis — contacte-nous avec ton panier.");
+      return;
+    }
     const data = new FormData(e.currentTarget);
     setBusy(true);
     try {
       const order = await createOrder({
         customerName: String(data.get("name")),
         phone: String(data.get("phone")),
-        gouvernorat,
+        shippingCountry: country,
+        gouvernorat: tunisia ? gouvernorat : "",
         city: String(data.get("city")),
         address: String(data.get("address")),
         notes: String(data.get("notes") || ""),
@@ -92,6 +141,9 @@ export default function CheckoutPage() {
     );
   }
 
+  const canPayOnline = onlineReady && !quote.needsQuote;
+  const canSubmit = !busy && !quote.needsQuote && !missingWeight && !quote.invalidWeight;
+
   return (
     <div className="mx-auto max-w-[1100px] px-4 py-10 md:px-6">
       <CheckoutSteps step={2} />
@@ -106,6 +158,7 @@ export default function CheckoutPage() {
       </div>
       <p className="mt-2 text-sm text-[var(--muted)]">
         Pas de mot de passe. On te contacte au {brand.phone} pour confirmer.
+        {!geoReady ? " Détection du pays…" : ` Pays détecté : ${countryName(country)}.`}
       </p>
 
       <form onSubmit={onSubmit} className="mt-8 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
@@ -113,6 +166,28 @@ export default function CheckoutPage() {
           <h2 className="font-[family-name:var(--font-display)] text-lg tracking-[0.14em] uppercase">
             Livraison
           </h2>
+          <div>
+            <label className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#C5A059]">
+              Pays
+            </label>
+            <select
+              value={country}
+              onChange={(e) => setCountry(e.target.value, { manual: true })}
+              className="field mt-1.5"
+            >
+              {SHIPPING_COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.flag} {c.name}
+                </option>
+              ))}
+              {!SHIPPING_COUNTRIES.some((c) => c.code === country) && (
+                <option value={country}>🌐 {country}</option>
+              )}
+            </select>
+            <p className="mt-1.5 text-xs text-[var(--muted)]">
+              Pré-rempli selon ton IP. Tu peux le changer : frais, transporteur et devise se mettent à jour tout de suite.
+            </p>
+          </div>
           <Field name="name" label="Nom complet" required autoComplete="name" />
           <Field
             name="phone"
@@ -122,61 +197,76 @@ export default function CheckoutPage() {
             placeholder="ex. 20 123 456"
             autoComplete="tel"
           />
-          <div>
-            <label className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#C5A059]">
-              Gouvernorat
-            </label>
-            <select
-              value={gouvernorat}
-              onChange={(e) => setGouvernorat(e.target.value as Gouvernorat)}
-              className="field mt-1.5"
-            >
-              {gouvernorats.map((g) => (
-                <option key={g}>{g}</option>
-              ))}
-            </select>
-          </div>
-          <Field name="city" label="Ville / délégation" required autoComplete="address-level2" />
+          {tunisia && (
+            <div>
+              <label className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#C5A059]">
+                Gouvernorat
+              </label>
+              <select
+                value={gouvernorat}
+                onChange={(e) => setGouvernorat(e.target.value as Gouvernorat)}
+                className="field mt-1.5"
+              >
+                {gouvernorats.map((g) => (
+                  <option key={g}>{g}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          <Field name="city" label={tunisia ? "Ville / délégation" : "Ville"} required autoComplete="address-level2" />
           <Field name="address" label="Adresse" required placeholder="Rue, immeuble, étage…" autoComplete="street-address" />
           <Field name="notes" label="Note pour le livreur (optionnel)" />
 
           <h2 className="pt-2 font-[family-name:var(--font-display)] text-lg tracking-[0.14em] uppercase">
             Paiement
           </h2>
-          <div className="space-y-2">
-            {paymentMethods.map((m) => {
-              const disabled = m.id === "online" && !onlineReady;
-              return (
-              <label
-                key={m.id}
-                className={`flex items-start gap-3 rounded-sm border p-4 ${
-                  disabled ? "cursor-not-allowed opacity-55" : "cursor-pointer"
-                } ${
-                  payment === m.id
-                    ? "border-[#C5A059] bg-[#C5A059]/10"
-                    : "border-[#C5A059]/25"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="payment"
-                  checked={payment === m.id}
-                  disabled={disabled}
-                  onChange={() => setPayment(m.id)}
-                  className="mt-1 accent-[#C5A059]"
-                />
-                <span>
-                  <span className="block font-semibold">{m.label}</span>
-                  <span className="text-sm text-[var(--muted)]">
-                    {disabled
-                      ? "Konnect n’est pas encore configuré (clés dans backend/.env). Tu peux payer à la livraison."
-                      : m.hint}
-                  </span>
-                </span>
-              </label>
-              );
-            })}
-          </div>
+          {quote.needsQuote ? (
+            <p className="rounded-sm border border-[#C5A059]/40 bg-[#C5A059]/10 p-4 text-sm">
+              Panier de plus de 5 kg : livraison sur devis. Le paiement en ligne est bloqué.
+              Envoie-nous le panier, on te confirme le tarif.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {paymentMethods.map((m) => {
+                const disabled = m.id === "online" && !canPayOnline;
+                const hint =
+                  m.id === "cod" && !tunisia
+                    ? "On confirme par téléphone avant l’expédition internationale."
+                    : m.id === "online" && !tunisia
+                      ? "Paiement Konnect en dinars (DT). Le total affiché dans ta devise est indicatif."
+                      : m.hint;
+                return (
+                  <label
+                    key={m.id}
+                    className={`flex items-start gap-3 rounded-sm border p-4 ${
+                      disabled ? "cursor-not-allowed opacity-55" : "cursor-pointer"
+                    } ${
+                      payment === m.id
+                        ? "border-[#C5A059] bg-[#C5A059]/10"
+                        : "border-[#C5A059]/25"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="payment"
+                      checked={payment === m.id}
+                      disabled={disabled}
+                      onChange={() => setPayment(m.id)}
+                      className="mt-1 accent-[#C5A059]"
+                    />
+                    <span>
+                      <span className="block font-semibold">{m.label}</span>
+                      <span className="text-sm text-[var(--muted)]">
+                        {disabled
+                          ? "Konnect n’est pas encore configuré (clés dans backend/.env). Tu peux payer à la livraison."
+                          : hint}
+                      </span>
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         <aside className="gold-frame h-fit rounded-[4px] bg-[var(--panel)] p-6 lg:sticky lg:top-28">
@@ -194,7 +284,7 @@ export default function CheckoutPage() {
                     {l.color} · {l.size} · x{l.qty}
                   </p>
                 </div>
-                <span className="text-[#C5A059]">{formatTnd(Number(l.price) * l.qty)}</span>
+                <Money amountDt={Number(l.price) * l.qty} align="end" />
               </li>
             ))}
           </ul>
@@ -202,20 +292,56 @@ export default function CheckoutPage() {
           <div className="space-y-1 text-sm">
             <div className="flex justify-between text-[var(--muted)]">
               <span>Sous-total</span>
-              <span>{formatTnd(subtotal)}</span>
+              <Money amountDt={subtotal} align="end" />
             </div>
             <div className="flex justify-between text-[var(--muted)]">
-              <span>Livraison ({gouvernorat})</span>
-              <span>{formatTnd(fee)}</span>
+              <span>
+                {quote.needsQuote
+                  ? "Livraison (sur devis)"
+                  : `Frais de livraison (${quote.carrierLabel})`}
+              </span>
+              <span>
+                {quote.needsQuote ? "—" : (
+                  <Money amountDt={quote.deliveryDt} align="end" />
+                )}
+              </span>
             </div>
+            <p className="text-[11px] text-[var(--muted)]">
+              Poids estimé : {missingWeight || quote.invalidWeight ? "incomplet" : `${totalWeight} g`}
+            </p>
             <div className="flex justify-between pt-2 text-lg font-bold">
               <span>Total</span>
-              <span className="text-[#C5A059]">{formatTnd(total)}</span>
+              <span className="text-[#C5A059]">
+                {quote.needsQuote ? (
+                  "Sur devis"
+                ) : (
+                  <Money amountDt={total} align="end" />
+                )}
+              </span>
             </div>
           </div>
-          <button type="submit" disabled={busy} className="gold-btn mt-6 h-12 w-full rounded-sm text-xs uppercase disabled:opacity-60">
-            {busy ? "Envoi…" : payment === "online" ? "Payer en ligne" : "Confirmer la commande"}
-          </button>
+          {fxMissing && !quote.needsQuote && (
+            <p className="mt-3 rounded-sm bg-[#C5A059]/10 px-3 py-2 text-xs text-[var(--muted)]">
+              Conversion temporairement indisponible, prix en DT.
+            </p>
+          )}
+          {missingWeight && (
+            <p className="mt-3 rounded-sm bg-red-50 px-3 py-2 text-xs text-red-800">
+              Un article n’a pas de poids renseigné. Impossible de valider — contacte la boutique.
+            </p>
+          )}
+          {quote.needsQuote ? (
+            <Link
+              href={`/contact?devis=1&pays=${quote.country}`}
+              className="gold-btn mt-6 flex h-12 w-full items-center justify-center rounded-sm text-xs uppercase"
+            >
+              Demander un devis
+            </Link>
+          ) : (
+            <button type="submit" disabled={!canSubmit} className="gold-btn mt-6 h-12 w-full rounded-sm text-xs uppercase disabled:opacity-60">
+              {busy ? "Envoi…" : payment === "online" ? "Payer en ligne" : "Confirmer la commande"}
+            </button>
+          )}
           <p className="mt-3 text-center text-[11px] tracking-[0.14em] uppercase text-[var(--muted)]">
             {brand.slogan}
           </p>

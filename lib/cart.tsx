@@ -10,6 +10,7 @@ export type CartLine = {
   size: number;
   color: string;
   qty: number;
+  weightGrams?: number;
 };
 
 type CartContextValue = {
@@ -23,6 +24,14 @@ type CartContextValue = {
 };
 
 const KEY = "kicks-cart";
+
+let hydrated = false;
+
+function ensureLoaded() {
+  if (hydrated || typeof window === "undefined") return;
+  hydrated = true;
+  load();
+}
 
 function same(
   a: Pick<CartLine, "productId" | "size" | "color">,
@@ -56,14 +65,16 @@ function load() {
   }
 }
 
-if (typeof window !== "undefined") load();
+if (typeof window !== "undefined") ensureLoaded();
 
 function subscribe(listener: () => void) {
+  ensureLoaded();
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
 
 function getSnapshot() {
+  ensureLoaded();
   return lines;
 }
 

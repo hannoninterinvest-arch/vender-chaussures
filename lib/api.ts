@@ -14,7 +14,7 @@ export function apiUrl(path: string) {
 }
 
 export async function fetchProducts() {
-  const res = await fetch(apiUrl("/products"), { cache: "no-store" });
+  const res = await fetch(apiUrl("/products"), { cache: "no-store", signal: AbortSignal.timeout(5000) });
   if (!res.ok) throw new Error("Impossible de charger les produits");
   return res.json();
 }
@@ -74,6 +74,56 @@ export async function fetchPaymentsConfig() {
   return res.json() as Promise<{ online: boolean }>;
 }
 
+type GeoPayload = { country?: string; source?: string };
+
+async function readGeo(url: string) {
+  const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(4000) });
+  if (!res.ok) return null;
+  return res.json() as Promise<GeoPayload>;
+}
+
+export async function fetchGeoCountry() {
+  const [nest, local] = await Promise.all([
+    readGeo(apiUrl("/geo")).catch(() => null),
+    readGeo("/api/geo").catch(() => null),
+  ]);
+  if (nest?.source === "ip" || nest?.source === "cache") return nest;
+  if (local?.source === "ip" || local?.source === "cache") return local;
+  if (nest?.country) return nest;
+  if (local?.country) return local;
+  return { country: "TN" as const, source: "default" };
+}
+
+type FxPayload = {
+  available: boolean;
+  base: "TND";
+  rates: Record<string, number>;
+  fetchedAt: string | null;
+};
+
+const FX_FALLBACK: FxPayload = {
+  available: false,
+  base: "TND",
+  rates: { TND: 1 },
+  fetchedAt: null,
+};
+
+async function readFx(url: string) {
+  const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(4000) });
+  if (!res.ok) return null;
+  return res.json() as Promise<FxPayload>;
+}
+
+export async function fetchFxRates() {
+  const [local, nest] = await Promise.all([
+    readFx("/api/fx").catch(() => null),
+    readFx(apiUrl("/fx")).catch(() => null),
+  ]);
+  if (local?.available) return local;
+  if (nest?.available) return nest;
+  return local || nest || FX_FALLBACK;
+}
+
 export async function fetchOrder(id: string) {
   const res = await fetch(apiUrl(`/orders/${id}`), { cache: "no-store" });
   if (res.status === 404) return null;
@@ -82,7 +132,7 @@ export async function fetchOrder(id: string) {
 }
 
 export async function fetchCategories() {
-  const res = await fetch(apiUrl("/categories"), { cache: "no-store" });
+  const res = await fetch(apiUrl("/categories"), { cache: "no-store", signal: AbortSignal.timeout(5000) });
   if (!res.ok) throw new Error("Impossible de charger les catégories");
   return res.json();
 }

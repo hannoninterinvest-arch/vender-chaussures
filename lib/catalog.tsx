@@ -45,7 +45,7 @@ function mapCategories(rows: unknown): ShopCategory[] {
 export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>(fallbackProducts);
   const [categories, setCategories] = useState<ShopCategory[]>(fallbackCategories);
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
@@ -61,7 +61,6 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
         setError("API indisponible — catalogue local");
       }
       if (c.status === "fulfilled") setCategories(mapCategories(c.value));
-      setReady(true);
     });
     return () => {
       cancelled = true;
