@@ -5,8 +5,10 @@ import {
   isAdmin,
   sellerRequest,
   sellerUploadImage,
+  sellerUploadMedia,
   type SellerProduct,
 } from "@/lib/seller";
+import { IMAGE_ACCEPT, VIDEO_ACCEPT, videoPoster } from "@/lib/media";
 import { useToast } from "@/components/Toast";
 import { defaultSite, type SiteHome } from "@/lib/site";
 
@@ -17,12 +19,18 @@ export default function SellerVitrinePage() {
   const [products, setProducts] = useState<SellerProduct[]>([]);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
 
   const productPhotos = useMemo(
     () =>
       products.flatMap((p) =>
         (p.images || []).filter(Boolean).map((url) => ({ url, name: p.name, id: p.id })),
       ),
+    [products],
+  );
+
+  const productVideos = useMemo(
+    () => products.filter((p) => p.video).map((p) => ({ url: p.video as string, name: p.name, id: p.id })),
     [products],
   );
 
@@ -37,7 +45,13 @@ export default function SellerVitrinePage() {
       });
     sellerRequest<SiteHome>("/seller/site")
       .then((home) => {
-        if (!cancelled && home) setSite({ ...defaultSite, ...home });
+        if (!cancelled && home)
+          setSite({
+            ...defaultSite,
+            ...home,
+            coverImages: home.coverImages?.length ? home.coverImages : defaultSite.coverImages,
+            coverVideos: home.coverVideos || [],
+          });
       })
       .catch((err: Error) => {
         if (!cancelled) toast(err.message);
@@ -52,7 +66,12 @@ export default function SellerVitrinePage() {
       method: "PATCH",
       body: JSON.stringify(next),
     });
-    setSite(saved);
+    setSite({
+      ...defaultSite,
+      ...saved,
+      coverImages: saved.coverImages || [],
+      coverVideos: saved.coverVideos || [],
+    });
   }
 
   async function onSaveTexts(e: FormEvent) {
@@ -109,6 +128,46 @@ export default function SellerVitrinePage() {
     }
   }
 
+  async function addCoverVideo(url: string) {
+    if (!admin) return;
+    if (site.coverVideos.includes(url)) {
+      toast("Cette vidéo est déjà sur la page de garde");
+      return;
+    }
+    if (site.coverVideos.length >= 6) {
+      toast("Maximum 6 vidéos de garde");
+      return;
+    }
+    try {
+      await saveSite({ ...site, coverVideos: [...site.coverVideos, url] });
+      toast("Vidéo ajoutée à la page de garde");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Ajout impossible");
+    }
+  }
+
+  async function removeCoverVideo(url: string) {
+    if (!admin) return;
+    try {
+      await saveSite({ ...site, coverVideos: site.coverVideos.filter((item) => item !== url) });
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Suppression impossible");
+    }
+  }
+
+  async function moveCoverVideo(index: number, dir: -1 | 1) {
+    if (!admin) return;
+    const next = [...site.coverVideos];
+    const target = index + dir;
+    if (target < 0 || target >= next.length) return;
+    [next[index], next[target]] = [next[target], next[index]];
+    try {
+      await saveSite({ ...site, coverVideos: next });
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Réorganisation impossible");
+    }
+  }
+
   async function onUpload(file: File) {
     if (!admin) return;
     setUploading(true);
@@ -119,6 +178,19 @@ export default function SellerVitrinePage() {
       toast(err instanceof Error ? err.message : "Upload Cloudinary impossible");
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function onUploadVideo(file: File) {
+    if (!admin) return;
+    setUploadingVideo(true);
+    try {
+      const { url } = await sellerUploadMedia(file);
+      await addCoverVideo(url);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Upload vidéo Cloudinary impossible");
+    } finally {
+      setUploadingVideo(false);
     }
   }
 
@@ -135,6 +207,25 @@ export default function SellerVitrinePage() {
     }
   }
 
+  async function toggleVideoHome(product: SellerProduct) {
+    if (!product.video) {
+      toast("Ajoute d’abord une vidéo 3D à ce produit");
+      return;
+    }
+    try {
+      const updated = await sellerRequest<SellerProduct>(`/seller/products/${product.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ showVideoOnHome: !product.showVideoOnHome }),
+      });
+      setProducts((rows) =>
+        rows.map((p) => (p.id === product.id ? { ...p, showVideoOnHome: updated.showVideoOnHome } : p)),
+      );
+      toast(updated.showVideoOnHome ? "Vidéo 3D visible sur l’accueil" : "Vidéo 3D retirée de l’accueil");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Mise à jour impossible");
+    }
+  }
+
   return (
     <div className="space-y-10">
       <div>
@@ -142,8 +233,8 @@ export default function SellerVitrinePage() {
           Page d’accueil
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-[#666]">
-          Choisis les photos de la page de garde (upload ou images déjà liées aux produits). Plus
-          d’image Unsplash figée : ce que tu sélectionnes ici s’affiche sur le site.
+          Choisis les photos et vidéos de la page de garde (upload Cloudinary ou médias déjà liés aux produits).
+          Le design de la boutique reste le même : or, crème, cadrage luxe.
         </p>
       </div>
 
@@ -197,7 +288,7 @@ export default function SellerVitrinePage() {
             {uploading ? "Envoi…" : "Uploader une photo"}
             <input
               type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
+              accept={IMAGE_ACCEPT}
               className="hidden"
               disabled={uploading}
               onChange={(e) => {
@@ -240,10 +331,68 @@ export default function SellerVitrinePage() {
         </div>
       </section>
 
-      <section>
+      <section className="rounded-[4px] border border-[#C5A059]/35 bg-white p-6">
         <h2 className="font-[family-name:var(--font-display)] text-xl tracking-[0.08em] uppercase">
-          Images des produits
+          Vidéos de garde ({site.coverVideos.length}/6)
         </h2>
+        <p className="mt-1 text-sm text-[#666]">
+          Elles passent dans le grand visuel d’accueil, avant les photos. Stockage Cloudinary (MP4, WebM, MOV).
+        </p>
+        {admin && (
+          <label className="mt-4 inline-flex cursor-pointer rounded-sm bg-[#1A1A1B] px-4 py-2 text-xs font-bold tracking-[0.08em] uppercase text-white">
+            {uploadingVideo ? "Envoi…" : "Uploader une vidéo"}
+            <input
+              type="file"
+              accept={VIDEO_ACCEPT}
+              className="hidden"
+              disabled={uploadingVideo}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (file) void onUploadVideo(file);
+              }}
+            />
+          </label>
+        )}
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {site.coverVideos.map((url, i) => (
+            <div key={url} className="overflow-hidden rounded-[4px] border border-[#C5A059]/25">
+              <video
+                src={url}
+                poster={videoPoster(url)}
+                className="h-36 w-full object-cover bg-[#111]"
+                muted
+                playsInline
+                controls
+              />
+              {admin && (
+                <div className="flex justify-between px-2 py-1.5 text-[11px]">
+                  <button type="button" disabled={i === 0} onClick={() => void moveCoverVideo(i, -1)}>
+                    ←
+                  </button>
+                  <button type="button" className="text-red-600" onClick={() => void removeCoverVideo(url)}>
+                    Retirer
+                  </button>
+                  <button
+                    type="button"
+                    disabled={i === site.coverVideos.length - 1}
+                    onClick={() => void moveCoverVideo(i, 1)}
+                  >
+                    →
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+          {site.coverVideos.length === 0 && (
+            <p className="col-span-full text-sm text-[#666]">
+              Aucune vidéo de garde. Uploade un fichier ou choisis une vidéo produit ci-dessous.
+            </p>
+          )}
+        </div>
+      </section>
+
+      <section>
         <p className="mt-1 text-sm text-[#666]">
           Clique une photo pour l’ajouter à la page de garde.
         </p>
@@ -274,6 +423,38 @@ export default function SellerVitrinePage() {
 
       <section>
         <h2 className="font-[family-name:var(--font-display)] text-xl tracking-[0.08em] uppercase">
+          Vidéos 3D des produits
+        </h2>
+        <p className="mt-1 text-sm text-[#666]">
+          Clique une vidéo pour l’ajouter à la page de garde. Coche « Accueil 3D » pour la section Looks 3D.
+        </p>
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {productVideos.map((clip) => {
+            const selected = site.coverVideos.includes(clip.url);
+            return (
+              <button
+                key={`${clip.id}-${clip.url}`}
+                type="button"
+                disabled={!admin}
+                onClick={() => void (selected ? removeCoverVideo(clip.url) : addCoverVideo(clip.url))}
+                className={`overflow-hidden rounded-[4px] border text-left ${
+                  selected ? "border-[#C5A059] ring-2 ring-[#C5A059]/40" : "border-transparent"
+                }`}
+                title={clip.name}
+              >
+                <video src={clip.url} poster={videoPoster(clip.url)} className="h-28 w-full object-cover bg-[#111]" muted />
+                <p className="truncate px-2 py-1 text-[11px]">{clip.name}</p>
+              </button>
+            );
+          })}
+          {productVideos.length === 0 && (
+            <p className="col-span-full text-sm text-[#666]">Ajoute d’abord une vidéo 3D aux produits.</p>
+          )}
+        </div>
+      </section>
+
+      <section>
+        <h2 className="font-[family-name:var(--font-display)] text-xl tracking-[0.08em] uppercase">
           Produits sur l’accueil
         </h2>
         <p className="mt-1 text-sm text-[#666]">
@@ -295,6 +476,15 @@ export default function SellerVitrinePage() {
                   onChange={() => void toggleFeatured(p)}
                 />
                 Accueil
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={Boolean(p.showVideoOnHome)}
+                  disabled={!p.video}
+                  onChange={() => void toggleVideoHome(p)}
+                />
+                Accueil 3D
               </label>
             </li>
           ))}

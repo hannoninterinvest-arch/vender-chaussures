@@ -75,7 +75,7 @@ export default function SellerImportPage() {
       <div className="mt-6 space-y-3 rounded-[4px] border border-[#C5A059]/35 bg-white p-6 text-sm">
         <p className="font-bold">Colonnes (Excel : séparateur point-virgule)</p>
         <p>
-          <code>nom;marque;prix;promo;achat;description;genre;categorie;nouveau;couleurs;pointures;images</code>
+          <code>nom;marque;prix;promo;achat;description;genre;categorie;nouveau;couleurs;pointures;images;video</code>
         </p>
         <ul className="list-disc space-y-1 pl-5 text-[#666]">
           <li>
@@ -91,6 +91,10 @@ export default function SellerImportPage() {
           <li>
             <strong>couleurs</strong> : <code>Noir:#171717@https://…/noir.jpg|Blanc:#ffffff@https://…/blanc.jpg</code>
             — le <code>@</code> lie la photo à la couleur. Sans photo, la 1re image de la colonne <code>images</code> est utilisée.
+          </li>
+          <li>
+            <strong>video</strong> (optionnel) : lien HTTPS Cloudinary de la vidéo 3D
+            (<code>https://res.cloudinary.com/…/video/upload/…mp4</code>)
           </li>
           <li>
             <strong>categorie</strong> : id ou nom déjà créé (ex. <code>ville</code>, <code>ceremonie</code>)

@@ -1,17 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Footsteps } from "@/components/Footsteps";
 import { BrandMark } from "@/components/Logo";
 import { brand } from "@/lib/brand";
 import { fetchSite } from "@/lib/api";
+import { isVideoUrl, toCoverSlides, videoPoster, type CoverSlide } from "@/lib/media";
 import { defaultSite, type SiteHome } from "@/lib/site";
 
 export function Hero() {
   const [site, setSite] = useState<SiteHome>(defaultSite);
   const [index, setIndex] = useState(0);
-  const photos = site.coverImages.filter(Boolean);
+
+  const slides = useMemo<CoverSlide[]>(() => {
+    const images = toCoverSlides(site.coverImages);
+    const videos = (site.coverVideos || []).filter(Boolean).map((url) => ({
+      type: "video" as const,
+      url,
+    }));
+    const merged = [...videos, ...images.filter((s) => !isVideoUrl(s.url))];
+    return merged.length ? merged : toCoverSlides(defaultSite.coverImages);
+  }, [site.coverImages, site.coverVideos]);
 
   useEffect(() => {
     let cancelled = false;
@@ -22,6 +32,7 @@ export function Hero() {
             ...defaultSite,
             ...data,
             coverImages: data.coverImages?.length ? data.coverImages : defaultSite.coverImages,
+            coverVideos: data.coverVideos || [],
           });
       })
       .catch(() => {
@@ -33,14 +44,16 @@ export function Hero() {
   }, []);
 
   useEffect(() => {
-    if (photos.length < 2) return;
+    if (slides.length < 2) return;
+    const current = slides[index];
+    const delay = current?.type === "video" ? 9000 : 5200;
     const timer = window.setInterval(() => {
-      setIndex((n) => (n + 1) % photos.length);
-    }, 5200);
+      setIndex((n) => (n + 1) % slides.length);
+    }, delay);
     return () => window.clearInterval(timer);
-  }, [photos.length]);
+  }, [slides, index]);
 
-  const current = photos[index] || "";
+  const current = slides[index];
 
   return (
     <section className="mx-auto max-w-[1280px] px-4 pb-6 pt-10 md:px-6">
@@ -64,11 +77,22 @@ export function Hero() {
       </div>
 
       <div className="anim-fade-up anim-d4 gold-frame relative overflow-hidden rounded-[4px] bg-[#14110C]">
-        {current ? (
+        {current?.type === "video" ? (
+          <video
+            key={current.url}
+            src={current.url}
+            poster={videoPoster(current.url)}
+            className="h-[420px] w-full object-cover opacity-90 md:h-[560px]"
+            autoPlay
+            muted
+            loop
+            playsInline
+          />
+        ) : current ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            key={current}
-            src={current}
+            key={current.url}
+            src={current.url}
             alt={site.heroTitle || "Collection ELVARO"}
             className="hero-photo h-[420px] w-full object-cover opacity-90 md:h-[560px]"
           />
@@ -97,15 +121,17 @@ export function Hero() {
             className="hidden drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)] sm:inline-flex"
           />
         </div>
-        {photos.length > 1 && (
+        {slides.length > 1 && (
           <div className="absolute bottom-8 right-6 flex gap-2 md:right-12">
-            {photos.map((url, i) => (
+            {slides.map((slide, i) => (
               <button
-                key={url}
+                key={`${slide.type}-${slide.url}-${i}`}
                 type="button"
-                aria-label={`Image ${i + 1}`}
+                aria-label={slide.type === "video" ? `Vidéo ${i + 1}` : `Image ${i + 1}`}
                 onClick={() => setIndex(i)}
-                className={`h-2 w-2 rounded-full ${i === index ? "bg-[#C9A45C]" : "bg-white/40"}`}
+                className={`h-2 rounded-full ${
+                  i === index ? "w-5 bg-[#C9A45C]" : "w-2 bg-white/40"
+                } ${slide.type === "video" ? "ring-1 ring-white/70" : ""}`}
               />
             ))}
           </div>

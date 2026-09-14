@@ -76,6 +76,8 @@ export class ProductsService implements OnModuleInit {
             ...item,
             ...media,
             featured: item.featured ?? false,
+            video: item.video || '',
+            showVideoOnHome: Boolean(item.showVideoOnHome),
             cost: Math.round(item.price * 0.62),
           }),
         );
@@ -92,10 +94,17 @@ export class ProductsService implements OnModuleInit {
       const row = await this.products.findOne({ where: { id: item.id } });
       if (!row || !isSeedMedia(row.images)) continue;
       const media = attachProductMedia(item.colors, item.images);
-      if (JSON.stringify(media.images) === JSON.stringify(row.images)) continue;
-      row.colors = media.colors;
-      row.images = media.images;
-      await this.products.save(row);
+      let dirty = JSON.stringify(media.images) !== JSON.stringify(row.images);
+      if (dirty) {
+        row.colors = media.colors;
+        row.images = media.images;
+      }
+      if (!row.video && item.video) {
+        row.video = item.video;
+        row.showVideoOnHome = Boolean(item.showVideoOnHome);
+        dirty = true;
+      }
+      if (dirty) await this.products.save(row);
     }
   }
 
@@ -191,6 +200,8 @@ export class ProductsService implements OnModuleInit {
       colors: media.colors,
       sizes: dto.sizes,
       images: media.images,
+      video: (dto.video || '').trim(),
+      showVideoOnHome: Boolean(dto.showVideoOnHome),
     });
     return this.toSeller(await this.products.save(product));
   }
@@ -208,6 +219,8 @@ export class ProductsService implements OnModuleInit {
     if (dto.isNew !== undefined) product.isNew = dto.isNew;
     if (dto.featured !== undefined) product.featured = dto.featured;
     if (dto.sizes !== undefined) product.sizes = dto.sizes;
+    if (dto.video !== undefined) product.video = dto.video.trim();
+    if (dto.showVideoOnHome !== undefined) product.showVideoOnHome = dto.showVideoOnHome;
     if (dto.promoPrice !== undefined || dto.price !== undefined) {
       product.promoPrice = normalizePromo(
         dto.promoPrice ?? product.promoPrice,
@@ -274,6 +287,8 @@ export class ProductsService implements OnModuleInit {
       colors: product.colors,
       sizes: product.sizes,
       images: product.images,
+      video: product.video || '',
+      showVideoOnHome: Boolean(product.showVideoOnHome),
     };
   }
 

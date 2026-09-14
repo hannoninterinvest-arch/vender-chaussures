@@ -91,4 +91,12 @@ export class CreateProductDto {
   @ArrayMinSize(1)
   @ArrayMaxSize(16)
   images: string[];
+
+  @IsOptional()
+  @IsString()
+  video?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  showVideoOnHome?: boolean;
 }
