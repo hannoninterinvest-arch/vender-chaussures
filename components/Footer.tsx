@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BrandSignature } from "@/components/Logo";
-import { Footsteps } from "@/components/Footsteps";
+import { Footstep } from "@/components/Footsteps";
 import { brand } from "@/lib/brand";
 
 export function Footer() {
@@ -9,7 +9,7 @@ export function Footer() {
       <div className="mx-auto grid max-w-[1280px] gap-10 px-4 py-16 md:grid-cols-4 md:px-6">
         <div>
           <BrandSignature size="lg" className="items-start" />
-          <Footsteps className="mt-4 origin-left scale-75" />
+          <Footstep size="sm" animated={false} className="mt-4" />
           <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">{brand.activity}.</p>
         </div>
         <div>

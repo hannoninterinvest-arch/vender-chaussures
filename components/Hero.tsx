@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Footsteps } from "@/components/Footsteps";
+import { Footstep } from "@/components/Footsteps";
 import { BrandMark } from "@/components/Logo";
 import { brand } from "@/lib/brand";
 import { fetchSite } from "@/lib/api";
@@ -51,15 +51,15 @@ export function Hero() {
             <span className="anim-fade-up anim-d2 block text-[36px] text-[var(--fg)] sm:text-[56px] md:text-[72px]">
               L&apos;EXCELLENCE
             </span>
-            <span className="anim-fade-up anim-d3 mt-2 flex flex-wrap items-center gap-4">
+            <span className="anim-fade-up anim-d3 mt-2 flex flex-wrap items-center gap-3 sm:gap-4">
               <span className="gold-text block text-[36px] sm:text-[56px] md:text-[72px]">À CHAQUE PAS</span>
-              <Footsteps className="hidden sm:inline-flex" />
+              <Footstep size="md" className="hidden sm:inline-flex" />
             </span>
           </h1>
           <p className="anim-fade-up anim-d4 max-w-md text-sm leading-relaxed text-[var(--muted)]">
             {brand.slogan} — cuir premium, allure de ville et de cérémonie.
           </p>
-          <Footsteps className="anim-fade-up anim-d4 sm:hidden" />
+          <Footstep size="md" className="anim-fade-up anim-d4 sm:hidden" />
         </div>
       </div>
 
@@ -76,6 +76,7 @@ export function Hero() {
           <div className="h-[420px] bg-[#14110C] md:h-[560px]" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+        <Footstep size="lg" className="footstep-on-cover" />
         <div className="absolute bottom-8 left-6 right-6 md:left-12 md:right-40">
           <p className="text-[11px] tracking-[0.28em] uppercase text-[#C9A45C]">{site.heroKicker}</p>
           <p className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.14em] text-[#F3EDE2] md:text-5xl">

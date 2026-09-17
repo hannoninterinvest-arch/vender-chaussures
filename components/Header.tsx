@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { Footstep } from "@/components/Footsteps";
 import { BrandLockup } from "@/components/Logo";
 import { ThemeToggle } from "@/components/Experience";
 import { useCart } from "@/lib/cart";
@@ -96,14 +97,17 @@ export function Header() {
         Aller au contenu
       </a>
       <div className="mx-auto grid h-[var(--header-h)] max-w-[1280px] grid-cols-[1fr_auto] items-center px-4 md:grid-cols-[1fr_auto_1fr] md:px-6">
-        <Link href="/" aria-label="ELVARO accueil" className="justify-self-start transition-transform duration-300 hover:scale-[1.03]">
-          <span className="md:hidden">
-            <BrandLockup compact />
-          </span>
-          <span className="hidden md:block">
-            <BrandLockup />
-          </span>
-        </Link>
+        <div className="flex items-center gap-2 justify-self-start sm:gap-3">
+          <Link href="/" aria-label="ELVARO accueil" className="transition-transform duration-300 hover:scale-[1.03]">
+            <span className="md:hidden">
+              <BrandLockup compact />
+            </span>
+            <span className="hidden md:block">
+              <BrandLockup />
+            </span>
+          </Link>
+          <Footstep size="sm" className="header-footstep" />
+        </div>
 
         <nav className="hidden items-center gap-8 text-[11px] font-medium tracking-[0.2em] uppercase text-[var(--header-fg)] md:flex">
           {NAV.map((item) => (
