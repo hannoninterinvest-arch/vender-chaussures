@@ -497,8 +497,8 @@ html[data-theme="light"] .gold-frame {
   align-items: flex-end;
   justify-content: center;
   color: var(--gold);
-  perspective: 260px;
-  perspective-origin: 50% 110%;
+  perspective: 320px;
+  perspective-origin: 50% 100%;
   vertical-align: bottom;
 }
 
@@ -508,18 +508,18 @@ html[data-theme="light"] .gold-frame {
 }
 
 .footstep-sm {
-  width: 18px;
-  height: 46px;
+  width: 22px;
+  height: 58px;
 }
 
 .footstep-md {
-  width: 28px;
-  height: 72px;
+  width: 34px;
+  height: 90px;
 }
 
 .footstep-lg {
-  width: 72px;
-  height: 186px;
+  width: 58px;
+  height: 154px;
 }
 
 .footstep-3d {
@@ -535,95 +535,95 @@ html[data-theme="light"] .gold-frame {
   display: block;
   width: 100%;
   height: 100%;
-  transform-origin: 50% 90%;
+  transform-origin: 50% 88%;
   will-change: transform, opacity, filter;
-  transform: rotateX(58deg) rotateZ(-11deg);
+  transform: rotateX(18deg) rotateZ(-9deg);
   filter: drop-shadow(0 10px 8px color-mix(in srgb, var(--gold) 28%, transparent));
 }
 
 .footstep-shadow {
   position: absolute;
   left: 50%;
-  bottom: 4%;
-  width: 72%;
-  height: 14%;
+  bottom: 2%;
+  width: 78%;
+  height: 12%;
   border-radius: 100%;
-  background: radial-gradient(ellipse, rgba(14, 12, 10, 0.38), transparent 72%);
-  transform: translateX(-50%) rotateX(70deg);
-  opacity: 0.55;
+  background: radial-gradient(ellipse, rgba(14, 12, 10, 0.42), transparent 72%);
+  transform: translateX(-50%) rotateX(64deg);
+  opacity: 0.5;
 }
 
 .footstep-mark.is-animated .footstep-sole {
-  animation: sole-step 2.7s cubic-bezier(0.45, 0.05, 0.2, 1) infinite;
+  animation: sole-step 2.8s cubic-bezier(0.45, 0.05, 0.2, 1) infinite;
 }
 
 .footstep-mark.is-animated .footstep-shadow {
-  animation: sole-shadow 2.7s cubic-bezier(0.45, 0.05, 0.2, 1) infinite;
+  animation: sole-shadow 2.8s cubic-bezier(0.45, 0.05, 0.2, 1) infinite;
 }
 
 .footstep-on-cover {
   pointer-events: none;
   position: absolute;
-  left: 4.5%;
-  top: 12%;
+  left: 18px;
+  top: 18px;
   z-index: 2;
-  perspective: 420px;
-  filter: drop-shadow(0 16px 22px rgba(0, 0, 0, 0.42));
+  perspective: 380px;
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5));
 }
 
 @keyframes sole-step {
   0%,
   100% {
-    opacity: 0.42;
-    transform: rotateX(58deg) rotateZ(-11deg) translateY(8px) translateZ(-8px);
-    filter: drop-shadow(0 8px 6px color-mix(in srgb, var(--gold) 22%, transparent)) brightness(0.96);
+    opacity: 0.82;
+    transform: rotateX(20deg) rotateZ(-9deg) translateY(3px);
+    filter: drop-shadow(0 8px 6px color-mix(in srgb, var(--gold) 24%, transparent)) brightness(0.98);
   }
   16% {
     opacity: 1;
-    transform: rotateX(12deg) rotateZ(-16deg) translateY(-16px) translateZ(22px);
-    filter: drop-shadow(0 16px 12px color-mix(in srgb, var(--gold) 42%, transparent)) brightness(1.22);
+    transform: rotateX(2deg) rotateZ(-14deg) translateY(-12px) scale(1.04);
+    filter: drop-shadow(0 16px 12px color-mix(in srgb, var(--gold) 42%, transparent)) brightness(1.2);
   }
   30% {
     opacity: 1;
-    transform: rotateX(62deg) rotateZ(-9deg) translateY(1px) translateZ(2px);
+    transform: rotateX(22deg) rotateZ(-8deg) translateY(0);
     filter: drop-shadow(0 10px 8px color-mix(in srgb, var(--gold) 30%, transparent)) brightness(1.05);
   }
   72% {
-    opacity: 0.7;
-    transform: rotateX(64deg) rotateZ(-8deg) translateY(6px) translateZ(-8px);
-    filter: drop-shadow(0 8px 6px color-mix(in srgb, var(--gold) 22%, transparent)) brightness(0.98);
+    opacity: 0.88;
+    transform: rotateX(18deg) rotateZ(-9deg) translateY(2px);
+    filter: drop-shadow(0 8px 6px color-mix(in srgb, var(--gold) 24%, transparent)) brightness(1);
   }
 }
 
 @keyframes sole-shadow {
   0%,
   100% {
-    opacity: 0.28;
-    transform: translateX(-50%) rotateX(70deg) scale(0.86);
+    opacity: 0.32;
+    transform: translateX(-50%) rotateX(64deg) scale(0.9);
   }
   16% {
-    opacity: 0.18;
-    transform: translateX(-50%) rotateX(70deg) scale(0.7);
+    opacity: 0.16;
+    transform: translateX(-50%) rotateX(64deg) scale(0.72);
   }
   30% {
-    opacity: 0.62;
-    transform: translateX(-50%) rotateX(70deg) scale(1);
+    opacity: 0.58;
+    transform: translateX(-50%) rotateX(64deg) scale(1);
   }
   72% {
     opacity: 0.4;
-    transform: translateX(-50%) rotateX(70deg) scale(0.92);
+    transform: translateX(-50%) rotateX(64deg) scale(0.94);
   }
 }
 
 @media (min-width: 768px) {
   .footstep-lg {
-    width: 92px;
-    height: 236px;
+    width: 72px;
+    height: 188px;
   }
 
   .footstep-on-cover {
-    left: 6%;
-    top: 14%;
+    left: 28px;
+    top: 24px;
   }
 }
 
@@ -754,6 +754,6 @@ html[data-theme="light"] .gold-frame {
 
   .footstep-mark.is-animated .footstep-sole {
     opacity: 1 !important;
-    transform: rotateX(58deg) rotateZ(-11deg) !important;
+    transform: rotateX(18deg) rotateZ(-9deg) !important;
   }
 }
