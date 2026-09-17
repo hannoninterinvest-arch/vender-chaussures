@@ -53,13 +53,12 @@ export function Hero() {
             </span>
             <span className="anim-fade-up anim-d3 mt-2 flex flex-wrap items-center gap-3 sm:gap-4">
               <span className="gold-text block text-[36px] sm:text-[56px] md:text-[72px]">À CHAQUE PAS</span>
-              <Footstep size="md" className="hidden sm:inline-flex" />
+              <Footstep size="md" />
             </span>
           </h1>
           <p className="anim-fade-up anim-d4 max-w-md text-sm leading-relaxed text-[var(--muted)]">
             {brand.slogan} — cuir premium, allure de ville et de cérémonie.
           </p>
-          <Footstep size="md" className="anim-fade-up anim-d4 sm:hidden" />
         </div>
       </div>
 

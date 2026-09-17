@@ -1,34 +1,28 @@
-/** Semelle cuir ville — un seul pas, lisible comme une vraie empreinte. */
+/** Semelle cuir ville — un seul pas, le plus réaliste. */
 
 function ShoePrint({ className = "" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 52 140" fill="currentColor" aria-hidden>
-      {/* Avant-pied oxford, bout amande. */}
-      <path d="M26 3c9.4 0 17.2 7.6 17.8 18.2 0.7 12.2-2.2 21.4-7.2 32.4-3.2 7-5.2 13.2-5.4 19.2-.2 3.6-1.2 5.6-3.6 6.6-2.2.8-5.4.8-7.6 0-2.4-1-3.4-3-3.6-6.6-.2-6-2.2-12.2-5.4-19.2-5-11-7.9-20.2-7.2-32.4C8.8 10.6 16.6 3 26 3z" />
-      {/* Cambrure + talon distinct. */}
-      <path d="M26 76.2c5.6 0 9.2 3.4 10.4 8.8 1.4 6.2 1.2 12.2 2.8 17.4 2.2 7.2 6.2 12.6 6.2 19.6 0 10.2-8.8 16.6-19.4 16.6S6.6 132.2 6.6 122c0-7 4-12.4 6.2-19.6 1.6-5.2 1.4-11.2 2.8-17.4 1.2-5.4 4.8-8.8 10.4-8.8z" />
-      {/* Chair claire de l’avant-pied. */}
-      <ellipse cx="26.2" cy="28" rx="11.2" ry="16" fill="var(--gold-light)" opacity="0.38" />
-      {/* Pièce talon. */}
-      <ellipse cx="26" cy="118" rx="11.4" ry="12.2" fill="var(--gold-dark)" opacity="0.5" />
+    <svg className={className} viewBox="0 0 44 108" fill="currentColor" aria-hidden>
+      <path d="M21.8 1.6c7.4.2 14 5.6 15.2 13.2 1.2 7.4-.8 13.4-3.2 20.6-1.8 5.8-2.6 11.8-2 18.8.4 4.8 1.6 8.6 3.8 12.4 2 3.4 3.2 6.6 3.2 10.4 0 8.6-7.6 15.6-17 15.6S4.8 85.6 4.8 77c0-3.8 1.2-7 3.2-10.4 2.2-3.8 3.4-7.6 3.8-12.4.6-7-.2-13-2-18.8-2.4-7.2-4.4-13.2-3.2-20.6C7.8 7.2 14.4 1.8 21.8 1.6z" />
+      <ellipse cx="22.2" cy="24.5" rx="8.8" ry="11.6" fill="var(--gold-light)" opacity="0.32" />
+      <ellipse cx="21.6" cy="73.8" rx="8.4" ry="7.8" fill="var(--gold-dark)" opacity="0.46" />
       <ellipse
-        cx="26"
-        cy="118"
-        rx="6.2"
-        ry="6.6"
+        cx="21.6"
+        cy="73.8"
+        rx="4.8"
+        ry="4.4"
         fill="none"
         stroke="var(--gold-light)"
-        strokeWidth="1.1"
-        opacity="0.7"
+        strokeWidth="0.9"
+        opacity="0.55"
       />
-      {/* Rainures de flexion. */}
       <path
-        d="M16.4 48c2.6 8.8 3.2 16.2 3 24.2M35.6 48c-2.2 8.6-2.6 16-2 23.8M19.2 44.2c4.8 1.2 9.2 1.2 13.8 0"
+        d="M13.6 40.5c2 7.4 2.6 14 2.4 21M30.2 40.5c-1.6 7.2-2 13.8-1.6 20.8M16.6 36.8c4.2.9 8.2.9 12.4 0"
         fill="none"
         stroke="var(--gold-dark)"
-        strokeWidth="1.2"
+        strokeWidth="1.05"
         strokeLinecap="round"
-        opacity="0.48"
+        opacity="0.42"
       />
     </svg>
   );
