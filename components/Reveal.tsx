@@ -12,22 +12,31 @@ export function Reveal({
   delay?: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [on, setOn] = useState(false);
+  const [on, setOn] = useState(true);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    const show = () => setOn(true);
+    if (typeof IntersectionObserver === "undefined") {
+      show();
+      return;
+    }
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setOn(true);
+          show();
           io.disconnect();
         }
       },
-      { threshold: 0.14, rootMargin: "0px 0px -40px 0px" },
+      { threshold: 0.08, rootMargin: "80px 0px 80px 0px" },
     );
     io.observe(el);
-    return () => io.disconnect();
+    const fallback = window.setTimeout(show, 900);
+    return () => {
+      io.disconnect();
+      window.clearTimeout(fallback);
+    };
   }, []);
 
   return (

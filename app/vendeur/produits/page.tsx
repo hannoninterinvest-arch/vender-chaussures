@@ -8,9 +8,11 @@ import {
   isAdmin,
   sellerRequest,
   sellerUploadImage,
+  sellerUploadMedia,
   type SellerCategory,
   type SellerProduct,
 } from "@/lib/seller";
+import { IMAGE_ACCEPT, VIDEO_ACCEPT } from "@/lib/media";
 import { useToast } from "@/components/Toast";
 
 const emptyForm = {
@@ -31,6 +33,8 @@ const emptyForm = {
   ],
   sizes: [40, 41, 42, 43, 44] as number[],
   images: ["", "", "", "", ""] as string[],
+  video: "",
+  showVideoOnHome: false,
 };
 
 export default function SellerProductsPage() {
@@ -94,6 +98,8 @@ export default function SellerProductsPage() {
           ],
       sizes: p.sizes,
       images: [0, 1, 2, 3, 4].map((i) => p.images[i] || ""),
+      video: p.video || "",
+      showVideoOnHome: Boolean(p.showVideoOnHome),
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -157,6 +163,8 @@ export default function SellerProductsPage() {
       colors,
       sizes: form.sizes,
       images,
+      video: form.video.trim(),
+      showVideoOnHome: form.showVideoOnHome,
     };
     try {
       if (editing) {
@@ -221,6 +229,19 @@ export default function SellerProductsPage() {
       toast("Photo enregistrée sur Cloudinary");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Upload Cloudinary impossible");
+    } finally {
+      setUploading(null);
+    }
+  }
+
+  async function onUploadVideo(file: File) {
+    setUploading("video-3d");
+    try {
+      const { url } = await sellerUploadMedia(file);
+      setForm((f) => ({ ...f, video: url }));
+      toast("Vidéo 3D enregistrée sur Cloudinary");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Upload vidéo Cloudinary impossible");
     } finally {
       setUploading(null);
     }
@@ -344,7 +365,7 @@ export default function SellerProductsPage() {
                   {uploading === `color-${i}` ? "Envoi…" : slot.image ? "Changer" : "Upload"}
                   <input
                     type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    accept={IMAGE_ACCEPT}
                     className="hidden"
                     disabled={uploading !== null}
                     onChange={(e) => {
@@ -442,7 +463,7 @@ export default function SellerProductsPage() {
                 {uploading === `gallery-${i}` ? "Envoi…" : url ? "Changer" : "Upload"}
                 <input
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  accept={IMAGE_ACCEPT}
                   className="hidden"
                   disabled={uploading !== null}
                   onChange={(e) => {
@@ -469,6 +490,65 @@ export default function SellerProductsPage() {
               )}
             </div>
           ))}
+        </div>
+        <p className="text-sm font-bold">Vidéo 3D du produit (Cloudinary)</p>
+        <p className="text-xs text-[#666]">
+          MP4 / WebM / MOV, jusqu’à 40 Mo. Elle apparaît dans la galerie de la fiche produit (vue 3D).
+          Tu peux aussi la montrer sur l’accueil.
+        </p>
+        <div className="flex flex-wrap items-start gap-4 rounded-lg border border-[#E5E5E5] p-3">
+          <div className="w-40 space-y-1">
+            <div className="relative aspect-square overflow-hidden rounded-lg bg-[#F5F5F5]">
+              {form.video ? (
+                <video src={form.video} className="h-full w-full object-cover" muted playsInline />
+              ) : (
+                <span className="grid h-full place-items-center text-[10px] text-[#888]">Vue 3D</span>
+              )}
+            </div>
+            <label className="block cursor-pointer rounded-lg bg-[#1A1A1A] px-2 py-1.5 text-center text-[11px] font-bold text-white">
+              {uploading === "video-3d" ? "Envoi…" : form.video ? "Changer" : "Upload vidéo"}
+              <input
+                type="file"
+                accept={VIDEO_ACCEPT}
+                className="hidden"
+                disabled={uploading !== null}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (file) void onUploadVideo(file);
+                }}
+              />
+            </label>
+            {form.video && (
+              <button
+                type="button"
+                className="w-full text-[11px] text-red-600"
+                onClick={() => setForm((f) => ({ ...f, video: "", showVideoOnHome: false }))}
+              >
+                Retirer
+              </button>
+            )}
+          </div>
+          <div className="min-w-0 flex-1 space-y-3">
+            <label className="block text-sm font-medium">
+              Ou colle une URL Cloudinary
+              <input
+                value={form.video}
+                onChange={(e) => setForm({ ...form, video: e.target.value })}
+                placeholder="https://res.cloudinary.com/…/video/upload/…"
+                className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#C5A059]"
+              />
+            </label>
+            <label className="flex items-center gap-2 text-sm font-medium">
+              <input
+                type="checkbox"
+                checked={form.showVideoOnHome}
+                disabled={!form.video}
+                onChange={(e) => setForm({ ...form, showVideoOnHome: e.target.checked })}
+              />
+              Afficher cette vidéo 3D sur la page d’accueil
+            </label>
+          </div>
         </div>
         <div className="flex gap-3">
           <button
@@ -514,6 +594,7 @@ export default function SellerProductsPage() {
                   )}{" "}
                   · achat {formatTnd(p.cost || 0)}
                   {p.featured ? " · accueil" : ""}
+                  {p.video ? " · 3D" : ""}
                 </p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                   {p.colors.map((c) => (

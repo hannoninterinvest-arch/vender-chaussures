@@ -16,4 +16,8 @@ export class SiteSettings {
 
   @Column({ type: 'jsonb', default: () => "'[]'" })
   coverImages: string[];
+
+  /** Vidéos de garde (Cloudinary), affichées avec les photos sur l’accueil. */
+  @Column({ type: 'jsonb', default: () => "'[]'" })
+  coverVideos: string[];
 }
