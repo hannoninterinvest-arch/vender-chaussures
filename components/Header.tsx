@@ -8,7 +8,8 @@ import { BrandLockup } from "@/components/Logo";
 import { ThemeToggle } from "@/components/Experience";
 import { useCart } from "@/lib/cart";
 import { useCatalog } from "@/lib/catalog";
-import { formatTnd } from "@/lib/format";
+import { CountrySwitcher } from "@/components/CountrySwitcher";
+import { Money } from "@/components/Price";
 import { whatsappHref } from "@/lib/brand";
 
 const NAV = [
@@ -122,6 +123,7 @@ export function Header() {
         </nav>
 
         <div className="flex items-center justify-self-end gap-0.5 text-[var(--gold)]">
+          <CountrySwitcher className="mr-1" />
           <ThemeToggle />
           <button
             type="button"
@@ -206,7 +208,7 @@ export function Header() {
                       <span className="block truncate font-medium text-[var(--fg)]">{p.name}</span>
                       <span className="text-xs text-[var(--muted)]">{p.brand}</span>
                     </span>
-                    <span className="text-[var(--gold)]">{formatTnd(p.price)}</span>
+                    <Money amountDt={p.price} className="text-[var(--gold)]" approx={false} />
                   </Link>
                 </li>
               ))}

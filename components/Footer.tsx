@@ -58,6 +58,11 @@ export function Footer() {
           <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[var(--gold)]">Contact</p>
           <ul className="mt-4 space-y-2 text-sm text-[var(--muted)]">
             <li>
+              <Link href="/contact" className="transition-colors hover:text-[var(--gold)]">
+                Contact / devis
+              </Link>
+            </li>
+            <li>
               <a href={brand.phoneHref} className="hover:text-[var(--gold)]">{brand.phone}</a>
             </li>
             <li>

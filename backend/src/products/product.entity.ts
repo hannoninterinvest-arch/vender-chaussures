@@ -44,4 +44,8 @@ export class Product {
 
   @Column({ type: 'jsonb' })
   images: string[];
+
+  /** Poids d'une paire, en grammes. Obligatoire pour le calcul de port. */
+  @Column({ name: 'weight_grams', type: 'int', default: 900 })
+  weightGrams: number;
 }

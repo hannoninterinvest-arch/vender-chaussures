@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { formatTnd } from "@/lib/format";
+import { countryName } from "@/lib/shipping";
 import { paymentLabel, paymentStatusLabel } from "@/lib/tunisia";
 import { sellerRequest, type SellerOrder } from "@/lib/seller";
 import { useToast } from "@/components/Toast";
@@ -100,7 +101,13 @@ export default function SellerOrdersPage() {
                   {paymentStatusLabel(o.paymentStatus || "", o.payment)}
                 </p>
                 <p className="text-sm text-[#666]">
-                  {o.customer.address}, {o.customer.city} ({o.customer.gouvernorat})
+                  {o.customer.address}, {o.customer.city}
+                  {o.customer.shippingCountry
+                    ? ` · ${countryName(o.customer.shippingCountry)}`
+                    : ""}
+                  {o.customer.gouvernorat ? ` (${o.customer.gouvernorat})` : ""}
+                  {o.customer.shippingCarrier ? ` · ${o.customer.shippingCarrier}` : ""}
+                  {o.totalWeightGrams ? ` · ${o.totalWeightGrams} g` : ""}
                 </p>
               </div>
               <div className="text-right">

@@ -75,7 +75,7 @@ export default function SellerImportPage() {
       <div className="mt-6 space-y-3 rounded-[4px] border border-[#C5A059]/35 bg-white p-6 text-sm">
         <p className="font-bold">Colonnes (Excel : séparateur point-virgule)</p>
         <p>
-          <code>nom;marque;prix;promo;achat;description;genre;categorie;nouveau;couleurs;pointures;images</code>
+          <code>nom;marque;prix;promo;achat;description;genre;categorie;nouveau;couleurs;pointures;images;poids</code>
         </p>
         <ul className="list-disc space-y-1 pl-5 text-[#666]">
           <li>
@@ -91,6 +91,9 @@ export default function SellerImportPage() {
           <li>
             <strong>couleurs</strong> : <code>Noir:#171717@https://…/noir.jpg|Blanc:#ffffff@https://…/blanc.jpg</code>
             — le <code>@</code> lie la photo à la couleur. Sans photo, la 1re image de la colonne <code>images</code> est utilisée.
+          </li>
+          <li>
+            <strong>poids</strong> : grammes pour <em>une</em> paire (ex. <code>900</code>). Sert au calcul Aramex / DHL.
           </li>
           <li>
             <strong>categorie</strong> : id ou nom déjà créé (ex. <code>ville</code>, <code>ceremonie</code>)

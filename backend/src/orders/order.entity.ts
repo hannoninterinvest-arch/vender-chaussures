@@ -57,6 +57,21 @@ export class Order {
   @Column({ default: 'en_attente' })
   status: string;
 
+  @Column({ name: 'shipping_country', type: 'varchar', default: 'TN' })
+  shippingCountry: string;
+
+  @Column({ name: 'shipping_carrier', type: 'varchar', default: 'poste' })
+  shippingCarrier: string;
+
+  @Column({ name: 'total_weight_grams', type: 'int', default: 0 })
+  totalWeightGrams: number;
+
+  @Column({ type: 'varchar', default: 'TND' })
+  currency: string;
+
+  @Column('decimal', { precision: 12, scale: 6, default: 1 })
+  exchangeRate: number;
+
   @OneToMany(() => OrderItem, (item) => item.order, { cascade: true, eager: true })
   items: OrderItem[];
 

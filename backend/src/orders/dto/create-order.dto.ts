@@ -5,6 +5,8 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  Length,
+  Matches,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -37,7 +39,13 @@ export class CreateOrderDto {
   phone: string;
 
   @IsString()
-  gouvernorat: string;
+  @Length(2, 2)
+  @Matches(/^[A-Za-z]{2}$/)
+  shippingCountry: string;
+
+  @IsOptional()
+  @IsString()
+  gouvernorat?: string;
 
   @IsString()
   city: string;
