@@ -475,10 +475,10 @@ html[data-theme="light"] .promo-bar {
   white-space: nowrap;
 }
 
-.country-select-menu.is-left {
-  right: auto;
-  left: 0;
-}
+.country-select-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.35rem);
   z-index: 80;
   max-height: 18rem;
   min-width: 14rem;
@@ -486,6 +486,11 @@ html[data-theme="light"] .promo-bar {
   border: 1px solid var(--line);
   background: var(--panel);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+}
+
+.country-select-menu.is-left {
+  right: auto;
+  left: 0;
 }
 
 .country-select-menu button {
