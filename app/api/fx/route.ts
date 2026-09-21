@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
   try {
     const res = await fetch(apiUrl(`/currency?country=${encodeURIComponent(country)}`), {
       cache: "no-store",
+      signal: AbortSignal.timeout(2500),
     });
     if (res.ok) {
       const data = await res.json();
@@ -25,7 +26,7 @@ export async function GET(req: NextRequest) {
     const url = key
       ? `https://v6.exchangerate-api.com/v6/${encodeURIComponent(key)}/latest/TND`
       : "https://open.er-api.com/v6/latest/TND";
-    const res = await fetch(url, { cache: "no-store" });
+    const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(4000) });
     if (res.ok) {
       const data = (await res.json()) as {
         conversion_rates?: Record<string, number>;

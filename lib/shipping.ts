@@ -28,6 +28,7 @@ export async function calculateShipping(body: {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(8000),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));

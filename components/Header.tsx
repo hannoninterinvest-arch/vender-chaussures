@@ -144,6 +144,7 @@ export function Header() {
             className="header-country"
             value={countries.some((c) => c.code === selectedCountry) ? selectedCountry : "TN"}
             onChange={(e) => setSelectedCountry(e.target.value)}
+            onInput={(e) => setSelectedCountry((e.target as HTMLSelectElement).value)}
             aria-label="Pays de livraison"
           >
             {!countries.some((c) => c.code === selectedCountry) && (

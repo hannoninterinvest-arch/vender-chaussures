@@ -68,7 +68,7 @@ export class CurrencyService {
     const url = key
       ? `https://v6.exchangerate-api.com/v6/${encodeURIComponent(key)}/latest/TND`
       : 'https://open.er-api.com/v6/latest/TND';
-    const res = await fetch(url, { cache: 'no-store' });
+    const res = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(4000) });
     if (!res.ok) throw new Error(`FX HTTP ${res.status}`);
     const data = (await res.json()) as {
       result?: string;
