@@ -25,12 +25,10 @@ const reviews = [
 
 export function Reviews() {
   return (
-    <section className="mx-auto max-w-[1280px] px-4 py-16 md:px-6">
+    <section className="store-section">
       <Reveal>
-        <p className="text-[11px] tracking-[0.28em] uppercase text-[#C9A45C]">Témoignages</p>
-        <h2 className="mb-8 mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.12em] text-[var(--fg)] md:text-5xl">
-          AVIS
-        </h2>
+        <p className="section-kicker">Témoignages</p>
+        <h2 className="section-title mb-8">Avis</h2>
       </Reveal>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {reviews.map((r, i) => (

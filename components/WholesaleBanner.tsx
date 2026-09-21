@@ -5,9 +5,9 @@ import { WHOLESALE_MIN_QTY } from "@/lib/wholesale";
 
 export function WholesaleBanner() {
   return (
-    <section className="mx-auto max-w-[1280px] px-4 pb-4 md:px-6">
+    <section className="wholesale-banner">
       <Reveal>
-        <div className="gold-frame flex flex-col gap-6 rounded-[4px] bg-[var(--panel)] px-6 py-10 md:flex-row md:items-center md:justify-between md:px-12">
+        <div className="wholesale-banner-inner">
           <div className="max-w-xl">
             <p className="text-[11px] tracking-[0.28em] uppercase text-[var(--gold)]">
               Revendeurs & boutiques

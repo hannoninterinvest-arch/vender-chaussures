@@ -27,7 +27,7 @@ const items = [
   },
   {
     title: "Confort supérieur",
-    text: "Pensé pour chaque pas.",
+    text: "Allure ville et cérémonie.",
     icon: (
       <path
         d="M5 16c2-6 5-9 7-10 2 1 5 4 7 10-3 2-11 2-14 0z"
@@ -63,8 +63,7 @@ const items = [
 
 export function Pillars() {
   return (
-    <section className="mx-auto max-w-[1280px] px-4 py-14 md:px-6">
-      <div className="gold-line mb-10" />
+    <section className="store-section">
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
         {items.map((item, i) => (
           <Reveal key={item.title} delay={i * 70} className="text-center">

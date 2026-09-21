@@ -1,80 +1,103 @@
+"use client";
+
+import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { BrandSignature } from "@/components/Logo";
-import { Footstep } from "@/components/Footsteps";
+import Logo from "@/components/Logo";
 import { brand } from "@/lib/brand";
+import { useToast } from "./Toast";
 
 export function Footer() {
+  const toast = useToast();
+  const [email, setEmail] = useState("");
+
+  function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!email.includes("@")) {
+      toast("Entre une adresse e-mail valide.");
+      return;
+    }
+    setEmail("");
+    toast("Inscrit — 15% sur ta prochaine commande.");
+  }
+
   return (
-    <footer className="mt-8 border-t border-[var(--line)] bg-[var(--panel)] text-[var(--fg)]">
-      <div className="mx-auto grid max-w-[1280px] gap-10 px-4 py-16 md:grid-cols-4 md:px-6">
-        <div>
-          <BrandSignature size="lg" className="items-start" />
-          <Footstep size="sm" animated={false} className="mt-4" />
-          <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">{brand.activity}.</p>
-        </div>
-        <div>
-          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[var(--gold)]">Collection</p>
-          <ul className="mt-4 space-y-2 text-sm text-[var(--muted)]">
+    <footer className="site-footer">
+      <div className="footer-grid">
+        <div className="footer-brand">
+          <Logo size="md" />
+          <ul className="footer-links">
             <li>
-              <Link href="/shop?category=ville" className="transition-colors hover:text-[var(--gold)]">Ville</Link>
+              <Link href="/shop">Toute la collection</Link>
             </li>
             <li>
-              <Link href="/shop?category=ceremonie" className="transition-colors hover:text-[var(--gold)]">Cérémonie</Link>
+              <Link href="/grossiste">Achat en gros</Link>
             </li>
             <li>
-              <Link href="/shop?category=mocassins" className="transition-colors hover:text-[var(--gold)]">Mocassins</Link>
-            </li>
-            <li>
-              <Link href="/shop?category=bottes" className="transition-colors hover:text-[var(--gold)]">Bottes</Link>
-            </li>
-            <li>
-              <Link href="/shop?category=femme" className="transition-colors hover:text-[var(--gold)]">Femme</Link>
+              <Link href="/vendeur">Espace équipe</Link>
             </li>
           </ul>
         </div>
         <div>
-          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[var(--gold)]">Boutique</p>
-          <ul className="mt-4 space-y-2 text-sm text-[var(--muted)]">
+          <p className="footer-heading">Shopping</p>
+          <ul className="footer-links">
             <li>
-              <Link href="/shop" className="transition-colors hover:text-[var(--gold)]">Toute la collection</Link>
+              <Link href="/shop?category=ville">Ville</Link>
             </li>
             <li>
-              <Link href="/cart" className="transition-colors hover:text-[var(--gold)]">Panier</Link>
+              <Link href="/shop?category=ceremonie">Cérémonie</Link>
             </li>
             <li>
-              <Link href="/checkout" className="transition-colors hover:text-[var(--gold)]">Commander</Link>
+              <Link href="/shop?category=mocassins">Mocassins</Link>
             </li>
             <li>
-              <Link href="/grossiste" className="transition-colors hover:text-[var(--gold)]">
-                Achat en gros
-              </Link>
+              <Link href="/shop?category=bottes">Bottes</Link>
             </li>
             <li>
-              <Link href="/vendeur" className="transition-colors hover:text-[var(--gold)]">Espace équipe</Link>
+              <Link href="/shop?category=femme">Femme</Link>
+            </li>
+            <li>
+              <Link href="/cart">Panier</Link>
+            </li>
+            <li>
+              <Link href="/checkout">Commander</Link>
             </li>
           </ul>
         </div>
         <div>
-          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[var(--gold)]">Contact</p>
-          <ul className="mt-4 space-y-2 text-sm text-[var(--muted)]">
+          <p className="footer-heading">Service client</p>
+          <p className="footer-copy">
+            Ouvert du lundi au vendredi. Appelez le{" "}
+            <a href={brand.phoneHref}>{brand.phone}</a> ou écrivez-nous.
+          </p>
+          <ul className="footer-links mt-4">
             <li>
-              <a href={brand.phoneHref} className="hover:text-[var(--gold)]">{brand.phone}</a>
-            </li>
-            <li>
-              <a href={brand.whatsapp} target="_blank" rel="noreferrer" className="hover:text-[var(--gold)]">
+              <a href={brand.whatsapp} target="_blank" rel="noreferrer">
                 WhatsApp
               </a>
             </li>
             <li>
-              <a href={`mailto:${brand.email}`} className="hover:text-[var(--gold)]">{brand.email}</a>
+              <a href={`mailto:${brand.email}`}>{brand.email}</a>
             </li>
             <li>{brand.address}</li>
           </ul>
         </div>
+        <div>
+          <p className="footer-heading">Abonnez-vous à la newsletter</p>
+          <p className="footer-copy">15% de réduction sur le premier achat.</p>
+          <form onSubmit={onSubmit} className="footer-news">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Votre e-mail"
+              aria-label="E-mail newsletter"
+            />
+            <button type="submit">Inscrivez-vous maintenant</button>
+          </form>
+        </div>
       </div>
-      <div className="gold-line mx-auto max-w-[1280px]" />
-      <div className="px-4 py-8 text-center">
-        <p className="text-[11px] tracking-[0.16em] uppercase text-[var(--muted)]">
+      <div className="footer-legal">
+        <p>
           © {new Date().getFullYear()} {brand.name} {brand.byline} — Tunisie
         </p>
       </div>

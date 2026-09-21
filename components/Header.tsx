@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Footstep } from "@/components/Footsteps";
-import { BrandLockup } from "@/components/Logo";
+import Logo from "@/components/Logo";
 import { ThemeToggle } from "@/components/Experience";
 import { useCart } from "@/lib/cart";
 import { useCatalog } from "@/lib/catalog";
@@ -12,11 +11,16 @@ import { formatTnd } from "@/lib/format";
 import { whatsappHref } from "@/lib/brand";
 
 const NAV = [
+  { href: "/shop?gender=femme", label: "Femme" },
+  { href: "/shop?gender=homme", label: "Homme" },
   { href: "/shop?drop=new", label: "Nouveautés" },
-  { href: "/shop?gender=homme", label: "Hommes" },
-  { href: "/shop?gender=femme", label: "Femmes" },
   { href: "/shop", label: "Collection" },
-  { href: "/grossiste", label: "Grossistes" },
+];
+
+const PROMO = [
+  "Livraison en Tunisie — paiement à la livraison",
+  "Commande sans compte — 2 minutes",
+  "Échange 7 jours si non portées",
 ];
 
 function IconSearch() {
@@ -45,6 +49,7 @@ export function Header() {
   const [menu, setMenu] = useState(false);
   const [q, setQ] = useState("");
   const [scrolled, setScrolled] = useState(false);
+  const [promo, setPromo] = useState(0);
 
   const results = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -64,6 +69,11 @@ export function Header() {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const t = window.setInterval(() => setPromo((n) => (n + 1) % PROMO.length), 4200);
+    return () => window.clearInterval(t);
   }, []);
 
   useEffect(() => {
@@ -87,62 +97,21 @@ export function Header() {
     };
   }, [open, menu]);
 
+  const shopActive = path.startsWith("/shop");
+
   return (
     <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
-      <div className="header-hairline" />
+      <div className="promo-bar">
+        <p key={promo}>{PROMO[promo]}</p>
+      </div>
       <a
         href="#contenu"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[80] focus:bg-[#C9A45C] focus:px-3 focus:py-2 focus:text-[#14110C]"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-10 focus:z-[80] focus:bg-[#C9A45C] focus:px-3 focus:py-2 focus:text-[#14110C]"
       >
         Aller au contenu
       </a>
-      <div className="mx-auto grid h-[var(--header-h)] max-w-[1280px] grid-cols-[1fr_auto] items-center px-4 md:grid-cols-[1fr_auto_1fr] md:px-6">
-        <div className="flex items-center gap-2 justify-self-start sm:gap-3">
-          <Link href="/" aria-label="ELVARO accueil" className="transition-transform duration-300 hover:scale-[1.03]">
-            <span className="md:hidden">
-              <BrandLockup compact />
-            </span>
-            <span className="hidden md:block">
-              <BrandLockup />
-            </span>
-          </Link>
-          <Footstep size="sm" className="header-footstep" />
-        </div>
-
-        <nav className="hidden items-center gap-8 text-[11px] font-medium tracking-[0.2em] uppercase text-[var(--header-fg)] md:flex">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`nav-link ${path.startsWith("/shop") && item.href === "/shop" ? "is-active" : ""}`}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="flex items-center justify-self-end gap-0.5 text-[var(--gold)]">
-          <ThemeToggle />
-          <button
-            type="button"
-            aria-label="Rechercher"
-            onClick={() => setOpen(true)}
-            className="icon-btn rounded-full p-2"
-          >
-            <IconSearch />
-          </button>
-          <Link
-            href="/cart"
-            className="icon-btn relative rounded-full p-2"
-            aria-label={`Panier, ${count} article${count > 1 ? "s" : ""}`}
-          >
-            <IconBag />
-            {count > 0 && (
-              <span className="badge-pop absolute right-0.5 top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-[var(--gold)] px-1 text-[10px] font-bold text-[#2C261C]">
-                {count}
-              </span>
-            )}
-          </Link>
+      <div className="header-bar">
+        <div className="header-left">
           <button
             type="button"
             className="icon-btn rounded-full p-2 md:hidden"
@@ -158,17 +127,62 @@ export function Header() {
               )}
             </svg>
           </button>
+          <nav className="header-nav" aria-label="Principal">
+            {NAV.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`nav-link ${shopActive && item.href === "/shop" ? "is-active" : ""}`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+
+        <Link href="/" aria-label="ELVARO accueil" className="header-logo">
+          <span className="md:hidden">
+            <Logo size="sm" />
+          </span>
+          <span className="hidden md:block">
+            <Logo size="md" />
+          </span>
+        </Link>
+
+        <div className="header-tools">
+          <Link href="/grossiste" className="header-wholesale">
+            Grossistes
+          </Link>
+          <ThemeToggle />
+          <button type="button" aria-label="Rechercher" onClick={() => setOpen(true)} className="icon-btn rounded-full p-2">
+            <IconSearch />
+          </button>
+          <Link
+            href="/cart"
+            className="icon-btn relative rounded-full p-2"
+            aria-label={`Panier, ${count} article${count > 1 ? "s" : ""}`}
+          >
+            <IconBag />
+            {count > 0 && (
+              <span className="badge-pop absolute right-0.5 top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-[var(--gold)] px-1 text-[10px] font-bold text-[#2C261C]">
+                {count}
+              </span>
+            )}
+          </Link>
         </div>
       </div>
 
       {menu && (
-        <div className="absolute inset-x-0 top-[var(--header-h)] border-b border-[var(--line)] bg-[var(--header-bg)] px-6 py-6 backdrop-blur-md md:hidden">
+        <div className="header-drawer md:hidden">
           <nav className="mx-auto flex max-w-[1280px] flex-col gap-5 text-xs font-medium tracking-[0.2em] uppercase text-[var(--header-fg)]">
             {NAV.map((item) => (
               <Link key={item.href} href={item.href} onClick={() => setMenu(false)} className="nav-link w-fit">
                 {item.label}
               </Link>
             ))}
+            <Link href="/grossiste" onClick={() => setMenu(false)} className="nav-link w-fit">
+              Grossistes
+            </Link>
             <a href={whatsappHref()} target="_blank" rel="noreferrer" className="gold-text font-semibold">
               WhatsApp
             </a>
