@@ -81,6 +81,10 @@ function getServerSnapshot(): CartLine[] {
 export function useCart(): CartContextValue {
   const current = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
+  useEffect(() => {
+    load();
+  }, []);
+
   const add = useCallback((line: Omit<CartLine, "qty"> & { qty?: number }) => {
     const qty = line.qty ?? 1;
     const i = lines.findIndex((l) => same(l, line));
