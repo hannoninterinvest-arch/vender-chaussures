@@ -1,4 +1,6 @@
-import { formatTnd } from "@/lib/format";
+"use client";
+
+import { useCurrency } from "@/lib/useCurrency";
 
 type Priced = { price: number; oldPrice?: number | null; discount?: number };
 
@@ -16,6 +18,7 @@ export function Price({
   size?: "sm" | "md" | "lg";
   className?: string;
 }) {
+  const { formatPrice } = useCurrency();
   const promo = hasPromo(product);
   const main =
     size === "lg" ? "text-2xl font-semibold" : size === "sm" ? "text-sm font-semibold" : "text-base font-semibold";
@@ -24,11 +27,11 @@ export function Price({
   return (
     <span className={`inline-flex flex-wrap items-baseline gap-2 ${className}`}>
       <span className={`${main} ${promo ? "text-[var(--promo)]" : "text-[var(--gold)]"}`}>
-        {formatTnd(product.price)}
+        {formatPrice(product.price)}
       </span>
       {promo && product.oldPrice ? (
         <span className={`${old} text-[var(--muted)] line-through decoration-[1.5px]`}>
-          {formatTnd(product.oldPrice)}
+          {formatPrice(product.oldPrice)}
         </span>
       ) : null}
     </span>

@@ -8,19 +8,12 @@ import { Repository } from 'typeorm';
 import { KonnectService } from '../payments/konnect.service';
 import { sellingPrice } from '../products/pricing';
 import { ProductsService } from '../products/products.service';
+import { PAIR_WEIGHT_KG, isTunisia } from '../shipping/shipping-rates.config';
+import { ShippingService } from '../shipping/shipping.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderStatus } from './dto/update-order-status.dto';
 import { OrderItem } from './order-item.entity';
 import { Order } from './order.entity';
-
-const GRAND_TUNIS = ['Tunis', 'Ariana', 'Ben Arous', 'Manouba'];
-const SAHEL = ['Sousse', 'Monastir', 'Mahdia', 'Nabeul'];
-
-function deliveryFee(gouvernorat: string) {
-  if (GRAND_TUNIS.includes(gouvernorat)) return 8;
-  if (SAHEL.includes(gouvernorat) || gouvernorat === 'Sfax') return 12;
-  return 15;
-}
 
 @Injectable()
 export class OrdersService {
@@ -31,6 +24,7 @@ export class OrdersService {
     private readonly items: Repository<OrderItem>,
     private readonly products: ProductsService,
     private readonly konnect: KonnectService,
+    private readonly shipping: ShippingService,
   ) {}
 
   frontendUrl() {
@@ -66,18 +60,30 @@ export class OrdersService {
       );
     }
 
-    const delivery = deliveryFee(dto.gouvernorat);
+    const country = dto.country || 'TN';
+    const carrier = dto.carrier || 'LA_POSTE';
+    if (dto.payment === 'cod' && !isTunisia(country)) {
+      throw new BadRequestException(
+        'Le paiement à la livraison n’est disponible qu’en Tunisie.',
+      );
+    }
+    const weightKg = lines.reduce((sum, line) => sum + PAIR_WEIGHT_KG * line.qty, 0);
+    const quote = await this.shipping.quote(country, carrier, weightKg);
+    const delivery = quote.price;
     const online = dto.payment === 'online';
     if (online && !this.konnect.configured()) {
       throw new BadRequestException(
-        'Paiement en ligne indisponible. Choisis le paiement à la livraison.',
+        'Paiement en ligne indisponible. Choisis le paiement à la livraison (Tunisie uniquement).',
       );
     }
     const order = this.orders.create({
       id: await this.nextId(),
       customerName: dto.customerName,
       phone: dto.phone,
-      gouvernorat: dto.gouvernorat,
+      gouvernorat: dto.gouvernorat ?? '',
+      country: quote.country,
+      carrier,
+      shippingZone: quote.zone,
       city: dto.city,
       address: dto.address,
       notes: dto.notes ?? '',
@@ -279,10 +285,13 @@ export class OrdersService {
         name: order.customerName,
         phone: order.phone,
         gouvernorat: order.gouvernorat,
+        country: order.country || 'TN',
         city: order.city,
         address: order.address,
         notes: order.notes,
       },
+      carrier: order.carrier || 'LA_POSTE',
+      shippingZone: order.shippingZone || 'TUNISIE',
       items: order.items.map((item) => ({
         productId: item.product?.id ?? '',
         name: item.name,

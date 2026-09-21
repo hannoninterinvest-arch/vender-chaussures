@@ -6,6 +6,7 @@ import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { WhatsAppFab } from "./Experience";
 import { CatalogProvider } from "@/lib/catalog";
+import { LocaleProvider } from "@/lib/locale";
 import { ThemeProvider } from "@/lib/theme";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -22,12 +23,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ThemeProvider>
       <ToastProvider>
         <CatalogProvider>
-          <Header />
-          <main id="contenu" className="flex-1 pt-[var(--header-h)]">
-            {children}
-          </main>
-          <Footer />
-          {!wholesale && <WhatsAppFab />}
+          <LocaleProvider>
+            <Header />
+            <main id="contenu" className="flex-1 pt-[var(--header-h)]">
+              {children}
+            </main>
+            <Footer />
+            {!wholesale && <WhatsAppFab />}
+          </LocaleProvider>
         </CatalogProvider>
       </ToastProvider>
     </ThemeProvider>

@@ -4,10 +4,11 @@ import Link from "next/link";
 import { CheckoutSteps } from "@/components/Experience";
 import Logo from "@/components/Logo";
 import { useCart } from "@/lib/cart";
-import { formatTnd } from "@/lib/format";
+import { useCurrency } from "@/lib/useCurrency";
 
 export default function CartPage() {
   const { lines, setQty, remove, subtotal, count } = useCart();
+  const { formatPrice } = useCurrency();
 
   return (
     <div className="mx-auto max-w-[1280px] px-4 py-10 md:px-6">
@@ -15,8 +16,8 @@ export default function CartPage() {
       <div className="store-panel mb-8 px-5 py-4">
         <p className="font-bold tracking-wide">Commande sans compte</p>
         <p className="text-sm text-[var(--muted)]">
-          Pas d’inscription. Nom, téléphone et adresse suffisent — paiement à la
-          livraison partout en Tunisie.
+          Pas d’inscription. Nom, téléphone et adresse suffisent. Paiement à la
+          livraison en Tunisie, carte en ligne pour l’international.
         </p>
       </div>
 
@@ -66,7 +67,7 @@ export default function CartPage() {
                         </p>
                       </div>
                       <p className="font-bold text-[#C5A059]">
-                        {formatTnd(Number(line.price) * line.qty)}
+                        {formatPrice(Number(line.price) * line.qty)}
                       </p>
                     </div>
                     <div className="mt-auto flex items-center justify-between pt-3">
@@ -107,12 +108,12 @@ export default function CartPage() {
         <aside className="store-panel h-fit p-6 lg:sticky lg:top-[calc(var(--header-h)+1rem)]">
           <h2 className="text-xl font-bold">Récapitulatif</h2>
           <div className="mt-4 space-y-2 text-sm">
-            <Row label="Sous-total" value={formatTnd(subtotal)} />
+            <Row label="Sous-total" value={formatPrice(subtotal)} />
             <Row label="Livraison" value="Calculée à l’étape suivante" />
           </div>
           <div className="mt-4 flex justify-between border-t border-[#C5A059]/30 pt-4 text-lg font-bold">
             <span>Total</span>
-            <span className="text-[#C5A059]">{formatTnd(subtotal)}</span>
+            <span className="text-[#C5A059]">{formatPrice(subtotal)}</span>
           </div>
           <Link
             href="/checkout"

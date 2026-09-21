@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { colorImage, galleryForColor } from "@/lib/product-media";
 import { relatedProducts } from "@/lib/products";
 import { useCatalog, useProduct } from "@/lib/catalog";
-import { formatTnd } from "@/lib/format";
+import { useCurrency } from "@/lib/useCurrency";
 import { useCart } from "@/lib/cart";
 import { useToast } from "@/components/Toast";
 import { ProductCard } from "@/components/ProductCard";
@@ -24,6 +24,7 @@ export default function ProductPage({
   const { product } = useProduct(id);
   const cart = useCart();
   const toast = useToast();
+  const { formatPrice } = useCurrency();
   const [color, setColor] = useState<string | null>(null);
   const [size, setSize] = useState<number | null>(null);
   const [qty, setQty] = useState(1);
@@ -110,7 +111,7 @@ export default function ProductPage({
           </div>
           {hasPromo(product) && product.oldPrice ? (
             <p className="mt-1 text-sm text-[var(--promo)]">
-              Tu économises {formatTnd(product.oldPrice - product.price)} sur cette paire.
+              Tu économises {formatPrice(product.oldPrice - product.price)} sur cette paire.
             </p>
           ) : null}
           <p className="mt-1 text-sm text-[var(--muted)]">Livraison calculée au checkout · Échange 7 jours</p>

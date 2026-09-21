@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useCatalog } from "@/lib/catalog";
 import { defaultSite } from "@/lib/site";
-import { formatTnd } from "@/lib/format";
+import { useCurrency } from "@/lib/useCurrency";
 import type { Product } from "@/lib/products";
 
 function ProductTile({ product }: { product: Product }) {
+  const { formatPrice } = useCurrency();
   const photo = product.images[0];
   return (
     <Link href={`/products/${product.id}`} className="look-tile">
@@ -14,7 +15,7 @@ function ProductTile({ product }: { product: Product }) {
       <img src={photo} alt={product.name} />
       <span className="look-tile-meta">
         <span className="look-tile-name">{product.name}</span>
-        <span className="look-tile-price">{formatTnd(product.price)}</span>
+        <span className="look-tile-price">{formatPrice(product.price)}</span>
       </span>
     </Link>
   );

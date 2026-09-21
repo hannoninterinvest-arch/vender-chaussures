@@ -51,7 +51,7 @@ export const paymentMethods: {
   {
     id: "cod",
     label: "Paiement à la livraison",
-    hint: "Espèces au livreur, partout en Tunisie. On confirme par téléphone avant l’envoi.",
+    hint: "Espèces au livreur — uniquement si la destination est la Tunisie. On confirme par téléphone avant l’envoi.",
   },
 ];
 

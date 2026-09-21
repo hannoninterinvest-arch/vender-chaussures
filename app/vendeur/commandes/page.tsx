@@ -100,7 +100,10 @@ export default function SellerOrdersPage() {
                   {paymentStatusLabel(o.paymentStatus || "", o.payment)}
                 </p>
                 <p className="text-sm text-[#666]">
-                  {o.customer.address}, {o.customer.city} ({o.customer.gouvernorat})
+                  {o.customer.address}, {o.customer.city}
+                  {o.customer.gouvernorat ? ` (${o.customer.gouvernorat})` : ""}
+                  {o.customer.country ? ` · ${o.customer.country}` : ""}
+                  {o.carrier ? ` · ${o.carrier.replace("_", " ")}` : ""}
                 </p>
               </div>
               <div className="text-right">

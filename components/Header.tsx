@@ -7,7 +7,7 @@ import Logo from "@/components/Logo";
 import { ThemeToggle } from "@/components/Experience";
 import { useCart } from "@/lib/cart";
 import { useCatalog } from "@/lib/catalog";
-import { formatTnd } from "@/lib/format";
+import { useLocale } from "@/lib/locale";
 import { whatsappHref } from "@/lib/brand";
 
 const NAV = [
@@ -18,7 +18,7 @@ const NAV = [
 ];
 
 const PROMO = [
-  "Livraison en Tunisie — paiement à la livraison",
+  "Livraison Tunisie et international — tarifs au checkout",
   "Commande sans compte — 2 minutes",
   "Échange 7 jours si non portées",
 ];
@@ -45,6 +45,7 @@ export function Header() {
   const path = usePathname();
   const { count } = useCart();
   const { products } = useCatalog();
+  const { selectedCountry, setSelectedCountry, countries, formatPrice } = useLocale();
   const [open, setOpen] = useState(false);
   const [menu, setMenu] = useState(false);
   const [q, setQ] = useState("");
@@ -111,22 +112,16 @@ export function Header() {
         Aller au contenu
       </a>
       <div className="header-bar">
+        <Link href="/" aria-label="ELVARO accueil" className="header-logo">
+          <span className="md:hidden">
+            <Logo size="sm" />
+          </span>
+          <span className="hidden md:block">
+            <Logo size="md" />
+          </span>
+        </Link>
+
         <div className="header-left">
-          <button
-            type="button"
-            className="icon-btn rounded-full p-2 md:hidden"
-            aria-label={menu ? "Fermer le menu" : "Ouvrir le menu"}
-            aria-expanded={menu}
-            onClick={() => setMenu((v) => !v)}
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-              {menu ? (
-                <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-              ) : (
-                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-              )}
-            </svg>
-          </button>
           <nav className="header-nav" aria-label="Principal">
             {NAV.map((item) => (
               <Link
@@ -140,16 +135,26 @@ export function Header() {
           </nav>
         </div>
 
-        <Link href="/" aria-label="ELVARO accueil" className="header-logo">
-          <span className="md:hidden">
-            <Logo size="sm" />
-          </span>
-          <span className="hidden md:block">
-            <Logo size="md" />
-          </span>
-        </Link>
-
         <div className="header-tools">
+          <label className="sr-only" htmlFor="header-country">
+            Pays de livraison
+          </label>
+          <select
+            id="header-country"
+            className="header-country"
+            value={countries.some((c) => c.code === selectedCountry) ? selectedCountry : "TN"}
+            onChange={(e) => setSelectedCountry(e.target.value)}
+            aria-label="Pays de livraison"
+          >
+            {!countries.some((c) => c.code === selectedCountry) && (
+              <option value={selectedCountry}>{selectedCountry}</option>
+            )}
+            {countries.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.code} · {c.name}
+              </option>
+            ))}
+          </select>
           <Link href="/grossiste" className="header-wholesale">
             Grossistes
           </Link>
@@ -169,6 +174,21 @@ export function Header() {
               </span>
             )}
           </Link>
+          <button
+            type="button"
+            className="icon-btn rounded-full p-2 md:hidden"
+            aria-label={menu ? "Fermer le menu" : "Ouvrir le menu"}
+            aria-expanded={menu}
+            onClick={() => setMenu((v) => !v)}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+              {menu ? (
+                <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              ) : (
+                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              )}
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -183,6 +203,20 @@ export function Header() {
             <Link href="/grossiste" onClick={() => setMenu(false)} className="nav-link w-fit">
               Grossistes
             </Link>
+            <label className="text-[11px] tracking-[0.16em] text-[var(--muted)]">
+              Pays
+              <select
+                className="header-country mt-2 block max-w-full"
+                value={countries.some((c) => c.code === selectedCountry) ? selectedCountry : "TN"}
+                onChange={(e) => setSelectedCountry(e.target.value)}
+              >
+                {countries.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </label>
             <a href={whatsappHref()} target="_blank" rel="noreferrer" className="gold-text font-semibold">
               WhatsApp
             </a>
@@ -220,7 +254,7 @@ export function Header() {
                       <span className="block truncate font-medium text-[var(--fg)]">{p.name}</span>
                       <span className="text-xs text-[var(--muted)]">{p.brand}</span>
                     </span>
-                    <span className="text-[var(--gold)]">{formatTnd(p.price)}</span>
+                    <span className="text-[var(--gold)]">{formatPrice(p.price)}</span>
                   </Link>
                 </li>
               ))}

@@ -23,6 +23,7 @@ const NAV = [
   { href: "/vendeur/grossistes", label: "Grossistes", adminOnly: false },
   { href: "/vendeur/import", label: "Import CSV", adminOnly: false },
   { href: "/vendeur/equipe", label: "Équipe", adminOnly: true },
+  { href: "/vendeur/livraison", label: "Livraison", adminOnly: true },
 ];
 
 const inputClass =
