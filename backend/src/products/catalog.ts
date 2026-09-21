@@ -14,6 +14,8 @@ export type CatalogProduct = {
   colors: { name: string; hex: string; image?: string }[];
   sizes: number[];
   images: string[];
+  /** Poids d'une paire en grammes. */
+  weightGrams?: number;
 };
 
 const shot = (file: string) => `/chaussures/${file}`;
@@ -199,8 +201,11 @@ const catalogSeed: CatalogProduct[] = [
 ];
 
 function withColorPhotos(product: CatalogProduct): CatalogProduct {
+  const byCategory =
+    product.category === 'bottes' ? 1100 : product.category === 'femme' ? 500 : product.category === 'mocassins' ? 800 : 900;
   return {
     ...product,
+    weightGrams: product.weightGrams || byCategory,
     colors: product.colors.map((color, index) => ({
       ...color,
       image: color.image || product.images[index] || product.images[0],

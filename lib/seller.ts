@@ -61,11 +61,15 @@ export type SellerOrder = {
   customer: {
     name: string;
     phone: string;
+    shippingCountry?: string;
+    shippingCarrier?: string;
     gouvernorat: string;
     city: string;
     address: string;
     notes: string;
   };
+  totalWeightGrams?: number;
+  currency?: string;
   items: {
     productId: string;
     name: string;
@@ -120,6 +124,7 @@ export type SellerProduct = {
   colors: { name: string; hex: string; image?: string }[];
   sizes: number[];
   images: string[];
+  weightGrams?: number;
 };
 
 export type SellerCategory = { id: string; label: string; image: string };

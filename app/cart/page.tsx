@@ -4,10 +4,12 @@ import Link from "next/link";
 import { CheckoutSteps } from "@/components/Experience";
 import { BrandMark } from "@/components/Logo";
 import { useCart } from "@/lib/cart";
-import { formatTnd } from "@/lib/format";
+import { Money } from "@/components/Price";
+import { useLocale } from "@/lib/locale";
 
 export default function CartPage() {
   const { lines, setQty, remove, subtotal, count } = useCart();
+  const { country, fxMissing } = useLocale();
 
   return (
     <div className="mx-auto max-w-[1280px] px-4 py-10 md:px-6">
@@ -15,8 +17,9 @@ export default function CartPage() {
       <div className="gold-frame mb-8 rounded-[4px] bg-[var(--panel)] px-5 py-4">
         <p className="font-bold tracking-wide">Commande sans compte</p>
         <p className="text-sm text-[var(--muted)]">
-          Pas d’inscription. Nom, téléphone et adresse suffisent — paiement à la
-          livraison partout en Tunisie.
+          {country === "TN"
+            ? "Pas d’inscription. Nom, téléphone et adresse suffisent — paiement à la livraison partout en Tunisie."
+            : "Pas d’inscription. Les prix s’affichent dans ta devise ; la livraison internationale se calcule au checkout."}
         </p>
       </div>
 
@@ -66,7 +69,7 @@ export default function CartPage() {
                         </p>
                       </div>
                       <p className="font-bold text-[#C5A059]">
-                        {formatTnd(Number(line.price) * line.qty)}
+                        <Money amountDt={Number(line.price) * line.qty} align="end" />
                       </p>
                     </div>
                     <div className="mt-auto flex items-center justify-between pt-3">
@@ -107,13 +110,26 @@ export default function CartPage() {
         <aside className="gold-frame h-fit rounded-[4px] bg-[var(--panel)] p-6 lg:sticky lg:top-28">
           <h2 className="text-xl font-bold">Récapitulatif</h2>
           <div className="mt-4 space-y-2 text-sm">
-            <Row label="Sous-total" value={formatTnd(subtotal)} />
-            <Row label="Livraison" value="Calculée à l’étape suivante" />
+            <div className="flex justify-between text-[var(--muted)]">
+              <span>Sous-total</span>
+              <Money amountDt={subtotal} align="end" />
+            </div>
+            <div className="flex justify-between text-[var(--muted)]">
+              <span>Livraison</span>
+              <span>Calculée à l’étape suivante</span>
+            </div>
           </div>
           <div className="mt-4 flex justify-between border-t border-[#C5A059]/30 pt-4 text-lg font-bold">
             <span>Total</span>
-            <span className="text-[#C5A059]">{formatTnd(subtotal)}</span>
+            <span className="text-[#C5A059]">
+              <Money amountDt={subtotal} align="end" />
+            </span>
           </div>
+          {fxMissing && (
+            <p className="mt-3 text-xs text-[var(--muted)]">
+              Conversion temporairement indisponible, prix en DT.
+            </p>
+          )}
           <Link
             href="/checkout"
             className={`gold-btn mt-6 flex h-12 items-center justify-center rounded-sm text-xs uppercase ${
@@ -128,15 +144,6 @@ export default function CartPage() {
           <p className="mt-3 text-center text-xs text-[var(--muted)]">Aucun login requis</p>
         </aside>
       </div>
-    </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between text-[var(--muted)]">
-      <span>{label}</span>
-      <span>{value}</span>
     </div>
   );
 }

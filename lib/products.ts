@@ -20,6 +20,7 @@ export type Product = {
   colors: { name: string; hex: string; image?: string }[];
   sizes: number[];
   images: string[];
+  weightGrams?: number;
 };
 
 export type ShopCategory = { slug: string; label: string; image: string };
@@ -198,7 +199,14 @@ const fallbackCatalog: Product[] = [
   },
 ];
 
-export const fallbackProducts: Product[] = fallbackCatalog.map(withColorImages);
+export const fallbackProducts: Product[] = fallbackCatalog.map((product) =>
+  withColorImages({
+    ...product,
+    weightGrams:
+      product.weightGrams ||
+      (product.category === "bottes" ? 1100 : product.category === "femme" ? 500 : product.category === "mocassins" ? 800 : 900),
+  }),
+);
 
 export const categories: ShopCategory[] = [
   { slug: "ville", label: "Ville", image: shot("derby-cognac.jpg") },

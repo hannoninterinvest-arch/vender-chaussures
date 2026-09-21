@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -8,22 +9,17 @@ import { Repository } from 'typeorm';
 import { KonnectService } from '../payments/konnect.service';
 import { sellingPrice } from '../products/pricing';
 import { ProductsService } from '../products/products.service';
+import { FxService } from '../shipping/fx.service';
+import { normalizeCountry, quoteShipping } from '../shipping/shipping';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderStatus } from './dto/update-order-status.dto';
 import { OrderItem } from './order-item.entity';
 import { Order } from './order.entity';
 
-const GRAND_TUNIS = ['Tunis', 'Ariana', 'Ben Arous', 'Manouba'];
-const SAHEL = ['Sousse', 'Monastir', 'Mahdia', 'Nabeul'];
-
-function deliveryFee(gouvernorat: string) {
-  if (GRAND_TUNIS.includes(gouvernorat)) return 8;
-  if (SAHEL.includes(gouvernorat) || gouvernorat === 'Sfax') return 12;
-  return 15;
-}
-
 @Injectable()
 export class OrdersService {
+  private readonly log = new Logger(OrdersService.name);
+
   constructor(
     @InjectRepository(Order)
     private readonly orders: Repository<Order>,
@@ -31,6 +27,7 @@ export class OrdersService {
     private readonly items: Repository<OrderItem>,
     private readonly products: ProductsService,
     private readonly konnect: KonnectService,
+    private readonly fx: FxService,
   ) {}
 
   frontendUrl() {
@@ -40,6 +37,7 @@ export class OrdersService {
   async create(dto: CreateOrderDto) {
     const lines: OrderItem[] = [];
     let subtotal = 0;
+    let totalWeight = 0;
 
     for (const line of dto.items) {
       const product = await this.products.getEntity(line.productId);
@@ -49,6 +47,13 @@ export class OrdersService {
       if (!product.sizes.includes(line.size)) {
         throw new BadRequestException(`Pointure indisponible pour ${product.name}`);
       }
+      const unitWeight = Number(product.weightGrams) || 0;
+      if (unitWeight < 1) {
+        throw new BadRequestException(
+          `Poids manquant pour ${product.name}. Impossible de calculer la livraison.`,
+        );
+      }
+      totalWeight += unitWeight * line.qty;
       const price = sellingPrice(product);
       const cost = Number(product.cost) || 0;
       subtotal += price * line.qty;
@@ -66,18 +71,52 @@ export class OrdersService {
       );
     }
 
-    const delivery = deliveryFee(dto.gouvernorat);
+    if (totalWeight < 1) {
+      throw new BadRequestException(
+        'Poids du panier invalide. Vérifie les articles ou contacte-nous.',
+      );
+    }
+
+    const country = normalizeCountry(dto.shippingCountry);
+    const quote = quoteShipping(country, totalWeight);
+    if (!quote.knownCountry) {
+      this.log.warn(`Pays non listé « ${country} » → DHL (reste du monde)`);
+    }
+    if (quote.needsQuote) {
+      throw new BadRequestException(
+        'Livraison sur devis — contactez-nous. Le paiement en ligne n’est pas disponible au-delà de 5 kg.',
+      );
+    }
+
+    const fx = await this.fx.getRates();
+    const rate =
+      quote.currency === 'TND'
+        ? 1
+        : fx.available && fx.rates[quote.currency]
+          ? fx.rates[quote.currency]
+          : 0;
+
+    const delivery = quote.deliveryDt;
     const online = dto.payment === 'online';
     if (online && !this.konnect.configured()) {
       throw new BadRequestException(
         'Paiement en ligne indisponible. Choisis le paiement à la livraison.',
       );
     }
+    const gouvernorat =
+      country === 'TN'
+        ? (dto.gouvernorat || '').trim() || 'Tunis'
+        : (dto.gouvernorat || '').trim();
     const order = this.orders.create({
       id: await this.nextId(),
       customerName: dto.customerName,
       phone: dto.phone,
-      gouvernorat: dto.gouvernorat,
+      shippingCountry: country,
+      shippingCarrier: quote.carrier,
+      totalWeightGrams: totalWeight,
+      currency: quote.currency,
+      exchangeRate: rate,
+      gouvernorat,
       city: dto.city,
       address: dto.address,
       notes: dto.notes ?? '',
@@ -278,11 +317,16 @@ export class OrdersService {
       customer: {
         name: order.customerName,
         phone: order.phone,
+        shippingCountry: order.shippingCountry || 'TN',
+        shippingCarrier: order.shippingCarrier || '',
         gouvernorat: order.gouvernorat,
         city: order.city,
         address: order.address,
         notes: order.notes,
       },
+      totalWeightGrams: Number(order.totalWeightGrams) || 0,
+      currency: order.currency || 'TND',
+      exchangeRate: Number(order.exchangeRate) || 0,
       items: order.items.map((item) => ({
         productId: item.product?.id ?? '',
         name: item.name,
