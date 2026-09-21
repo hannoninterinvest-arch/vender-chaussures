@@ -54,14 +54,13 @@ function load() {
   } catch {
     lines = [];
   }
+  emit();
 }
 
 if (typeof window !== "undefined") {
   load();
-  window.addEventListener("pageshow", () => {
-    load();
-    emit();
-  });
+  queueMicrotask(emit);
+  window.addEventListener("pageshow", load);
 }
 
 function subscribe(listener: () => void) {
