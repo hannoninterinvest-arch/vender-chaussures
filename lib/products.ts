@@ -20,6 +20,10 @@ export type Product = {
   colors: { name: string; hex: string; image?: string }[];
   sizes: number[];
   images: string[];
+  /** Vidéo 3D Cloudinary (fiche produit). */
+  video?: string;
+  /** Afficher cette vidéo aussi sur l’accueil. */
+  showVideoOnHome?: boolean;
 };
 
 export type ShopCategory = { slug: string; label: string; image: string };
@@ -45,6 +49,8 @@ const fallbackCatalog: Product[] = [
     ],
     sizes: [39, 40, 41, 42, 43, 44, 45],
     images: [shot("oxford-noir.jpg"), shot("oxford-cognac.jpg"), shot("derby-chocolat.jpg")],
+    video: shot("oxford-noir-3d.mp4"),
+    showVideoOnHome: true,
   },
   {
     id: "derby-cognac",
@@ -195,6 +201,8 @@ const fallbackCatalog: Product[] = [
       shot("sandale-ivoire.jpg"),
       shot("escarpin-nude.jpg"),
     ],
+    video: shot("sandale-or-3d.mp4"),
+    showVideoOnHome: true,
   },
 ];
 

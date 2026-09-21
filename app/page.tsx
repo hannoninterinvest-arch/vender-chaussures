@@ -1,6 +1,7 @@
 import { Categories } from "@/components/Categories";
 import { TrustBar } from "@/components/Experience";
 import { Hero } from "@/components/Hero";
+import { HomeVideos } from "@/components/HomeVideos";
 import { NewDrops } from "@/components/NewDrops";
 import { Newsletter } from "@/components/Newsletter";
 import { Pillars } from "@/components/Pillars";
@@ -14,6 +15,7 @@ export default function HomePage() {
       <TrustBar />
       <Pillars />
       <NewDrops />
+      <HomeVideos />
       <Categories />
       <Reviews />
       <WholesaleBanner />

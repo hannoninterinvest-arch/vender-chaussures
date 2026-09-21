@@ -11,6 +11,8 @@ export type CsvProduct = {
   colors: { name: string; hex: string; image?: string }[];
   sizes: number[];
   images: string[];
+  video: string;
+  showVideoOnHome?: boolean;
 };
 
 export type CsvParseError = { line: number; message: string };
@@ -47,6 +49,9 @@ const HEADERS: Record<string, string> = {
   photos: "images",
   photo: "images",
   liens: "images",
+  video: "video",
+  video3d: "video",
+  "video 3d": "video",
 };
 
 function normalizeHeader(value: string) {
@@ -209,6 +214,7 @@ export function parseProductCsv(text: string): { products: CsvProduct[]; errors:
         })),
         sizes: parseSizes(get("sizes")),
         images,
+        video: parseImages(get("video"))[0] || "",
       });
     } catch (err) {
       errors.push({
@@ -221,7 +227,7 @@ export function parseProductCsv(text: string): { products: CsvProduct[]; errors:
   return { products, errors };
 }
 
-export const CSV_TEMPLATE = `nom;marque;prix;promo;achat;description;genre;categorie;nouveau;couleurs;pointures;images
-Oxford Noir;ELVARO;489;399;280;Richelieu cuir lustré;homme;ceremonie;oui;Noir:#141210@/chaussures/oxford-noir.jpg|Cognac:#B5763A@/chaussures/oxford-cognac.jpg;40|41|42|43|44;/chaussures/oxford-noir.jpg|/chaussures/oxford-cognac.jpg
-Derby Cognac;ELVARO;459;;260;Derby ville en cuir;homme;ville;oui;Cognac:#8B5A2B@/chaussures/derby-cognac.jpg;40|41|42|43;/chaussures/derby-cognac.jpg|/chaussures/derby-tabac.jpg
+export const CSV_TEMPLATE = `nom;marque;prix;promo;achat;description;genre;categorie;nouveau;couleurs;pointures;images;video
+Oxford Noir;ELVARO;489;399;280;Richelieu cuir lustré;homme;ceremonie;oui;Noir:#141210@/chaussures/oxford-noir.jpg|Cognac:#B5763A@/chaussures/oxford-cognac.jpg;40|41|42|43|44;/chaussures/oxford-noir.jpg|/chaussures/oxford-cognac.jpg;
+Derby Cognac;ELVARO;459;;260;Derby ville en cuir;homme;ville;oui;Cognac:#8B5A2B@/chaussures/derby-cognac.jpg;40|41|42|43;/chaussures/derby-cognac.jpg|/chaussures/derby-tabac.jpg;
 `;

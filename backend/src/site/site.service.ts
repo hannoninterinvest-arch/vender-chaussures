@@ -29,6 +29,7 @@ export class SiteService implements OnModuleInit {
           heroTitle: 'CUIR PREMIUM',
           heroSubtitle: DEFAULT_SUBTITLE,
           coverImages: homepageCovers,
+          coverVideos: [],
         }),
       );
     } else {
@@ -40,6 +41,10 @@ export class SiteService implements OnModuleInit {
       }
       if (!exists.heroSubtitle || exists.heroSubtitle === OLD_SUBTITLE) {
         exists.heroSubtitle = DEFAULT_SUBTITLE;
+        dirty = true;
+      }
+      if (!Array.isArray(exists.coverVideos)) {
+        exists.coverVideos = [];
         dirty = true;
       }
       if (dirty) await this.rows.save(exists);
@@ -59,6 +64,9 @@ export class SiteService implements OnModuleInit {
     if (dto.coverImages !== undefined) {
       row.coverImages = dto.coverImages.map((url) => url.trim()).filter(Boolean).slice(0, 8);
     }
+    if (dto.coverVideos !== undefined) {
+      row.coverVideos = dto.coverVideos.map((url) => url.trim()).filter(Boolean).slice(0, 6);
+    }
     return this.toClient(await this.rows.save(row));
   }
 
@@ -72,6 +80,7 @@ export class SiteService implements OnModuleInit {
         heroTitle: 'CUIR PREMIUM',
         heroSubtitle: DEFAULT_SUBTITLE,
         coverImages: homepageCovers,
+        coverVideos: [],
       }),
     );
   }
@@ -82,6 +91,7 @@ export class SiteService implements OnModuleInit {
       heroTitle: row.heroTitle || 'CUIR PREMIUM',
       heroSubtitle: row.heroSubtitle || DEFAULT_SUBTITLE,
       coverImages: Array.isArray(row.coverImages) ? row.coverImages.filter(Boolean) : [],
+      coverVideos: Array.isArray(row.coverVideos) ? row.coverVideos.filter(Boolean) : [],
     };
   }
 }
