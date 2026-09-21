@@ -45,8 +45,8 @@ export const paymentMethods: {
 }[] = [
   {
     id: "online",
-    label: "Paiement en ligne",
-    hint: "Carte bancaire, e-DINAR / D17, wallet Konnect ou Flouci — tu es redirigé vers Konnect pour payer tout de suite.",
+    label: "Payer avec Flouci",
+    hint: "Wallet Flouci, cartes tunisiennes et Visa / Mastercard internationales.",
   },
   {
     id: "cod",
@@ -56,7 +56,7 @@ export const paymentMethods: {
 ];
 
 export function paymentLabel(id: string) {
-  if (id === "flouci") return "Flouci";
+  if (id === "online" || id === "flouci") return "Flouci";
   if (id === "d17") return "D17 (La Poste)";
   return paymentMethods.find((m) => m.id === id)?.label ?? id;
 }

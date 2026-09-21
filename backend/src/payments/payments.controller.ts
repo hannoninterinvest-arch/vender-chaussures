@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Query, UsePipes, ValidationPipe } from '@nestjs/common';
 import { OrdersService } from '../orders/orders.service';
-import { KonnectService } from './konnect.service';
+import { FlouciService } from './flouci.service';
 
 const webhookPipe = new ValidationPipe({
   whitelist: false,
@@ -11,32 +11,41 @@ const webhookPipe = new ValidationPipe({
 export class PaymentsController {
   constructor(
     private readonly orders: OrdersService,
-    private readonly konnect: KonnectService,
+    private readonly flouci: FlouciService,
   ) {}
 
   @Get('config')
   config() {
-    return { online: this.konnect.configured() };
+    return { online: this.flouci.configured(), provider: 'flouci' };
   }
 
-  /** Konnect notifie ce webhook en GET (payment_ref en query). */
-  @Get('konnect/webhook')
+  @Get('flouci/webhook')
   webhookGet(
-    @Query('payment_ref') paymentRef?: string,
-    @Query('paymentRef') paymentRefAlt?: string,
+    @Query('payment_id') paymentId?: string,
+    @Query('paymentId') paymentIdAlt?: string,
   ) {
-    return this.orders.confirmKonnect(paymentRef || paymentRefAlt || '');
+    return this.orders.confirmOnline(paymentId || paymentIdAlt || '');
   }
 
-  @Post('konnect/webhook')
+  @Post('flouci/webhook')
   @UsePipes(webhookPipe)
   webhookPost(
-    @Query('payment_ref') paymentRef?: string,
-    @Query('paymentRef') paymentRefAlt?: string,
-    @Body() body?: { paymentRef?: string; payment_ref?: string },
+    @Query('payment_id') paymentId?: string,
+    @Query('paymentId') paymentIdAlt?: string,
+    @Body()
+    body?: {
+      payment_id?: string;
+      paymentId?: string;
+      payment_ref?: string;
+    },
   ) {
     const ref =
-      paymentRef || paymentRefAlt || body?.paymentRef || body?.payment_ref || '';
-    return this.orders.confirmKonnect(ref);
+      paymentId ||
+      paymentIdAlt ||
+      body?.payment_id ||
+      body?.paymentId ||
+      body?.payment_ref ||
+      '';
+    return this.orders.confirmOnline(ref);
   }
 }

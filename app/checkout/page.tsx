@@ -7,7 +7,6 @@ import { useCart } from "@/lib/cart";
 import { useLocale } from "@/lib/locale";
 import {
   gouvernorats,
-  paymentMethods,
   type Gouvernorat,
   type PaymentMethod,
 } from "@/lib/tunisia";
@@ -18,6 +17,7 @@ import { brand } from "@/lib/brand";
 import { CheckoutSteps } from "@/components/Experience";
 import Logo from "@/components/Logo";
 import { CountrySelect } from "@/components/CountrySelect";
+import { PaymentPicker } from "@/components/PaymentPicker";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -216,47 +216,16 @@ export default function CheckoutPage() {
           <h2 className="pt-2 font-[family-name:var(--font-display)] text-lg tracking-[0.14em] uppercase">
             Paiement
           </h2>
-          <div className="space-y-2">
-            {paymentMethods.map((m) => {
-              const codBlocked = m.id === "cod" && !isLocal;
-              const onlineBlocked = m.id === "online" && !onlineReady;
-              const disabled = codBlocked || onlineBlocked;
-              return (
-              <label
-                key={m.id}
-                className={`flex items-start gap-3 rounded-sm border p-4 ${
-                  disabled ? "cursor-not-allowed opacity-55" : "cursor-pointer"
-                } ${
-                  payment === m.id
-                    ? "border-[#C5A059] bg-[#C5A059]/10"
-                    : "border-[#C5A059]/25"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="payment"
-                  checked={payment === m.id}
-                  disabled={disabled}
-                  onChange={() => setPayment(m.id)}
-                  className="mt-1 accent-[#C5A059]"
-                />
-                <span>
-                  <span className="block font-semibold">{m.label}</span>
-                  <span className="text-sm text-[var(--muted)]">
-                    {codBlocked
-                      ? "Disponible uniquement pour une livraison en Tunisie."
-                      : onlineBlocked
-                        ? "Konnect n’est pas encore configuré (clés dans backend/.env)."
-                        : m.hint}
-                  </span>
-                </span>
-              </label>
-              );
-            })}
-          </div>
+          <PaymentPicker
+            value={payment}
+            onChange={setPayment}
+            onlineReady={onlineReady}
+            isLocal={isLocal}
+          />
           {!isLocal && !onlineReady && (
             <p className="text-sm text-[var(--promo)]">
-              L’international se règle en ligne. Configure Konnect pour activer cette option.
+              L’international se règle en ligne. Configure Flouci (clés dans backend/.env) pour
+              activer Visa / Mastercard.
             </p>
           )}
         </div>
@@ -301,7 +270,7 @@ export default function CheckoutPage() {
             disabled={busy || fee == null || (payment === "online" && !onlineReady)}
             className="gold-btn mt-6 h-12 w-full rounded-sm text-xs uppercase disabled:opacity-60"
           >
-            {busy ? "Envoi…" : payment === "online" ? "Payer en ligne" : "Confirmer la commande"}
+            {busy ? "Envoi…" : payment === "online" ? "Payer avec Flouci" : "Confirmer la commande"}
           </button>
           <p className="mt-3 text-center text-[11px] tracking-[0.14em] uppercase text-[var(--muted)]">
             {brand.slogan}

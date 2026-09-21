@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { KonnectService } from '../payments/konnect.service';
+import { FlouciService } from '../payments/flouci.service';
 import { sellingPrice } from '../products/pricing';
 import { ProductsService } from '../products/products.service';
 import { PAIR_WEIGHT_KG, isTunisia } from '../shipping/shipping-rates.config';
@@ -23,12 +23,12 @@ export class OrdersService {
     @InjectRepository(OrderItem)
     private readonly items: Repository<OrderItem>,
     private readonly products: ProductsService,
-    private readonly konnect: KonnectService,
+    private readonly flouci: FlouciService,
     private readonly shipping: ShippingService,
   ) {}
 
   frontendUrl() {
-    return this.konnect.frontendUrl();
+    return this.flouci.frontendUrl();
   }
 
   async create(dto: CreateOrderDto) {
@@ -71,7 +71,7 @@ export class OrdersService {
     const quote = await this.shipping.quote(country, carrier, weightKg);
     const delivery = quote.price;
     const online = dto.payment === 'online';
-    if (online && !this.konnect.configured()) {
+    if (online && !this.flouci.configured()) {
       throw new BadRequestException(
         'Paiement en ligne indisponible. Choisis le paiement à la livraison (Tunisie uniquement).',
       );
@@ -103,7 +103,7 @@ export class OrdersService {
     if (!online) return saved;
 
     try {
-      const payment = await this.konnect.initPayment({
+      const payment = await this.flouci.initPayment({
         orderId: saved.id,
         amountTnd: Number(saved.total),
         customerName: saved.customerName,
@@ -130,7 +130,7 @@ export class OrdersService {
     if (order.status === 'annulee') {
       throw new BadRequestException('Commande annulée');
     }
-    const payment = await this.konnect.initPayment({
+    const payment = await this.flouci.initPayment({
       orderId: order.id,
       amountTnd: Number(order.total),
       customerName: order.customerName,
@@ -143,22 +143,22 @@ export class OrdersService {
     return this.orders.save(order);
   }
 
-  async confirmKonnect(paymentRef: string) {
+  async confirmOnline(paymentRef: string) {
     if (!paymentRef) return { ok: false, paid: false, orderId: '' };
-    const payment = await this.konnect.getPayment(paymentRef);
+    const payment = await this.flouci.getPayment(paymentRef);
     let order = await this.orders.findOne({ where: { paymentRef } });
     if (!order && payment?.orderId) {
       order = await this.orders.findOne({ where: { id: payment.orderId } });
     }
     if (!order) return { ok: false, paid: false, orderId: '' };
 
-    if (this.konnect.isPaid(payment)) {
+    if (this.flouci.isPaid(payment)) {
       order.paymentStatus = 'paid';
       if (order.status === 'paiement_en_cours') order.status = 'en_attente';
       await this.orders.save(order);
       return { ok: true, paid: true, orderId: order.id };
     }
-    if (this.konnect.isFailed(payment)) {
+    if (this.flouci.isFailed(payment)) {
       order.paymentStatus = 'failed';
       await this.orders.save(order);
       return { ok: true, paid: false, orderId: order.id };
@@ -170,7 +170,7 @@ export class OrdersService {
     if (order.payment !== 'online' || order.paymentStatus === 'paid' || !order.paymentRef) {
       return order;
     }
-    const result = await this.confirmKonnect(order.paymentRef);
+    const result = await this.confirmOnline(order.paymentRef);
     if (!result.ok) return order;
     const fresh = await this.orders.findOne({ where: { id: order.id } });
     return fresh ?? order;

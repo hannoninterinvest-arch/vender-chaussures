@@ -273,6 +273,123 @@ html[data-theme="light"] .gold-frame {
   transform: translateY(1px);
 }
 
+.pay-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+@media (min-width: 720px) {
+  .pay-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.pay-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  min-height: 11.5rem;
+  padding: 1.15rem 1.15rem 1.05rem;
+  border: 1px solid color-mix(in srgb, var(--gold) 28%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--gold) 8%, var(--panel)), var(--panel));
+  color: var(--fg);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.pay-card:hover:not(:disabled) {
+  border-color: var(--gold);
+  transform: translateY(-2px);
+}
+
+.pay-card.is-on {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold), 0 16px 32px color-mix(in srgb, var(--gold) 18%, transparent);
+}
+
+.pay-card.is-off {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pay-kicker {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.pay-title {
+  margin-top: 0.45rem;
+  font-family: var(--font-display), serif;
+  font-size: 1.2rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pay-hint {
+  margin-top: 0.45rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.pay-brands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+.pay-brand,
+.pay-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
+  background: color-mix(in srgb, var(--cream) 8%, transparent);
+  padding: 0.22rem 0.5rem;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pay-brand-visa {
+  letter-spacing: 0.18em;
+}
+
+.pay-mc {
+  width: 1.05rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 50%, #eb001b 0 46%, transparent 47%),
+    radial-gradient(circle at 65% 50%, #f79e1b 0 46%, transparent 47%);
+}
+
+.pay-check {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+  color: var(--ink);
+  background: transparent;
+  font-size: 0.75rem;
+}
+
+.pay-card.is-on .pay-check {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
 .promo-badge {
   display: inline-block;
   border-radius: 2px;

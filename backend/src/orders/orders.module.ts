@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { KonnectModule } from '../payments/konnect.module';
+import { FlouciModule } from '../payments/flouci.module';
 import { ProductsModule } from '../products/products.module';
 import { ShippingModule } from '../shipping/shipping.module';
 import { OrderItem } from './order-item.entity';
@@ -12,7 +12,7 @@ import { OrdersService } from './orders.service';
   imports: [
     TypeOrmModule.forFeature([Order, OrderItem]),
     ProductsModule,
-    KonnectModule,
+    FlouciModule,
     ShippingModule,
   ],
   controllers: [OrdersController],

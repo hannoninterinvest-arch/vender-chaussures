@@ -114,7 +114,7 @@ export default function SellerOrdersPage() {
             <div className="mt-4 flex flex-wrap gap-2">
               {o.payment === "online" && o.paymentStatus !== "paid" && o.status !== "annulee" && (
                 <p className="w-full text-sm text-amber-800">
-                  Paiement Konnect non confirmé — pas d’expédition tant que ce n’est pas payé.
+                  Paiement Flouci non confirmé — pas d’expédition tant que ce n’est pas payé.
                 </p>
               )}
               {o.status !== "en_livraison" &&

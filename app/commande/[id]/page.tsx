@@ -116,7 +116,7 @@ export default function OrderPage({
       </h1>
       <p className="mt-2 text-sm text-[var(--muted)]">
         {online && !paid
-          ? "Termine le paiement Konnect pour valider la commande. On t’appelle ensuite pour l’expédition."
+          ? "Termine le paiement Flouci pour valider la commande. On t’appelle ensuite pour l’expédition."
           : `On t’appelle au ${order.customer.phone} pour confirmer avant expédition.`}
       </p>
 
@@ -158,7 +158,7 @@ export default function OrderPage({
             onClick={() => void payNow()}
             className="gold-btn inline-flex rounded-sm px-6 py-3 text-xs uppercase disabled:opacity-60"
           >
-            {paying ? "Ouverture…" : "Payer avec Konnect"}
+            {paying ? "Ouverture…" : "Payer avec Flouci"}
           </button>
         )}
         <Link href="/shop" className="gold-btn inline-flex rounded-sm px-6 py-3 text-xs uppercase">
