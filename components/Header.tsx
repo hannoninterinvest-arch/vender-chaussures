@@ -3,20 +3,25 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Footstep } from "@/components/Footsteps";
-import { BrandLockup } from "@/components/Logo";
+import Logo from "@/components/Logo";
 import { ThemeToggle } from "@/components/Experience";
+import { CountrySelect } from "@/components/CountrySelect";
 import { useCart } from "@/lib/cart";
 import { useCatalog } from "@/lib/catalog";
-import { formatTnd } from "@/lib/format";
+import { useLocale } from "@/lib/locale";
 import { whatsappHref } from "@/lib/brand";
 
 const NAV = [
+  { href: "/shop?gender=femme", label: "Femme" },
+  { href: "/shop?gender=homme", label: "Homme" },
   { href: "/shop?drop=new", label: "Nouveautés" },
-  { href: "/shop?gender=homme", label: "Hommes" },
-  { href: "/shop?gender=femme", label: "Femmes" },
   { href: "/shop", label: "Collection" },
-  { href: "/grossiste", label: "Grossistes" },
+];
+
+const PROMO = [
+  "Livraison Tunisie et international — tarifs au checkout",
+  "Commande sans compte — 2 minutes",
+  "Échange 7 jours si non portées",
 ];
 
 function IconSearch() {
@@ -41,10 +46,12 @@ export function Header() {
   const path = usePathname();
   const { count } = useCart();
   const { products } = useCatalog();
+  const { formatPrice } = useLocale();
   const [open, setOpen] = useState(false);
   const [menu, setMenu] = useState(false);
   const [q, setQ] = useState("");
   const [scrolled, setScrolled] = useState(false);
+  const [promo, setPromo] = useState(0);
 
   const results = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -64,6 +71,11 @@ export function Header() {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const t = window.setInterval(() => setPromo((n) => (n + 1) % PROMO.length), 4200);
+    return () => window.clearInterval(t);
   }, []);
 
   useEffect(() => {
@@ -87,48 +99,50 @@ export function Header() {
     };
   }, [open, menu]);
 
+  const shopActive = path.startsWith("/shop");
+
   return (
     <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
-      <div className="header-hairline" />
+      <div className="promo-bar">
+        <p key={promo}>{PROMO[promo]}</p>
+      </div>
       <a
         href="#contenu"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[80] focus:bg-[#C9A45C] focus:px-3 focus:py-2 focus:text-[#14110C]"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-10 focus:z-[80] focus:bg-[#C9A45C] focus:px-3 focus:py-2 focus:text-[#14110C]"
       >
         Aller au contenu
       </a>
-      <div className="mx-auto grid h-[var(--header-h)] max-w-[1280px] grid-cols-[1fr_auto] items-center px-4 md:grid-cols-[1fr_auto_1fr] md:px-6">
-        <div className="flex items-center gap-2 justify-self-start sm:gap-3">
-          <Link href="/" aria-label="ELVARO accueil" className="transition-transform duration-300 hover:scale-[1.03]">
-            <span className="md:hidden">
-              <BrandLockup compact />
-            </span>
-            <span className="hidden md:block">
-              <BrandLockup />
-            </span>
-          </Link>
-          <Footstep size="sm" className="header-footstep" />
+      <div className="header-bar">
+        <Link href="/" aria-label="ELVARO accueil" className="header-logo">
+          <span className="md:hidden">
+            <Logo size="sm" />
+          </span>
+          <span className="hidden md:block">
+            <Logo size="md" />
+          </span>
+        </Link>
+
+        <div className="header-left">
+          <nav className="header-nav" aria-label="Principal">
+            {NAV.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`nav-link ${shopActive && item.href === "/shop" ? "is-active" : ""}`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
         </div>
 
-        <nav className="hidden items-center gap-8 text-[11px] font-medium tracking-[0.2em] uppercase text-[var(--header-fg)] md:flex">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`nav-link ${path.startsWith("/shop") && item.href === "/shop" ? "is-active" : ""}`}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="flex items-center justify-self-end gap-0.5 text-[var(--gold)]">
+        <div className="header-tools">
+          <CountrySelect id="header-country" />
+          <Link href="/grossiste" className="header-wholesale">
+            Grossistes
+          </Link>
           <ThemeToggle />
-          <button
-            type="button"
-            aria-label="Rechercher"
-            onClick={() => setOpen(true)}
-            className="icon-btn rounded-full p-2"
-          >
+          <button type="button" aria-label="Rechercher" onClick={() => setOpen(true)} className="icon-btn rounded-full p-2">
             <IconSearch />
           </button>
           <Link
@@ -162,13 +176,20 @@ export function Header() {
       </div>
 
       {menu && (
-        <div className="absolute inset-x-0 top-[var(--header-h)] border-b border-[var(--line)] bg-[var(--header-bg)] px-6 py-6 backdrop-blur-md md:hidden">
+        <div className="header-drawer md:hidden">
           <nav className="mx-auto flex max-w-[1280px] flex-col gap-5 text-xs font-medium tracking-[0.2em] uppercase text-[var(--header-fg)]">
             {NAV.map((item) => (
               <Link key={item.href} href={item.href} onClick={() => setMenu(false)} className="nav-link w-fit">
                 {item.label}
               </Link>
             ))}
+            <Link href="/grossiste" onClick={() => setMenu(false)} className="nav-link w-fit">
+              Grossistes
+            </Link>
+            <div className="text-[11px] tracking-[0.16em] text-[var(--muted)]">
+              Pays
+              <CountrySelect className="mt-2" fullLabel />
+            </div>
             <a href={whatsappHref()} target="_blank" rel="noreferrer" className="gold-text font-semibold">
               WhatsApp
             </a>
@@ -179,7 +200,7 @@ export function Header() {
       {open && (
         <div className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm" onClick={() => setOpen(false)}>
           <div
-            className="gold-frame anim-fade-up mx-auto mt-28 max-w-xl rounded-[4px] bg-[var(--panel)] p-5"
+            className="store-panel anim-fade-up mx-auto mt-28 max-w-xl p-5"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-label="Recherche"
@@ -206,7 +227,7 @@ export function Header() {
                       <span className="block truncate font-medium text-[var(--fg)]">{p.name}</span>
                       <span className="text-xs text-[var(--muted)]">{p.brand}</span>
                     </span>
-                    <span className="text-[var(--gold)]">{formatTnd(p.price)}</span>
+                    <span className="text-[var(--gold)]">{formatPrice(p.price)}</span>
                   </Link>
                 </li>
               ))}

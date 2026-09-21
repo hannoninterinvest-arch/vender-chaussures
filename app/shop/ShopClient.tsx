@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ProductCard } from "@/components/ProductCard";
-import { BrandMark } from "@/components/Logo";
 import { useCatalog } from "@/lib/catalog";
 import { allSizes, brandsOf, type Gender } from "@/lib/products";
 
@@ -127,16 +126,9 @@ export function ShopClient() {
 
   return (
     <div>
-      <div className="gold-line" />
       <section className="shop-hero">
         <div className="relative mx-auto max-w-[1280px] px-4 py-12 md:px-6 md:py-16">
-          <div className="pointer-events-none absolute right-4 top-4 sm:right-6 sm:top-6">
-            <BrandMark size="md" className="hidden sm:inline-flex" />
-          </div>
-          <div className="shop-hero-ornament">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#C5A059]" />
-          </div>
-          <p className="mt-4 text-[11px] font-semibold tracking-[0.36em] uppercase text-[#C5A059]">Boutique</p>
+          <p className="text-[11px] font-semibold tracking-[0.36em] uppercase text-[#C5A059]">Boutique</p>
           <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.14em] uppercase text-[var(--fg)] md:text-6xl">
             {title}
           </h1>
@@ -225,7 +217,7 @@ export function ShopClient() {
               <ProductCard key={p.id} product={p} />
             ))}
             {ready && filtered.length === 0 && (
-              <div className="gold-frame col-span-full rounded-[4px] bg-[var(--panel)] px-6 py-16 text-center">
+              <div className="store-panel col-span-full px-6 py-16 text-center">
                 <p className="font-[family-name:var(--font-display)] text-xl tracking-[0.12em] uppercase">
                   Aucune paire pour ces filtres
                 </p>

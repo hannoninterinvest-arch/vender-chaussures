@@ -56,7 +56,13 @@ function load() {
   }
 }
 
-if (typeof window !== "undefined") load();
+if (typeof window !== "undefined") {
+  load();
+  window.addEventListener("pageshow", () => {
+    load();
+    emit();
+  });
+}
 
 function subscribe(listener: () => void) {
   listeners.add(listener);

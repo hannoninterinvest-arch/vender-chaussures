@@ -29,6 +29,8 @@ export class CreateOrderItemDto {
   qty: number;
 }
 
+const CARRIERS = ['ARAMEX', 'LA_POSTE'] as const;
+
 export class CreateOrderDto {
   @IsString()
   customerName: string;
@@ -36,8 +38,18 @@ export class CreateOrderDto {
   @IsString()
   phone: string;
 
+  @IsOptional()
   @IsString()
-  gouvernorat: string;
+  gouvernorat?: string;
+
+  /** Code ISO-2 (TN, FR, …) ou nom de pays. Défaut Tunisie. */
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @IsOptional()
+  @IsIn(CARRIERS)
+  carrier?: (typeof CARRIERS)[number];
 
   @IsString()
   city: string;

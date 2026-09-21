@@ -2,27 +2,28 @@
 
 import Link from "next/link";
 import { CheckoutSteps } from "@/components/Experience";
-import { BrandMark } from "@/components/Logo";
+import Logo from "@/components/Logo";
 import { useCart } from "@/lib/cart";
-import { formatTnd } from "@/lib/format";
+import { useCurrency } from "@/lib/useCurrency";
 
 export default function CartPage() {
   const { lines, setQty, remove, subtotal, count } = useCart();
+  const { formatPrice } = useCurrency();
 
   return (
     <div className="mx-auto max-w-[1280px] px-4 py-10 md:px-6">
       <CheckoutSteps step={1} />
-      <div className="gold-frame mb-8 rounded-[4px] bg-[var(--panel)] px-5 py-4">
+      <div className="store-panel mb-8 px-5 py-4">
         <p className="font-bold tracking-wide">Commande sans compte</p>
         <p className="text-sm text-[var(--muted)]">
-          Pas d’inscription. Nom, téléphone et adresse suffisent — paiement à la
-          livraison partout en Tunisie.
+          Pas d’inscription. Nom, téléphone et adresse suffisent. Paiement à la
+          livraison en Tunisie, carte en ligne pour l’international.
         </p>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[1.6fr_1fr]">
         <div>
-          <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase">Ton sac</h1>
+          <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase">Panier</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
             {count} article{count > 1 ? "s" : ""} — les articles ne sont pas
             réservés tant que tu n’as pas validé.
@@ -30,14 +31,14 @@ export default function CartPage() {
 
           <ul className="mt-6 space-y-4">
             {lines.length === 0 && (
-              <li className="gold-frame rounded-[4px] bg-[var(--panel)] p-10 text-center">
-                <BrandMark size="sm" className="mx-auto opacity-90" />
-                <p className="mt-4 font-medium">Ton panier est vide.</p>
+              <li className="store-panel p-10 text-center">
+                <Logo size="md" className="mx-auto" />
+                <p className="mt-4 font-medium">Votre panier est vide.</p>
                 <Link
                   href="/shop"
                   className="gold-btn mt-4 inline-flex rounded-sm px-5 py-2.5 text-xs uppercase"
                 >
-                  Voir les paires
+                  Voir la collection
                 </Link>
               </li>
             )}
@@ -45,7 +46,7 @@ export default function CartPage() {
               return (
                 <li
                   key={`${line.productId}-${line.size}-${line.color}`}
-                  className="gold-frame flex gap-4 rounded-[4px] bg-[var(--panel)] p-4"
+                  className="store-panel flex gap-4 p-4"
                 >
                   <Link href={`/products/${line.productId}`} className="shrink-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -66,7 +67,7 @@ export default function CartPage() {
                         </p>
                       </div>
                       <p className="font-bold text-[#C5A059]">
-                        {formatTnd(Number(line.price) * line.qty)}
+                        {formatPrice(Number(line.price) * line.qty)}
                       </p>
                     </div>
                     <div className="mt-auto flex items-center justify-between pt-3">
@@ -104,15 +105,15 @@ export default function CartPage() {
           </ul>
         </div>
 
-        <aside className="gold-frame h-fit rounded-[4px] bg-[var(--panel)] p-6 lg:sticky lg:top-28">
+        <aside className="store-panel h-fit p-6 lg:sticky lg:top-[calc(var(--header-h)+1rem)]">
           <h2 className="text-xl font-bold">Récapitulatif</h2>
           <div className="mt-4 space-y-2 text-sm">
-            <Row label="Sous-total" value={formatTnd(subtotal)} />
+            <Row label="Sous-total" value={formatPrice(subtotal)} />
             <Row label="Livraison" value="Calculée à l’étape suivante" />
           </div>
           <div className="mt-4 flex justify-between border-t border-[#C5A059]/30 pt-4 text-lg font-bold">
             <span>Total</span>
-            <span className="text-[#C5A059]">{formatTnd(subtotal)}</span>
+            <span className="text-[#C5A059]">{formatPrice(subtotal)}</span>
           </div>
           <Link
             href="/checkout"

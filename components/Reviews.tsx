@@ -25,17 +25,15 @@ const reviews = [
 
 export function Reviews() {
   return (
-    <section className="mx-auto max-w-[1280px] px-4 py-16 md:px-6">
+    <section className="store-section">
       <Reveal>
-        <p className="text-[11px] tracking-[0.28em] uppercase text-[#C9A45C]">Témoignages</p>
-        <h2 className="mb-8 mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.12em] text-[var(--fg)] md:text-5xl">
-          AVIS
-        </h2>
+        <p className="section-kicker">Témoignages</p>
+        <h2 className="section-title mb-8">Avis</h2>
       </Reveal>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {reviews.map((r, i) => (
           <Reveal key={r.title} delay={i * 90}>
-          <article className="gold-frame overflow-hidden rounded-[4px] bg-[var(--panel)]">
+          <article className="store-panel overflow-hidden">
             <div className="p-6">
               <h3 className="text-lg font-semibold tracking-wide">{r.title}</h3>
               <p className="mt-2 text-sm text-[var(--muted)]">{r.text}</p>

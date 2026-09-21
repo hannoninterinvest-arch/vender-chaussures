@@ -20,7 +20,10 @@ async function bootstrap() {
       path.startsWith('/categories') ||
       path.startsWith('/orders') ||
       path.startsWith('/payments') ||
-      path.startsWith('/site')
+      path.startsWith('/site') ||
+      path.startsWith('/shipping') ||
+      path.startsWith('/admin') ||
+      path.startsWith('/currency')
     ) {
       req.url = `/api${url}`;
     }
@@ -34,7 +37,7 @@ async function bootstrap() {
   const allowAll = origins.includes('*');
   app.enableCors({
     origin: allowAll ? '*' : origins.length === 1 ? origins[0] : origins,
-    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   });
   app.useGlobalPipes(

@@ -18,8 +18,17 @@ export class Order {
   @Column()
   phone: string;
 
-  @Column()
+  @Column({ default: '' })
   gouvernorat: string;
+
+  @Column({ default: 'TN' })
+  country: string;
+
+  @Column({ default: 'LA_POSTE' })
+  carrier: string;
+
+  @Column({ default: 'TUNISIE' })
+  shippingZone: string;
 
   @Column()
   city: string;

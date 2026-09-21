@@ -52,7 +52,7 @@ const fallbackCatalog: Product[] = [
     brand: "ELVARO",
     price: 459,
     description:
-      "Derby à lacets ouverts en cuir cognac. Un classique ville, souple dès les premiers pas.",
+      "Derby à lacets ouverts en cuir cognac. Un classique ville, souple dès le premier jour.",
     gender: "homme",
     category: "ville",
     isNew: true,

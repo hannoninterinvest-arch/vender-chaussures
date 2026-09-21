@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { BrandMark } from "@/components/Logo";
+import Logo from "@/components/Logo";
 
 export default function NotFound() {
   return (
     <div className="px-6 py-24 text-center">
-      <BrandMark size="lg" className="mx-auto" />
+      <Logo size="lg" className="mx-auto" />
       <p className="mt-8 font-[family-name:var(--font-display)] text-6xl tracking-[0.2em] text-[var(--gold)]">
         404
       </p>

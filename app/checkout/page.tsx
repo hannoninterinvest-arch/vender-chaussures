@@ -4,30 +4,38 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart";
-import { formatTnd } from "@/lib/format";
+import { useLocale } from "@/lib/locale";
 import {
-  deliveryFee,
   gouvernorats,
   paymentMethods,
   type Gouvernorat,
   type PaymentMethod,
 } from "@/lib/tunisia";
 import { createOrder, fetchPaymentsConfig } from "@/lib/api";
+import { calculateShipping, cartWeightKg, SHIPPING_CARRIERS, type ShippingCarrier } from "@/lib/shipping";
 import { useToast } from "@/components/Toast";
 import { brand } from "@/lib/brand";
 import { CheckoutSteps } from "@/components/Experience";
-import { BrandMark } from "@/components/Logo";
+import Logo from "@/components/Logo";
+import { CountrySelect } from "@/components/CountrySelect";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const toast = useToast();
   const { lines, subtotal, clear } = useCart();
+  const { selectedCountry, formatPrice, isLocal } = useLocale();
   const [payment, setPayment] = useState<PaymentMethod>("cod");
   const [onlineReady, setOnlineReady] = useState(false);
   const [gouvernorat, setGouvernorat] = useState<Gouvernorat>("Tunis");
+  const [carrier, setCarrier] = useState<ShippingCarrier>("LA_POSTE");
   const [busy, setBusy] = useState(false);
-  const fee = useMemo(() => deliveryFee(gouvernorat), [gouvernorat]);
-  const total = subtotal + fee;
+  const [fee, setFee] = useState<number | null>(null);
+  const [quoteError, setQuoteError] = useState("");
+  const weightKg = useMemo(
+    () => cartWeightKg(lines.reduce((sum, line) => sum + line.qty, 0)),
+    [lines],
+  );
+  const total = subtotal + (fee ?? 0);
 
   useEffect(() => {
     let cancelled = false;
@@ -45,16 +53,48 @@ export default function CheckoutPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isLocal && payment === "cod") setPayment("online");
+  }, [isLocal, payment]);
+
+  useEffect(() => {
+    if (lines.length === 0) return;
+    let cancelled = false;
+    setQuoteError("");
+    calculateShipping({ country: selectedCountry, carrier, weightKg })
+      .then((quote) => {
+        if (!cancelled) setFee(quote.price);
+      })
+      .catch((err: Error) => {
+        if (cancelled) return;
+        setFee(null);
+        setQuoteError(err.message);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedCountry, carrier, weightKg, lines.length]);
+
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (lines.length === 0 || busy) return;
+    if (payment === "cod" && !isLocal) {
+      toast("Le paiement à la livraison n’est disponible qu’en Tunisie.");
+      return;
+    }
+    if (payment === "online" && !onlineReady) {
+      toast("Paiement en ligne indisponible pour le moment.");
+      return;
+    }
     const data = new FormData(e.currentTarget);
     setBusy(true);
     try {
       const order = await createOrder({
         customerName: String(data.get("name")),
         phone: String(data.get("phone")),
-        gouvernorat,
+        country: selectedCountry,
+        carrier,
+        gouvernorat: isLocal ? gouvernorat : "",
         city: String(data.get("city")),
         address: String(data.get("address")),
         notes: String(data.get("notes") || ""),
@@ -81,9 +121,9 @@ export default function CheckoutPage() {
   if (lines.length === 0) {
     return (
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <BrandMark size="md" className="mx-auto" />
+        <Logo size="lg" className="mx-auto" />
         <p className="mt-6 font-[family-name:var(--font-display)] text-3xl tracking-[0.12em] uppercase">
-          Ton panier est vide.
+          Votre panier est vide.
         </p>
         <Link href="/shop" className="gold-btn mt-6 inline-flex rounded-sm px-6 py-3 text-xs uppercase">
           Continuer les achats
@@ -95,21 +135,16 @@ export default function CheckoutPage() {
   return (
     <div className="mx-auto max-w-[1100px] px-4 py-10 md:px-6">
       <CheckoutSteps step={2} />
-      <div className="mb-6 flex items-center gap-4">
-        <BrandMark size="sm" />
-        <div>
-          <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-[#C5A059]">Paiement</p>
-          <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.12em] uppercase">
-            Checkout invité
-          </h1>
-        </div>
-      </div>
+      <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-[#C5A059]">Paiement</p>
+      <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.12em] uppercase">
+        Checkout invité
+      </h1>
       <p className="mt-2 text-sm text-[var(--muted)]">
         Pas de mot de passe. On te contacte au {brand.phone} pour confirmer.
       </p>
 
       <form onSubmit={onSubmit} className="mt-8 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-        <div className="gold-frame space-y-6 rounded-[4px] bg-[var(--panel)] p-6">
+        <div className="store-panel space-y-6 p-6">
           <h2 className="font-[family-name:var(--font-display)] text-lg tracking-[0.14em] uppercase">
             Livraison
           </h2>
@@ -124,28 +159,68 @@ export default function CheckoutPage() {
           />
           <div>
             <label className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#C5A059]">
-              Gouvernorat
+              Pays
             </label>
-            <select
-              value={gouvernorat}
-              onChange={(e) => setGouvernorat(e.target.value as Gouvernorat)}
-              className="field mt-1.5"
-            >
-              {gouvernorats.map((g) => (
-                <option key={g}>{g}</option>
-              ))}
-            </select>
+            <div className="mt-1.5">
+              <CountrySelect fullLabel />
+            </div>
           </div>
-          <Field name="city" label="Ville / délégation" required autoComplete="address-level2" />
+          {isLocal && (
+            <div>
+              <label className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#C5A059]">
+                Gouvernorat
+              </label>
+              <select
+                value={gouvernorat}
+                onChange={(e) => setGouvernorat(e.target.value as Gouvernorat)}
+                className="field mt-1.5"
+              >
+                {gouvernorats.map((g) => (
+                  <option key={g}>{g}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          <Field name="city" label="Ville" required autoComplete="address-level2" />
           <Field name="address" label="Adresse" required placeholder="Rue, immeuble, étage…" autoComplete="street-address" />
           <Field name="notes" label="Note pour le livreur (optionnel)" />
+
+          <div>
+            <p className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#C5A059]">
+              Transporteur
+            </p>
+            <div className="mt-2 space-y-2">
+              {SHIPPING_CARRIERS.map((m) => (
+                <label
+                  key={m.id}
+                  className={`flex cursor-pointer items-start gap-3 rounded-sm border p-4 ${
+                    carrier === m.id ? "border-[#C5A059] bg-[#C5A059]/10" : "border-[#C5A059]/25"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="carrier"
+                    checked={carrier === m.id}
+                    onChange={() => setCarrier(m.id)}
+                    className="mt-1 accent-[#C5A059]"
+                  />
+                  <span>
+                    <span className="block font-semibold">{m.label}</span>
+                    <span className="text-sm text-[var(--muted)]">{m.hint}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
 
           <h2 className="pt-2 font-[family-name:var(--font-display)] text-lg tracking-[0.14em] uppercase">
             Paiement
           </h2>
           <div className="space-y-2">
             {paymentMethods.map((m) => {
-              const disabled = m.id === "online" && !onlineReady;
+              const codBlocked = m.id === "cod" && !isLocal;
+              const onlineBlocked = m.id === "online" && !onlineReady;
+              const disabled = codBlocked || onlineBlocked;
               return (
               <label
                 key={m.id}
@@ -168,18 +243,25 @@ export default function CheckoutPage() {
                 <span>
                   <span className="block font-semibold">{m.label}</span>
                   <span className="text-sm text-[var(--muted)]">
-                    {disabled
-                      ? "Konnect n’est pas encore configuré (clés dans backend/.env). Tu peux payer à la livraison."
-                      : m.hint}
+                    {codBlocked
+                      ? "Disponible uniquement pour une livraison en Tunisie."
+                      : onlineBlocked
+                        ? "Konnect n’est pas encore configuré (clés dans backend/.env)."
+                        : m.hint}
                   </span>
                 </span>
               </label>
               );
             })}
           </div>
+          {!isLocal && !onlineReady && (
+            <p className="text-sm text-[var(--promo)]">
+              L’international se règle en ligne. Configure Konnect pour activer cette option.
+            </p>
+          )}
         </div>
 
-        <aside className="gold-frame h-fit rounded-[4px] bg-[var(--panel)] p-6 lg:sticky lg:top-28">
+        <aside className="store-panel h-fit p-6 lg:sticky lg:top-[calc(var(--header-h)+1rem)]">
           <h2 className="font-[family-name:var(--font-display)] text-lg tracking-[0.14em] uppercase">
             Ta commande
           </h2>
@@ -194,7 +276,7 @@ export default function CheckoutPage() {
                     {l.color} · {l.size} · x{l.qty}
                   </p>
                 </div>
-                <span className="text-[#C5A059]">{formatTnd(Number(l.price) * l.qty)}</span>
+                <span className="text-[#C5A059]">{formatPrice(Number(l.price) * l.qty)}</span>
               </li>
             ))}
           </ul>
@@ -202,18 +284,23 @@ export default function CheckoutPage() {
           <div className="space-y-1 text-sm">
             <div className="flex justify-between text-[var(--muted)]">
               <span>Sous-total</span>
-              <span>{formatTnd(subtotal)}</span>
+              <span>{formatPrice(subtotal)}</span>
             </div>
             <div className="flex justify-between text-[var(--muted)]">
-              <span>Livraison ({gouvernorat})</span>
-              <span>{formatTnd(fee)}</span>
+              <span>Livraison ({carrier.replace("_", " ")})</span>
+              <span>{fee == null ? "…" : formatPrice(fee)}</span>
             </div>
+            {quoteError && <p className="text-xs text-[var(--promo)]">{quoteError}</p>}
             <div className="flex justify-between pt-2 text-lg font-bold">
               <span>Total</span>
-              <span className="text-[#C5A059]">{formatTnd(total)}</span>
+              <span className="text-[#C5A059]">{formatPrice(total)}</span>
             </div>
           </div>
-          <button type="submit" disabled={busy} className="gold-btn mt-6 h-12 w-full rounded-sm text-xs uppercase disabled:opacity-60">
+          <button
+            type="submit"
+            disabled={busy || fee == null || (payment === "online" && !onlineReady)}
+            className="gold-btn mt-6 h-12 w-full rounded-sm text-xs uppercase disabled:opacity-60"
+          >
             {busy ? "Envoi…" : payment === "online" ? "Payer en ligne" : "Confirmer la commande"}
           </button>
           <p className="mt-3 text-center text-[11px] tracking-[0.14em] uppercase text-[var(--muted)]">

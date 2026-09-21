@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchOrder, retryOrderPayment } from "@/lib/api";
-import { formatTnd } from "@/lib/format";
+import { useCurrency } from "@/lib/useCurrency";
 import { paymentLabel, paymentStatusLabel } from "@/lib/tunisia";
 import { brand, whatsappHref } from "@/lib/brand";
 import { CheckoutSteps } from "@/components/Experience";
@@ -20,6 +20,7 @@ type OrderView = {
     name: string;
     phone: string;
     gouvernorat: string;
+    country?: string;
     city: string;
     address: string;
   };
@@ -40,6 +41,7 @@ export default function OrderPage({
 }) {
   const { id } = use(params);
   const toast = useToast();
+  const { formatPrice } = useCurrency();
   const [order, setOrder] = useState<OrderView | null>(null);
   const [ready, setReady] = useState(false);
   const [paying, setPaying] = useState(false);
@@ -118,7 +120,7 @@ export default function OrderPage({
           : `On t’appelle au ${order.customer.phone} pour confirmer avant expédition.`}
       </p>
 
-      <div className="gold-frame mt-8 rounded-[4px] bg-[var(--panel)] p-6">
+      <div className="store-panel mt-8 p-6">
         <h2 className="font-[family-name:var(--font-display)] tracking-[0.14em] uppercase">Livraison</h2>
         <p className="mt-2 text-sm leading-relaxed text-[var(--fg)]">
           {order.customer.name}
@@ -126,6 +128,7 @@ export default function OrderPage({
           {order.customer.address}, {order.customer.city}
           <br />
           {order.customer.gouvernorat}
+          {order.customer.country ? ` · ${order.customer.country}` : ""}
         </p>
         <p className="mt-4 text-sm">
           Paiement : <strong className="text-[#C5A059]">{pay}</strong>
@@ -137,13 +140,13 @@ export default function OrderPage({
               <span>
                 {item.name} · {item.color} · {item.size} × {item.qty}
               </span>
-              <span className="text-[#C5A059]">{formatTnd(Number(item.price) * item.qty)}</span>
+              <span className="text-[#C5A059]">{formatPrice(Number(item.price) * item.qty)}</span>
             </li>
           ))}
         </ul>
         <div className="mt-4 flex justify-between font-bold">
           <span>Total</span>
-          <span className="text-[#C5A059]">{formatTnd(Number(order.total))}</span>
+          <span className="text-[#C5A059]">{formatPrice(Number(order.total))}</span>
         </div>
       </div>
 

@@ -58,10 +58,13 @@ export type SellerOrder = {
   paymentPhone?: string;
   paymentStatus?: string;
   payUrl?: string;
+  carrier?: string;
+  shippingZone?: string;
   customer: {
     name: string;
     phone: string;
     gouvernorat: string;
+    country?: string;
     city: string;
     address: string;
     notes: string;

@@ -49,24 +49,22 @@ export function TrustBar() {
     { title: "WhatsApp", text: brand.phone, href: whatsappHref() },
   ];
   return (
-    <section className="mx-auto max-w-[1280px] px-4 md:px-6">
+    <section className="trust-bar">
       <Reveal>
-        <div className="gold-frame grid gap-4 rounded-[4px] bg-[var(--panel)] px-4 py-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="trust-bar-row">
           {items.map((item) => {
             const inner = (
               <>
-                <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C9A45C]">
-                  {item.title}
-                </p>
-                <p className="mt-1 text-sm text-[var(--muted)]">{item.text}</p>
+                <p className="trust-title">{item.title}</p>
+                <p className="trust-text">{item.text}</p>
               </>
             );
             return item.href ? (
-              <a key={item.title} href={item.href} target="_blank" rel="noreferrer" className="text-center transition-colors hover:text-[#C9A45C]">
+              <a key={item.title} href={item.href} target="_blank" rel="noreferrer" className="trust-item">
                 {inner}
               </a>
             ) : (
-              <div key={item.title} className="text-center">
+              <div key={item.title} className="trust-item">
                 {inner}
               </div>
             );

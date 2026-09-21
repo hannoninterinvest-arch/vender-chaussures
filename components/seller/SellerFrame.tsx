@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { BrandLockup } from "@/components/Logo";
+import Logo from "@/components/Logo";
 import {
   clearSellerSession,
   createFirstAdmin,
@@ -23,6 +23,7 @@ const NAV = [
   { href: "/vendeur/grossistes", label: "Grossistes", adminOnly: false },
   { href: "/vendeur/import", label: "Import CSV", adminOnly: false },
   { href: "/vendeur/equipe", label: "Équipe", adminOnly: true },
+  { href: "/vendeur/livraison", label: "Livraison", adminOnly: true },
 ];
 
 const inputClass =
@@ -114,7 +115,7 @@ export function SellerFrame({ children }: { children: React.ReactNode }) {
           onSubmit={setup ? onSetup : onLogin}
           className="w-full max-w-md rounded-[4px] border border-[#C5A059]/50 bg-white p-8"
         >
-          <BrandLockup />
+          <Logo size="md" />
           <h1 className="mt-5 font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase text-[#1A1A1B]">
             {setup ? "Créer le premier admin" : "Espace équipe"}
           </h1>
@@ -176,7 +177,7 @@ export function SellerFrame({ children }: { children: React.ReactNode }) {
         <div className="mx-auto flex max-w-[1280px] items-center justify-between px-4 py-3 md:px-6">
           <div className="flex items-center gap-3">
             <Link href="/vendeur" aria-label="ELVARO équipe">
-              <BrandLockup compact />
+              <Logo size="sm" />
             </Link>
             <span className="hidden rounded-sm border border-[#C5A059]/40 px-3 py-1 text-[10px] font-bold tracking-[0.16em] uppercase text-[#C5A059] sm:inline">
               {user.role === "admin" ? "Admin" : "Vendeur"}

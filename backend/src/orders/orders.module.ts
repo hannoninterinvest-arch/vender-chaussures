@@ -2,13 +2,19 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { KonnectModule } from '../payments/konnect.module';
 import { ProductsModule } from '../products/products.module';
+import { ShippingModule } from '../shipping/shipping.module';
 import { OrderItem } from './order-item.entity';
 import { Order } from './order.entity';
 import { OrdersController } from './orders.controller';
 import { OrdersService } from './orders.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Order, OrderItem]), ProductsModule, KonnectModule],
+  imports: [
+    TypeOrmModule.forFeature([Order, OrderItem]),
+    ProductsModule,
+    KonnectModule,
+    ShippingModule,
+  ],
   controllers: [OrdersController],
   providers: [OrdersService],
   exports: [OrdersService],
