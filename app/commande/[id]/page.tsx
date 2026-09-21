@@ -118,7 +118,7 @@ export default function OrderPage({
           : `On t’appelle au ${order.customer.phone} pour confirmer avant expédition.`}
       </p>
 
-      <div className="gold-frame mt-8 rounded-[4px] bg-[var(--panel)] p-6">
+      <div className="store-panel mt-8 p-6">
         <h2 className="font-[family-name:var(--font-display)] tracking-[0.14em] uppercase">Livraison</h2>
         <p className="mt-2 text-sm leading-relaxed text-[var(--fg)]">
           {order.customer.name}

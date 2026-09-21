@@ -33,7 +33,7 @@ export function Reviews() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {reviews.map((r, i) => (
           <Reveal key={r.title} delay={i * 90}>
-          <article className="gold-frame overflow-hidden rounded-[4px] bg-[var(--panel)]">
+          <article className="store-panel overflow-hidden">
             <div className="p-6">
               <h3 className="text-lg font-semibold tracking-wide">{r.title}</h3>
               <p className="mt-2 text-sm text-[var(--muted)]">{r.text}</p>

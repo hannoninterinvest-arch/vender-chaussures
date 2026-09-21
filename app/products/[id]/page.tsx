@@ -77,7 +77,7 @@ export default function ProductPage({
           <img
             src={mainPhoto}
             alt={product.name}
-            className="gold-frame aspect-square w-full rounded-[4px] object-cover"
+            className="aspect-square w-full object-cover"
           />
           <div className="grid grid-cols-5 gap-3">
             {gallery.map((src, i) => (
@@ -86,7 +86,7 @@ export default function ProductPage({
                 type="button"
                 onClick={() => setPhoto(i)}
                 aria-label={`Photo ${i + 1}`}
-                className={`overflow-hidden rounded-sm ${photo === i ? "gold-frame" : "opacity-70"}`}
+                className={`overflow-hidden ${photo === i ? "ring-1 ring-[var(--gold)]" : "opacity-70"}`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={src} alt="" className="aspect-square w-full object-cover" />
@@ -224,7 +224,7 @@ export default function ProductPage({
         </div>
       </section>
 
-      <div className="gold-frame fixed inset-x-3 bottom-3 z-40 rounded-[4px] bg-[var(--panel)]/95 p-3 backdrop-blur-md lg:hidden">
+      <div className="store-panel fixed inset-x-3 bottom-3 z-40 bg-[var(--panel)]/95 p-3 backdrop-blur-md lg:hidden">
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs text-[var(--muted)]">{product.name}</p>

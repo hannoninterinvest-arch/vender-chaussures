@@ -1,7 +1,7 @@
 export const brand = {
   name: "ELVARO",
   byline: "by AIR GO SHOES",
-  slogan: "L'excellence à chaque pas",
+  slogan: "Cuir premium, fabrication tunisienne",
   activity: "Fabrication et vente de chaussures haut de gamme",
   email: "airgoshoes@gmail.com",
   phone: "+216 28 135 503",

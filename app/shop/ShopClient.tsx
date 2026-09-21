@@ -126,7 +126,6 @@ export function ShopClient() {
 
   return (
     <div>
-      <div className="gold-line" />
       <section className="shop-hero">
         <div className="relative mx-auto max-w-[1280px] px-4 py-12 md:px-6 md:py-16">
           <p className="text-[11px] font-semibold tracking-[0.36em] uppercase text-[#C5A059]">Boutique</p>
@@ -218,7 +217,7 @@ export function ShopClient() {
               <ProductCard key={p.id} product={p} />
             ))}
             {ready && filtered.length === 0 && (
-              <div className="gold-frame col-span-full rounded-[4px] bg-[var(--panel)] px-6 py-16 text-center">
+              <div className="store-panel col-span-full px-6 py-16 text-center">
                 <p className="font-[family-name:var(--font-display)] text-xl tracking-[0.12em] uppercase">
                   Aucune paire pour ces filtres
                 </p>

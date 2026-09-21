@@ -16,7 +16,7 @@ import { createOrder, fetchPaymentsConfig } from "@/lib/api";
 import { useToast } from "@/components/Toast";
 import { brand } from "@/lib/brand";
 import { CheckoutSteps } from "@/components/Experience";
-import { BrandMark } from "@/components/Logo";
+import Logo from "@/components/Logo";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -81,9 +81,9 @@ export default function CheckoutPage() {
   if (lines.length === 0) {
     return (
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <BrandMark size="md" className="mx-auto" />
+        <Logo size="lg" className="mx-auto" />
         <p className="mt-6 font-[family-name:var(--font-display)] text-3xl tracking-[0.12em] uppercase">
-          Ton panier est vide.
+          Votre panier est vide.
         </p>
         <Link href="/shop" className="gold-btn mt-6 inline-flex rounded-sm px-6 py-3 text-xs uppercase">
           Continuer les achats
@@ -95,21 +95,16 @@ export default function CheckoutPage() {
   return (
     <div className="mx-auto max-w-[1100px] px-4 py-10 md:px-6">
       <CheckoutSteps step={2} />
-      <div className="mb-6 flex items-center gap-4">
-        <BrandMark size="sm" />
-        <div>
-          <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-[#C5A059]">Paiement</p>
-          <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.12em] uppercase">
-            Checkout invité
-          </h1>
-        </div>
-      </div>
+      <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-[#C5A059]">Paiement</p>
+      <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.12em] uppercase">
+        Checkout invité
+      </h1>
       <p className="mt-2 text-sm text-[var(--muted)]">
         Pas de mot de passe. On te contacte au {brand.phone} pour confirmer.
       </p>
 
       <form onSubmit={onSubmit} className="mt-8 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-        <div className="gold-frame space-y-6 rounded-[4px] bg-[var(--panel)] p-6">
+        <div className="store-panel space-y-6 p-6">
           <h2 className="font-[family-name:var(--font-display)] text-lg tracking-[0.14em] uppercase">
             Livraison
           </h2>
@@ -179,7 +174,7 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        <aside className="gold-frame h-fit rounded-[4px] bg-[var(--panel)] p-6 lg:sticky lg:top-28">
+        <aside className="store-panel h-fit p-6 lg:sticky lg:top-[calc(var(--header-h)+1rem)]">
           <h2 className="font-[family-name:var(--font-display)] text-lg tracking-[0.14em] uppercase">
             Ta commande
           </h2>

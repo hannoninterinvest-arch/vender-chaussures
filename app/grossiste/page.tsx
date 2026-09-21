@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
-import { BrandMark } from "@/components/Logo";
+import Logo from "@/components/Logo";
 import { useToast } from "@/components/Toast";
 import { brand } from "@/lib/brand";
 import { useCatalog } from "@/lib/catalog";
@@ -79,7 +79,7 @@ export default function GrossistePage() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-14 md:px-6">
         <div className="text-center">
-          <BrandMark size="md" className="mx-auto" />
+          <Logo size="lg" className="mx-auto" />
           <p className="mt-8 text-[11px] font-semibold tracking-[0.28em] uppercase text-[var(--gold)]">
             Demande enregistrée sur le site
           </p>
@@ -124,13 +124,7 @@ export default function GrossistePage() {
     <div>
       <section className="shop-hero">
         <div className="relative mx-auto max-w-[1280px] px-4 py-12 md:px-6 md:py-16">
-          <div className="pointer-events-none absolute right-4 top-4 sm:right-6 sm:top-6">
-            <BrandMark size="md" className="hidden sm:inline-flex" />
-          </div>
-          <div className="shop-hero-ornament">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--gold)]" />
-          </div>
-          <p className="mt-4 text-[11px] font-semibold tracking-[0.36em] uppercase text-[var(--gold)]">
+          <p className="text-[11px] font-semibold tracking-[0.36em] uppercase text-[var(--gold)]">
             Espace grossistes
           </p>
           <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.14em] uppercase text-[var(--fg)] md:text-6xl">
@@ -158,7 +152,7 @@ export default function GrossistePage() {
 
       {saved && (
         <section className="mx-auto max-w-[1280px] px-4 pt-8 md:px-6">
-          <div className="gold-frame rounded-[4px] bg-[var(--panel)] p-5">
+          <div className="store-panel p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold tracking-[0.2em] uppercase text-[var(--gold)]">
@@ -213,7 +207,7 @@ export default function GrossistePage() {
                 return (
                   <li
                     key={product.id}
-                    className={`gold-frame flex flex-wrap items-center gap-4 rounded-[4px] bg-[var(--panel)] p-3 ${
+                    className={`store-panel flex flex-wrap items-center gap-4 p-3 ${
                       count > 0 ? "ring-1 ring-[var(--gold)]" : ""
                     }`}
                   >
@@ -278,7 +272,7 @@ export default function GrossistePage() {
             </ul>
           </div>
 
-          <div className="gold-frame rounded-[4px] bg-[var(--panel)] p-6 lg:sticky lg:top-[calc(var(--header-h)+1rem)]">
+          <div className="store-panel p-6 lg:sticky lg:top-[calc(var(--header-h)+1rem)]">
             <h2 className="font-[family-name:var(--font-display)] text-2xl tracking-[0.12em] uppercase">
               2 · Vos coordonnées
             </h2>
@@ -378,7 +372,7 @@ function RequestRecap({ request }: { request: WholesaleRequest }) {
   ].filter((info) => info.value);
 
   return (
-    <div className="gold-frame mt-8 rounded-[4px] bg-[var(--panel)] p-6">
+    <div className="store-panel mt-8 p-6">
       <p className="text-[11px] font-semibold tracking-[0.2em] uppercase text-[var(--gold)]">
         Vos informations
       </p>

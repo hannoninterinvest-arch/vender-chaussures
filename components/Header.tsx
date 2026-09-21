@@ -193,7 +193,7 @@ export function Header() {
       {open && (
         <div className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm" onClick={() => setOpen(false)}>
           <div
-            className="gold-frame anim-fade-up mx-auto mt-28 max-w-xl rounded-[4px] bg-[var(--panel)] p-5"
+            className="store-panel anim-fade-up mx-auto mt-28 max-w-xl p-5"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-label="Recherche"
