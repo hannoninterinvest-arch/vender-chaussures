@@ -1,6 +1,6 @@
 "use client";
 
-import { useCurrency } from "@/lib/useCurrency";
+import { useLocale } from "@/lib/locale";
 
 type Priced = { price: number; oldPrice?: number | null; discount?: number };
 
@@ -18,7 +18,7 @@ export function Price({
   size?: "sm" | "md" | "lg";
   className?: string;
 }) {
-  const { formatPrice } = useCurrency();
+  const { formatPrice } = useLocale();
   const promo = hasPromo(product);
   const main =
     size === "lg" ? "text-2xl font-semibold" : size === "sm" ? "text-sm font-semibold" : "text-base font-semibold";

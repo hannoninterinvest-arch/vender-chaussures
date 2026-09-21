@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "@/components/Experience";
+import { CountrySelect } from "@/components/CountrySelect";
 import { useCart } from "@/lib/cart";
 import { useCatalog } from "@/lib/catalog";
 import { useLocale } from "@/lib/locale";
@@ -45,7 +46,7 @@ export function Header() {
   const path = usePathname();
   const { count } = useCart();
   const { products } = useCatalog();
-  const { selectedCountry, setSelectedCountry, countries, formatPrice } = useLocale();
+  const { formatPrice } = useLocale();
   const [open, setOpen] = useState(false);
   const [menu, setMenu] = useState(false);
   const [q, setQ] = useState("");
@@ -136,26 +137,7 @@ export function Header() {
         </div>
 
         <div className="header-tools">
-          <label className="sr-only" htmlFor="header-country">
-            Pays de livraison
-          </label>
-          <select
-            id="header-country"
-            className="header-country"
-            value={countries.some((c) => c.code === selectedCountry) ? selectedCountry : "TN"}
-            onChange={(e) => setSelectedCountry(e.target.value)}
-            onInput={(e) => setSelectedCountry((e.target as HTMLSelectElement).value)}
-            aria-label="Pays de livraison"
-          >
-            {!countries.some((c) => c.code === selectedCountry) && (
-              <option value={selectedCountry}>{selectedCountry}</option>
-            )}
-            {countries.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.code} · {c.name}
-              </option>
-            ))}
-          </select>
+          <CountrySelect id="header-country" />
           <Link href="/grossiste" className="header-wholesale">
             Grossistes
           </Link>
@@ -204,20 +186,10 @@ export function Header() {
             <Link href="/grossiste" onClick={() => setMenu(false)} className="nav-link w-fit">
               Grossistes
             </Link>
-            <label className="text-[11px] tracking-[0.16em] text-[var(--muted)]">
+            <div className="text-[11px] tracking-[0.16em] text-[var(--muted)]">
               Pays
-              <select
-                className="header-country mt-2 block max-w-full"
-                value={countries.some((c) => c.code === selectedCountry) ? selectedCountry : "TN"}
-                onChange={(e) => setSelectedCountry(e.target.value)}
-              >
-                {countries.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+              <CountrySelect className="mt-2" fullLabel />
+            </div>
             <a href={whatsappHref()} target="_blank" rel="noreferrer" className="gold-text font-semibold">
               WhatsApp
             </a>

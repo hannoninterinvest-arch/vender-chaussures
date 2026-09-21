@@ -17,12 +17,13 @@ import { useToast } from "@/components/Toast";
 import { brand } from "@/lib/brand";
 import { CheckoutSteps } from "@/components/Experience";
 import Logo from "@/components/Logo";
+import { CountrySelect } from "@/components/CountrySelect";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const toast = useToast();
   const { lines, subtotal, clear } = useCart();
-  const { selectedCountry, setSelectedCountry, countries, formatPrice, isLocal } = useLocale();
+  const { selectedCountry, formatPrice, isLocal } = useLocale();
   const [payment, setPayment] = useState<PaymentMethod>("cod");
   const [onlineReady, setOnlineReady] = useState(false);
   const [gouvernorat, setGouvernorat] = useState<Gouvernorat>("Tunis");
@@ -160,20 +161,9 @@ export default function CheckoutPage() {
             <label className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#C5A059]">
               Pays
             </label>
-            <select
-              value={countries.some((c) => c.code === selectedCountry) ? selectedCountry : "TN"}
-              onChange={(e) => setSelectedCountry(e.target.value)}
-              className="field mt-1.5"
-            >
-              {!countries.some((c) => c.code === selectedCountry) && (
-                <option value={selectedCountry}>{selectedCountry}</option>
-              )}
-              {countries.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            <div className="mt-1.5">
+              <CountrySelect fullLabel />
+            </div>
           </div>
           {isLocal && (
             <div>

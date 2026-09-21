@@ -22,16 +22,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
       <ToastProvider>
-        <CatalogProvider>
-          <LocaleProvider>
+        <LocaleProvider>
+          <CatalogProvider>
             <Header />
             <main id="contenu" className="flex-1 pt-[var(--header-h)]">
               {children}
             </main>
             <Footer />
             {!wholesale && <WhatsAppFab />}
-          </LocaleProvider>
-        </CatalogProvider>
+          </CatalogProvider>
+        </LocaleProvider>
       </ToastProvider>
     </ThemeProvider>
   );
