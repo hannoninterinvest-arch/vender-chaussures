@@ -71,9 +71,8 @@ body::after {
   display: block;
 }
 
-/* public/logo.png garde des marges transparentes autour du dessin : la fenêtre
-   est calée sur l'illustration (906x613 dans une image de 1376x768) pour que la
-   typographie de la carte de visite vienne se coller dessous.
+/* public/logo.webp est déjà le lockup serré (600×411, alpha). On affiche
+   le fichier entier, sans recadrage, pour que le blason et ELVARO restent lisibles.
    Dans la couche components pour que « hidden » de Tailwind reste prioritaire. */
 @layer components {
   .brand-signature {
@@ -83,19 +82,17 @@ body::after {
   }
 
   .logo-art {
-    position: relative;
     display: inline-block;
-    overflow: hidden;
-    aspect-ratio: 906 / 613;
+    line-height: 0;
+    aspect-ratio: 600 / 411;
   }
 
   .logo-art img {
-    position: absolute;
-    left: -27.37%;
-    top: -11.09%;
-    width: 151.87%;
-    height: auto;
+    display: block;
+    height: 100%;
+    width: auto;
     max-width: none;
+    object-fit: contain;
   }
 }
 
