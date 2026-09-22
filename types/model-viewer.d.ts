@@ -13,6 +13,7 @@ type ModelViewerElement = DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLEle
   ar?: boolean;
   "ar-modes"?: string;
   "camera-orbit"?: string;
+  "field-of-view"?: string;
   "min-camera-orbit"?: string;
   "max-camera-orbit"?: string;
 };
