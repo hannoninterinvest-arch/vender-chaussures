@@ -49,9 +49,10 @@ export function ProductModel({
         touch-action="pan-y"
         ar
         ar-modes="webxr scene-viewer quick-look"
-        camera-orbit="70deg 68deg 2.35m"
-        min-camera-orbit="auto auto 1.5m"
-        max-camera-orbit="auto auto 4.2m"
+        camera-orbit="55deg 75deg 1.7m"
+        field-of-view="28deg"
+        min-camera-orbit="auto auto 1.15m"
+        max-camera-orbit="auto auto 3.2m"
       />
       <p className="product-model-hint">Glisse pour tourner · pince pour zoomer</p>
       <span className="sr-only">Aperçu 3D au format glTF (.glb)</span>
