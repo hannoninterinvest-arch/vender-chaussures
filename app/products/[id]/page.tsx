@@ -13,7 +13,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { ColorDots } from "@/components/ColorDots";
 import { hasPromo, Price, PromoBadge } from "@/components/Price";
 import { ProductModel } from "@/components/ProductModel";
-import { isGlbUrl } from "@/lib/product-models";
+import { useExistingGlb } from "@/lib/use-product-glb";
 import { BRAND } from "@/constants/branding";
 import { whatsappHref } from "@/lib/brand";
 
@@ -28,6 +28,7 @@ export default function ProductPage({
   const cart = useCart();
   const toast = useToast();
   const { formatPrice } = useCurrency();
+  const modelSrc = useExistingGlb(product);
   const [color, setColor] = useState<string | null>(null);
   const [size, setSize] = useState<number | null>(null);
   const [qty, setQty] = useState(1);
@@ -43,7 +44,6 @@ export default function ProductPage({
   const selectedColor = color ?? product.colors[0]?.name ?? "";
   const gallery = galleryForColor(product, selectedColor);
   const mainPhoto = gallery[photo] || gallery[0] || product.images[0];
-  const modelSrc = product.model && isGlbUrl(product.model) ? product.model : "";
   const showModel = Boolean(modelSrc) && view3d;
 
   const snapshot = {

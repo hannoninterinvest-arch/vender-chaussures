@@ -10,7 +10,6 @@ import {
 } from "react";
 import { fetchCategories, fetchProducts } from "./api";
 import { withColorImages } from "./product-media";
-import { DEFAULT_SHOE_GLB } from "./product-models";
 import {
   categories as fallbackCategories,
   fallbackProducts,
@@ -57,15 +56,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     Promise.allSettled([fetchProducts(), fetchCategories()]).then(([p, c]) => {
       if (cancelled) return;
       if (p.status === "fulfilled" && Array.isArray(p.value) && p.value.length) {
-        setProducts(
-          p.value.map((item) => {
-            const product = withColorImages(item as Product);
-            const seeded = fallbackProducts.find((row) => row.id === product.id);
-            if (!product.model && seeded?.model) product.model = seeded.model;
-            if (!product.model && seeded) product.model = DEFAULT_SHOE_GLB;
-            return product;
-          }),
-        );
+        setProducts(p.value.map((item) => withColorImages(item as Product)));
       } else {
         setError("API indisponible — catalogue local");
       }

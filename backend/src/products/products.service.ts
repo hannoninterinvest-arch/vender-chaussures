@@ -100,17 +100,16 @@ export class ProductsService implements OnModuleInit {
     }
   }
 
-  /** Attach the bundled .glb when the shop has not uploaded its own 3D file. */
+  /** Drop the sample GLB unless the product actually has its own model path. */
   private async refreshSeedModels() {
     for (const item of catalog) {
-      if (!item.model) continue;
       const row = await this.products.findOne({ where: { id: item.id } });
       if (!row) continue;
-      const custom = row.model && !row.model.startsWith('/models/');
-      if (custom) continue;
-      if (row.model === item.model) continue;
-      row.model = item.model;
-      await this.products.save(row);
+      const next = item.model?.trim() || '';
+      if (row.model === '/models/elvaro-shoe.glb' || (!row.model && next)) {
+        row.model = next;
+        await this.products.save(row);
+      }
     }
   }
 

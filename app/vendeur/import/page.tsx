@@ -93,7 +93,7 @@ export default function SellerImportPage() {
             — le <code>@</code> lie la photo à la couleur. Sans photo, la 1re image de la colonne <code>images</code> est utilisée.
           </li>
           <li>
-            <strong>glb</strong> : chemin ou URL du fichier 3D, ex. <code>/models/elvaro-shoe.glb</code>
+            <strong>glb</strong> : chemin ou URL du fichier 3D s’il existe, ex. <code>/models/oxford-noir.glb</code>. Laisse vide s’il n’y a pas de 3D.
           </li>
           <li>
             <strong>categorie</strong> : id ou nom déjà créé (ex. <code>ville</code>, <code>ceremonie</code>)

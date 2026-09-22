@@ -1,4 +1,0 @@
-elvaro-shoe.glb is the Khronos “Materials Variants Shoe” sample
-(© 2021 Shopify, Creative Commons Attribution 4.0 International).
-Source: https://github.com/KhronosGroup/glTF-Sample-Assets
-Replace this file with ELVARO’s own .glb per product when available.

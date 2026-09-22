@@ -18,7 +18,6 @@ export type CatalogProduct = {
 };
 
 const shot = (file: string) => `/chaussures/${file}`;
-const glb = '/models/elvaro-shoe.glb';
 
 export const homepageCovers = [
   shot('hero-oxford.jpg'),
@@ -203,7 +202,7 @@ const catalogSeed: CatalogProduct[] = [
 function withColorPhotos(product: CatalogProduct): CatalogProduct {
   return {
     ...product,
-    model: product.model || glb,
+    model: product.model?.trim() || '',
     colors: product.colors.map((color, index) => ({
       ...color,
       image: color.image || product.images[index] || product.images[0],

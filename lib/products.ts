@@ -1,6 +1,5 @@
 import { withColorImages } from "@/lib/product-media";
 import { BRAND } from "@/constants/branding";
-import { DEFAULT_SHOE_GLB } from "@/lib/product-models";
 
 export type Gender = "homme" | "femme" | "unisexe";
 
@@ -200,7 +199,7 @@ const fallbackCatalog: Product[] = [
       shot("escarpin-nude.jpg"),
     ],
   },
-].map((product) => ({ ...product, model: product.model || DEFAULT_SHOE_GLB }));
+];
 
 export const fallbackProducts: Product[] = fallbackCatalog.map(withColorImages);
 

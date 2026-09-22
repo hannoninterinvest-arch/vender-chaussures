@@ -492,7 +492,7 @@ export default function SellerProductsPage() {
           <input
             value={form.model}
             onChange={(e) => setForm({ ...form, model: e.target.value })}
-            placeholder="/models/elvaro-shoe.glb ou https://…"
+            placeholder="/models/oxford-noir.glb ou https://…"
             className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#C5A059]"
           />
         </label>
