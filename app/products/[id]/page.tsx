@@ -12,6 +12,8 @@ import { useToast } from "@/components/Toast";
 import { ProductCard } from "@/components/ProductCard";
 import { ColorDots } from "@/components/ColorDots";
 import { hasPromo, Price, PromoBadge } from "@/components/Price";
+import { ProductModel } from "@/components/ProductModel";
+import { isGlbUrl } from "@/lib/product-models";
 import { BRAND } from "@/constants/branding";
 import { whatsappHref } from "@/lib/brand";
 
@@ -31,6 +33,7 @@ export default function ProductPage({
   const [qty, setQty] = useState(1);
   const [photo, setPhoto] = useState(0);
   const [sizeHint, setSizeHint] = useState(false);
+  const [view3d, setView3d] = useState(true);
 
   if (!ready) {
     return <p className="px-6 py-20 text-center text-sm text-[var(--muted)]">Chargement…</p>;
@@ -40,6 +43,8 @@ export default function ProductPage({
   const selectedColor = color ?? product.colors[0]?.name ?? "";
   const gallery = galleryForColor(product, selectedColor);
   const mainPhoto = gallery[photo] || gallery[0] || product.images[0];
+  const modelSrc = product.model && isGlbUrl(product.model) ? product.model : "";
+  const showModel = Boolean(modelSrc) && view3d;
 
   const snapshot = {
     productId: product.id,
@@ -75,20 +80,37 @@ export default function ProductPage({
       </p>
       <div className="grid gap-10 lg:grid-cols-2">
         <div className="space-y-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={mainPhoto}
-            alt={product.name}
-            className="aspect-square w-full object-cover"
-          />
-          <div className="grid grid-cols-5 gap-3">
+          {showModel ? (
+            <ProductModel src={modelSrc} poster={mainPhoto} alt={product.name} colorName={selectedColor} />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={mainPhoto}
+              alt={product.name}
+              className="aspect-square w-full object-cover"
+            />
+          )}
+          <div className={`grid gap-3 ${modelSrc ? "grid-cols-6" : "grid-cols-5"}`}>
+            {modelSrc ? (
+              <button
+                type="button"
+                onClick={() => setView3d(true)}
+                aria-label="Voir le modèle 3D"
+                className={`product-3d-thumb ${view3d ? "is-on" : ""}`}
+              >
+                3D
+              </button>
+            ) : null}
             {gallery.map((src, i) => (
               <button
                 key={`${src}-${i}`}
                 type="button"
-                onClick={() => setPhoto(i)}
+                onClick={() => {
+                  setView3d(false);
+                  setPhoto(i);
+                }}
                 aria-label={`Photo ${i + 1}`}
-                className={`overflow-hidden ${photo === i ? "ring-1 ring-[var(--gold)]" : "opacity-70"}`}
+                className={`overflow-hidden ${!view3d && photo === i ? "ring-1 ring-[var(--gold)]" : "opacity-70"}`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={src} alt="" className="aspect-square w-full object-cover" />

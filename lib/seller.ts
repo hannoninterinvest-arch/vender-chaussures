@@ -123,6 +123,7 @@ export type SellerProduct = {
   colors: { name: string; hex: string; image?: string }[];
   sizes: number[];
   images: string[];
+  model?: string;
 };
 
 export type SellerCategory = { id: string; label: string; image: string };
@@ -206,6 +207,18 @@ export async function sellerUploadImage(file: File): Promise<{ url: string }> {
   const body = new FormData();
   body.append("file", file);
   const res = await fetch(apiUrl("/seller/uploads"), {
+    method: "POST",
+    headers: authHeaders(),
+    body,
+  });
+  if (!res.ok) await parseError(res);
+  return res.json() as Promise<{ url: string }>;
+}
+
+export async function sellerUploadGlb(file: File): Promise<{ url: string }> {
+  const body = new FormData();
+  body.append("file", file);
+  const res = await fetch(apiUrl("/seller/uploads/model"), {
     method: "POST",
     headers: authHeaders(),
     body,

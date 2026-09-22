@@ -17,6 +17,7 @@ export function ProductCard({ product }: { product: Product }) {
         <div className="absolute left-3 top-3 z-10 flex flex-col items-start gap-1.5">
           <PromoBadge product={product} />
           {product.isNew && <span className="product-badge">New</span>}
+          {product.model ? <span className="product-badge product-badge-3d">3D</span> : null}
         </div>
         <Link href={`/products/${product.id}`} className="block aspect-square">
           {/* eslint-disable-next-line @next/next/no-img-element */}

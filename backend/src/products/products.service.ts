@@ -82,6 +82,7 @@ export class ProductsService implements OnModuleInit {
       }
     }
     await this.refreshSeedMedia();
+    await this.refreshSeedModels();
     await this.backfillColorImages();
   }
 
@@ -95,6 +96,20 @@ export class ProductsService implements OnModuleInit {
       if (JSON.stringify(media.images) === JSON.stringify(row.images)) continue;
       row.colors = media.colors;
       row.images = media.images;
+      await this.products.save(row);
+    }
+  }
+
+  /** Attach the bundled .glb when the shop has not uploaded its own 3D file. */
+  private async refreshSeedModels() {
+    for (const item of catalog) {
+      if (!item.model) continue;
+      const row = await this.products.findOne({ where: { id: item.id } });
+      if (!row) continue;
+      const custom = row.model && !row.model.startsWith('/models/');
+      if (custom) continue;
+      if (row.model === item.model) continue;
+      row.model = item.model;
       await this.products.save(row);
     }
   }
@@ -191,6 +206,7 @@ export class ProductsService implements OnModuleInit {
       colors: media.colors,
       sizes: dto.sizes,
       images: media.images,
+      model: dto.model?.trim() || '',
     });
     return this.toSeller(await this.products.save(product));
   }
@@ -222,6 +238,7 @@ export class ProductsService implements OnModuleInit {
       product.colors = media.colors;
       product.images = media.images;
     }
+    if (dto.model !== undefined) product.model = dto.model.trim();
     return this.toSeller(await this.products.save(product));
   }
 
@@ -274,6 +291,7 @@ export class ProductsService implements OnModuleInit {
       colors: product.colors,
       sizes: product.sizes,
       images: product.images,
+      model: product.model || '',
     };
   }
 

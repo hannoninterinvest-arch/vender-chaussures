@@ -1,5 +1,6 @@
 import { withColorImages } from "@/lib/product-media";
 import { BRAND } from "@/constants/branding";
+import { DEFAULT_SHOE_GLB } from "@/lib/product-models";
 
 export type Gender = "homme" | "femme" | "unisexe";
 
@@ -21,6 +22,8 @@ export type Product = {
   colors: { name: string; hex: string; image?: string }[];
   sizes: number[];
   images: string[];
+  /** Fichier 3D glTF binaire (.glb), chemin public ou URL. */
+  model?: string;
 };
 
 export type ShopCategory = { slug: string; label: string; image: string };
@@ -197,7 +200,7 @@ const fallbackCatalog: Product[] = [
       shot("escarpin-nude.jpg"),
     ],
   },
-];
+].map((product) => ({ ...product, model: product.model || DEFAULT_SHOE_GLB }));
 
 export const fallbackProducts: Product[] = fallbackCatalog.map(withColorImages);
 

@@ -8,6 +8,7 @@ import {
   isAdmin,
   sellerRequest,
   sellerUploadImage,
+  sellerUploadGlb,
   type SellerCategory,
   type SellerProduct,
 } from "@/lib/seller";
@@ -31,6 +32,7 @@ const emptyForm = {
   ],
   sizes: [40, 41, 42, 43, 44] as number[],
   images: ["", "", "", "", ""] as string[],
+  model: "",
 };
 
 export default function SellerProductsPage() {
@@ -94,6 +96,7 @@ export default function SellerProductsPage() {
           ],
       sizes: p.sizes,
       images: [0, 1, 2, 3, 4].map((i) => p.images[i] || ""),
+      model: p.model || "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -157,6 +160,7 @@ export default function SellerProductsPage() {
       colors,
       sizes: form.sizes,
       images,
+      model: form.model.trim(),
     };
     try {
       if (editing) {
@@ -221,6 +225,19 @@ export default function SellerProductsPage() {
       toast("Photo enregistrée sur Cloudinary");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Upload Cloudinary impossible");
+    } finally {
+      setUploading(null);
+    }
+  }
+
+  async function onUploadGlb(file: File) {
+    setUploading("model");
+    try {
+      const { url } = await sellerUploadGlb(file);
+      setForm((f) => ({ ...f, model: url }));
+      toast("Fichier 3D GLB enregistré");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Upload GLB impossible");
     } finally {
       setUploading(null);
     }
@@ -470,6 +487,32 @@ export default function SellerProductsPage() {
             </div>
           ))}
         </div>
+        <label className="block text-sm font-medium">
+          Fichier 3D GLB (optionnel)
+          <input
+            value={form.model}
+            onChange={(e) => setForm({ ...form, model: e.target.value })}
+            placeholder="/models/elvaro-shoe.glb ou https://…"
+            className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#C5A059]"
+          />
+        </label>
+        <label className="inline-flex cursor-pointer rounded-sm bg-[#C9A227] px-4 py-2 text-xs font-bold tracking-[0.08em] uppercase text-[#1C1812]">
+          {uploading === "model" ? "Envoi…" : form.model ? "Changer le GLB" : "Uploader un .glb"}
+          <input
+            type="file"
+            accept=".glb,model/gltf-binary,application/octet-stream"
+            className="hidden"
+            disabled={uploading !== null}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (file) void onUploadGlb(file);
+            }}
+          />
+        </label>
+        <p className="text-xs text-[#666]">
+          La fiche produit affiche le modèle 3D (rotation, zoom). Les photos restent en miniature.
+        </p>
         <div className="flex gap-3">
           <button
             type="submit"
@@ -514,6 +557,7 @@ export default function SellerProductsPage() {
                   )}{" "}
                   · achat {formatTnd(p.cost || 0)}
                   {p.featured ? " · accueil" : ""}
+                  {p.model ? " · 3D" : ""}
                 </p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                   {p.colors.map((c) => (

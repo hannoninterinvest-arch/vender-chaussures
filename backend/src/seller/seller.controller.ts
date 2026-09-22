@@ -52,6 +52,18 @@ export class SellerController {
     return this.uploads.uploadImage(file);
   }
 
+  @Post('uploads/model')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 20 * 1024 * 1024 },
+    }),
+  )
+  uploadModel(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Choisis un fichier .glb');
+    return this.uploads.uploadModel(file);
+  }
+
   @Get('stats')
   stats() {
     return this.orders.stats();

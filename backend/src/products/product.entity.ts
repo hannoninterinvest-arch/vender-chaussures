@@ -44,4 +44,8 @@ export class Product {
 
   @Column({ type: 'jsonb' })
   images: string[];
+
+  /** Chemin public ou URL HTTPS d’un fichier .glb */
+  @Column({ default: '' })
+  model: string;
 }
