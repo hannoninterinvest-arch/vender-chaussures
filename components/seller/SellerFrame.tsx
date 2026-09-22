@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Logo from "@/components/Logo";
+import { BRAND } from "@/constants/branding";
 import {
   clearSellerSession,
   createFirstAdmin,
@@ -115,7 +116,7 @@ export function SellerFrame({ children }: { children: React.ReactNode }) {
           onSubmit={setup ? onSetup : onLogin}
           className="w-full max-w-md rounded-[4px] border border-[#C5A059]/50 bg-white p-8"
         >
-          <Logo size="md" />
+          <Logo size="md" wordmark />
           <h1 className="mt-5 font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase text-[#1A1A1B]">
             {setup ? "Créer le premier admin" : "Espace équipe"}
           </h1>
@@ -172,25 +173,25 @@ export function SellerFrame({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#EDE8DE] text-[#1A1A1B]">
-      <div className="sticky top-0 z-40 border-b border-[#C5A059]/30 bg-[#1A1A1B] text-[#EDE8DE]">
+    <div className="min-h-screen bg-[#F7F1E4] text-[#1C1812]">
+      <div className="sticky top-0 z-40 border-b border-[#C9A227]/35 bg-[#FFFAF1] text-[#1C1812]">
         <div className="mx-auto flex max-w-[1280px] items-center justify-between px-4 py-3 md:px-6">
           <div className="flex items-center gap-3">
-            <Link href="/vendeur" aria-label="ELVARO équipe">
-              <Logo size="sm" />
+            <Link href="/vendeur" aria-label={`${BRAND.name} équipe`}>
+              <Logo size="sm" wordmark />
             </Link>
-            <span className="hidden rounded-sm border border-[#C5A059]/40 px-3 py-1 text-[10px] font-bold tracking-[0.16em] uppercase text-[#C5A059] sm:inline">
+            <span className="hidden rounded-sm border border-[#C9A227]/45 px-3 py-1 text-[10px] font-bold tracking-[0.16em] uppercase text-[#C9A227] sm:inline">
               {user.role === "admin" ? "Admin" : "Vendeur"}
             </span>
           </div>
           <div className="flex items-center gap-3 text-sm">
-            <span className="hidden text-[#EDE8DE]/70 md:inline">{user.name}</span>
-            <Link href="/" className="hidden text-[#C5A059] hover:underline sm:inline">
+            <span className="hidden text-[#1C1812]/70 md:inline">{user.name}</span>
+            <Link href="/" className="hidden text-[#C9A227] hover:underline sm:inline">
               Voir la boutique
             </Link>
             <button
               type="button"
-              className="rounded-sm bg-[#C5A059] px-3 py-1.5 text-xs font-bold tracking-[0.08em] uppercase text-[#1A1A1B]"
+              className="rounded-sm bg-[#C9A227] px-3 py-1.5 text-xs font-bold tracking-[0.08em] uppercase text-[#1C1812]"
               onClick={() => {
                 clearSellerSession();
                 setUser(null);
@@ -209,7 +210,7 @@ export function SellerFrame({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={`rounded-sm px-4 py-2 text-sm font-medium whitespace-nowrap ${
-                  active ? "bg-[#C5A059] text-[#1A1A1B]" : "bg-white/5 text-[#EDE8DE]"
+                  active ? "bg-[#C9A227] text-[#1C1812]" : "bg-[#C9A227]/10 text-[#1C1812]"
                 }`}
               >
                 {item.label}

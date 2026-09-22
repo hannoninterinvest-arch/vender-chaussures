@@ -12,6 +12,7 @@ import { useToast } from "@/components/Toast";
 import { ProductCard } from "@/components/ProductCard";
 import { ColorDots } from "@/components/ColorDots";
 import { hasPromo, Price, PromoBadge } from "@/components/Price";
+import { BRAND } from "@/constants/branding";
 import { whatsappHref } from "@/lib/brand";
 
 export default function ProductPage({
@@ -191,7 +192,7 @@ export default function ProductPage({
               Acheter maintenant
             </Link>
             <a
-              href={whatsappHref(`Bonjour ELVARO, je m’intéresse à ${product.name} (${selectedColor}).`)}
+              href={whatsappHref(`Bonjour ${BRAND.name}, je m’intéresse à ${product.name} (${selectedColor}).`)}
               target="_blank"
               rel="noreferrer"
               className="block text-center text-sm text-[var(--muted)] underline hover:text-[#C5A059]"

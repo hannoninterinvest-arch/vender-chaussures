@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cinzel, Montserrat } from "next/font/google";
 import { Providers } from "@/components/Providers";
+import { BRAND } from "@/constants/branding";
 import "./globals.css";
 
 const display = Cinzel({
@@ -16,9 +17,8 @@ const body = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "ELVARO by AIR GO SHOES — Cuir premium",
-  description:
-    "Chaussures haut de gamme fabriquées en Tunisie. Commande sans compte, paiement à la livraison.",
+  title: `${BRAND.fullDisplay} — ${BRAND.tagline}`,
+  description: `${BRAND.fullDisplay} — ${BRAND.tagline}. Chaussures haut de gamme fabriquées en Tunisie. Commande sans compte, paiement à la livraison.`,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

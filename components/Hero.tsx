@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Logo from "@/components/Logo";
+import { BRAND } from "@/constants/branding";
 import { fetchSite } from "@/lib/api";
 import { defaultSite, type SiteHome } from "@/lib/site";
 
@@ -48,7 +50,7 @@ export function Hero() {
         <img
           key={current}
           src={current}
-          alt={site.heroTitle || "Collection ELVARO"}
+          alt={site.heroTitle || `Collection ${BRAND.name}`}
           className="hero-photo"
         />
       ) : (
@@ -56,6 +58,8 @@ export function Hero() {
       )}
       <div className="hero-veil" />
       <div className="hero-copy">
+        <Logo size="xl" className="hero-logo" />
+        <p className="hero-tagline">{BRAND.tagline}</p>
         <p className="hero-kicker">{site.heroKicker || "Nouvelle collection"}</p>
         <h1 className="hero-title">{site.heroTitle}</h1>
         {site.heroSubtitle ? <p className="hero-sub">{site.heroSubtitle}</p> : null}

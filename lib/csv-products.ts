@@ -1,3 +1,5 @@
+import { BRAND } from "@/constants/branding";
+
 export type CsvProduct = {
   name: string;
   brand: string;
@@ -195,7 +197,7 @@ export function parseProductCsv(text: string): { products: CsvProduct[]; errors:
       const promoPrice = Number.isFinite(promoRaw) && promoRaw > 0 && promoRaw < price ? promoRaw : 0;
       products.push({
         name,
-        brand: get("brand") || "ELVARO",
+        brand: get("brand") || BRAND.name,
         price,
         promoPrice,
         cost: Number.isFinite(Number(costRaw)) ? Number(costRaw) : 0,

@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import { BRAND } from "@/constants/branding";
 import { brand } from "@/lib/brand";
 import { useToast } from "./Toast";
 
@@ -25,6 +26,8 @@ export function Footer() {
       <div className="footer-grid">
         <div className="footer-brand">
           <Logo size="md" />
+          <p className="footer-brand-name">{BRAND.fullDisplay}</p>
+          <p className="footer-tagline">{BRAND.tagline}</p>
           <ul className="footer-links">
             <li>
               <Link href="/shop">Toute la collection</Link>
@@ -98,7 +101,7 @@ export function Footer() {
       </div>
       <div className="footer-legal">
         <p>
-          © {new Date().getFullYear()} {brand.name} {brand.byline} — Tunisie
+          © {new Date().getFullYear()} {BRAND.fullDisplay} — {BRAND.tagline}
         </p>
       </div>
     </footer>

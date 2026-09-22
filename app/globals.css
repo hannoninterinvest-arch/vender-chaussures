@@ -1,42 +1,50 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0e0c0a;
-  --foreground: #f5efe4;
-  --bg: #0e0c0a;
-  --fg: #f5efe4;
-  --muted: rgba(245, 239, 228, 0.68);
-  --panel: #181510;
-  --line: rgba(212, 175, 55, 0.4);
-  --gold: #d4af37;
-  --gold-light: #f0d78c;
-  --gold-dark: #a67c2d;
-  --cream: #f5efe4;
+  --background: #100e0b;
+  --foreground: #f6f0e4;
+  --bg: #100e0b;
+  --fg: #f6f0e4;
+  --muted: rgba(246, 240, 228, 0.68);
+  --panel: #1a1712;
+  --line: rgba(201, 162, 39, 0.42);
+  --gold: #c9a227;
+  --gold-light: #e4c56a;
+  --gold-dark: #9a7a1c;
+  --cream: #f6f0e4;
   --ink: #2c261c;
   --glow: #3d3118;
   --promo: #e0483c;
   --promo-h: 36px;
   --nav-h: 88px;
   --header-h: calc(var(--promo-h) + var(--nav-h));
-  --header-bg: rgba(14, 12, 10, 0.94);
-  --header-fg: #f5efe4;
+  --header-bg: rgba(16, 14, 11, 0.94);
+  --header-fg: #f6f0e4;
+  --promo-bg: #16130f;
+  --promo-fg: #e4c56a;
+  --footer-legal-bg: #14110d;
+  --footer-legal-fg: rgba(246, 240, 228, 0.78);
 }
 
 html[data-theme="light"] {
-  --background: #f4eee2;
-  --foreground: #241e16;
-  --bg: #f4eee2;
-  --fg: #241e16;
-  --muted: rgba(36, 30, 22, 0.62);
-  --panel: #fffdf8;
-  --line: rgba(158, 123, 40, 0.46);
-  --gold: #9e7b28;
-  --gold-light: #c5a059;
-  --gold-dark: #7a5e22;
+  --background: #f7f1e4;
+  --foreground: #1c1812;
+  --bg: #f7f1e4;
+  --fg: #1c1812;
+  --muted: rgba(28, 24, 18, 0.62);
+  --panel: #fffaf1;
+  --line: rgba(201, 162, 39, 0.38);
+  --gold: #c9a227;
+  --gold-light: #d4b03a;
+  --gold-dark: #9a7a1c;
   --glow: #ead9ae;
   --promo: #c0271b;
-  --header-bg: #fdf8f3;
-  --header-fg: #241e16;
+  --header-bg: #fffaf1;
+  --header-fg: #1c1812;
+  --promo-bg: #f3e6c4;
+  --promo-fg: #7a5e16;
+  --footer-legal-bg: #f3ead6;
+  --footer-legal-fg: #3a3224;
 }
 
 @theme inline {
@@ -52,9 +60,17 @@ html {
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(ellipse 90% 42% at 50% -8%, color-mix(in srgb, var(--gold) 16%, transparent), transparent 58%),
+    var(--background);
   color: var(--foreground);
   font-family: var(--font-body), Arial, Helvetica, sans-serif;
+}
+
+html[data-theme="light"] body {
+  background:
+    radial-gradient(ellipse 90% 42% at 50% -8%, color-mix(in srgb, var(--gold) 22%, transparent), transparent 58%),
+    var(--background);
 }
 
 .logo-direct {
@@ -71,6 +87,12 @@ body {
     align-items: center;
   }
 
+  .brand-signature.has-wordmark {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.7rem;
+  }
+
   .logo-art {
     display: inline-block;
     line-height: 0;
@@ -83,6 +105,36 @@ body {
     width: auto;
     max-width: none;
     object-fit: contain;
+  }
+
+  .brand-wordmark {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.15;
+    min-width: 0;
+  }
+
+  .brand-name {
+    font-family: var(--font-display), serif;
+    font-size: clamp(0.92rem, 1.5vw, 1.2rem);
+    font-weight: 600;
+    letter-spacing: 0.34em;
+    text-indent: 0.34em;
+    text-transform: uppercase;
+    color: var(--gold);
+    white-space: nowrap;
+  }
+
+  .brand-subtitle {
+    margin-top: 0.18rem;
+    font-size: 0.62rem;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-indent: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
   }
 }
 
@@ -172,7 +224,7 @@ a {
 }
 
 html[data-theme="light"] .gold-text {
-  background: linear-gradient(180deg, #c5a059 0%, #b8943a 45%, #8a6e2f 100%);
+  background: linear-gradient(180deg, #d4b03a 0%, #c9a227 45%, #9a7a1c 100%);
   -webkit-background-clip: text;
   background-clip: text;
 }
@@ -190,9 +242,9 @@ html[data-theme="light"] .gold-text {
 
 .gold-btn-ghost {
   position: relative;
-  border: 1px solid #c9a45c;
-  background: rgba(20, 17, 12, 0.78);
-  color: #f5efe4 !important;
+  border: 1px solid var(--gold);
+  background: color-mix(in srgb, var(--gold) 10%, transparent);
+  color: var(--fg) !important;
   font-weight: 700;
   letter-spacing: 0.08em;
   backdrop-filter: blur(8px);
@@ -200,7 +252,7 @@ html[data-theme="light"] .gold-text {
 }
 
 .gold-btn-ghost:hover {
-  background: #c9a45c;
+  background: var(--gold);
   color: #1a1612 !important;
 }
 
@@ -226,13 +278,13 @@ html[data-theme="light"] .gold-text {
 }
 
 html[data-theme="light"] .gold-btn-ghost {
-  background: #1a1612;
-  color: #f5efe4 !important;
-  border-color: #c9a45c;
+  background: color-mix(in srgb, var(--gold) 12%, #fffaf1);
+  color: #1c1812 !important;
+  border-color: var(--gold);
 }
 
 html[data-theme="light"] .gold-btn-ghost:hover {
-  background: #c9a45c;
+  background: var(--gold);
   color: #1a1612 !important;
 }
 
@@ -470,7 +522,7 @@ html[data-theme="light"] .gold-frame {
   color: var(--header-fg);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  border-bottom: 1px solid transparent;
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 28%, transparent);
   transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
 }
 
@@ -483,17 +535,18 @@ html[data-theme="light"] .gold-frame {
   display: grid;
   place-items: center;
   height: var(--promo-h);
-  background: #0a0908;
-  color: var(--gold-light);
+  background: var(--promo-bg);
+  color: var(--promo-fg);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.18em;
   text-transform: uppercase;
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 35%, transparent);
 }
 
 html[data-theme="light"] .promo-bar {
-  background: #14110c;
-  color: #f0d78c;
+  background: var(--promo-bg);
+  color: var(--promo-fg);
 }
 
 .promo-bar p {
@@ -537,11 +590,25 @@ html[data-theme="light"] .promo-bar {
 
 .header-logo {
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
   transition: transform 0.3s ease;
 }
 
 .header-logo:hover {
   transform: scale(1.03);
+}
+
+@media (max-width: 420px) {
+  .header-logo .brand-name {
+    font-size: 0.78rem;
+    letter-spacing: 0.2em;
+    text-indent: 0.2em;
+  }
+
+  .header-logo .brand-subtitle {
+    display: none;
+  }
 }
 
 .header-tools {
@@ -713,7 +780,22 @@ html[data-theme="light"] .promo-bar {
   text-align: center;
 }
 
+.hero-logo {
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.35));
+}
+
+.hero-tagline {
+  margin-top: 0.85rem;
+  font-size: clamp(0.72rem, 1.6vw, 0.92rem);
+  font-weight: 500;
+  letter-spacing: 0.38em;
+  text-indent: 0.38em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+}
+
 .hero-kicker {
+  margin-top: 1.35rem;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.34em;
@@ -1129,9 +1211,10 @@ html[data-theme="light"] .promo-bar {
 }
 
 .trust-bar {
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  background: var(--panel);
+  border-top: 1px solid color-mix(in srgb, var(--gold) 28%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 28%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--gold) 8%, var(--panel)), var(--panel));
 }
 
 .trust-bar-row {
@@ -1200,7 +1283,7 @@ html[data-theme="light"] .promo-bar {
   margin-top: 0;
   background: var(--panel);
   color: var(--fg);
-  border-top: 1px solid var(--line);
+  border-top: 1px solid color-mix(in srgb, var(--gold) 32%, transparent);
 }
 
 .footer-grid {
@@ -1221,7 +1304,27 @@ html[data-theme="light"] .promo-bar {
 .footer-brand {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 1.25rem;
+}
+
+.footer-brand-name {
+  margin: 0;
+  font-family: var(--font-display), serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.footer-tagline {
+  margin: -0.7rem 0 0;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .footer-heading {
@@ -1278,8 +1381,8 @@ html[data-theme="light"] .promo-bar {
 }
 
 .footer-news button {
-  background: var(--fg);
-  color: var(--bg);
+  background: var(--gold);
+  color: #1a1612;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -1293,17 +1396,19 @@ html[data-theme="light"] .promo-bar {
 }
 
 .footer-legal {
-  background: #0a0908;
-  color: rgba(245, 239, 228, 0.72);
+  background: var(--footer-legal-bg);
+  color: var(--footer-legal-fg);
   text-align: center;
   padding: 1.25rem;
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  border-top: 1px solid color-mix(in srgb, var(--gold) 35%, transparent);
 }
 
 html[data-theme="light"] .footer-legal {
-  background: #14110c;
+  background: var(--footer-legal-bg);
+  color: var(--footer-legal-fg);
 }
 
 .shop-hero {

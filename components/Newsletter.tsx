@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import Logo from "./Logo";
+import { BRAND } from "@/constants/branding";
 import { useToast } from "./Toast";
 import { Reveal } from "./Reveal";
 
@@ -27,7 +28,7 @@ export function Newsletter() {
           <Logo size="md" className="hidden sm:inline-flex" />
         </div>
         <div className="max-w-xl">
-          <p className="text-[11px] tracking-[0.28em] uppercase text-[#C9A45C]">Cercle ELVARO</p>
+          <p className="text-[11px] tracking-[0.28em] uppercase text-[var(--gold)]">Cercle {BRAND.name}</p>
           <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] text-[var(--fg)] md:text-4xl">
             REJOINS-NOUS ET OBTIENS 15%
           </h2>

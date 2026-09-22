@@ -1,11 +1,12 @@
 "use client";
 
 import { Reveal } from "./Reveal";
+import { BRAND } from "@/constants/branding";
 
 const reviews = [
   {
     title: "Qualité rare",
-    text: "Le cuir et la finition ELVARO tiennent vraiment la promesse haut de gamme.",
+    text: `Le cuir et la finition ${BRAND.name} tiennent vraiment la promesse haut de gamme.`,
     rating: "5.0",
     image: "/chaussures/oxford-cognac.jpg",
   },

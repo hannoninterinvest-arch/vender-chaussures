@@ -14,6 +14,7 @@ import { createOrder, fetchPaymentsConfig } from "@/lib/api";
 import { calculateShipping, cartWeightKg, SHIPPING_CARRIERS, type ShippingCarrier } from "@/lib/shipping";
 import { useToast } from "@/components/Toast";
 import { brand } from "@/lib/brand";
+import { BRAND } from "@/constants/branding";
 import { CheckoutSteps } from "@/components/Experience";
 import Logo from "@/components/Logo";
 import { CountrySelect } from "@/components/CountrySelect";
@@ -272,8 +273,8 @@ export default function CheckoutPage() {
           >
             {busy ? "Envoi…" : payment === "online" ? "Payer avec Flouci" : "Confirmer la commande"}
           </button>
-          <p className="mt-3 text-center text-[11px] tracking-[0.14em] uppercase text-[var(--muted)]">
-            {brand.slogan}
+          <p className="mt-3 text-center text-[11px] tracking-[0.18em] uppercase text-[var(--gold)]">
+            {BRAND.fullDisplay} — {BRAND.tagline}
           </p>
         </aside>
       </form>

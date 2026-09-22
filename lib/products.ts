@@ -1,4 +1,5 @@
 import { withColorImages } from "@/lib/product-media";
+import { BRAND } from "@/constants/branding";
 
 export type Gender = "homme" | "femme" | "unisexe";
 
@@ -30,7 +31,7 @@ const fallbackCatalog: Product[] = [
   {
     id: "oxford-noir",
     name: "Oxford Noir Cap-Toe",
-    brand: "ELVARO",
+    brand: BRAND.name,
     price: 489,
     description:
       "Richelieu cap-toe en cuir noir lustré. Semelle Goodyear, finitions atelier — la paire de cérémonie et de bureau.",
@@ -49,7 +50,7 @@ const fallbackCatalog: Product[] = [
   {
     id: "derby-cognac",
     name: "Derby Cognac",
-    brand: "ELVARO",
+    brand: BRAND.name,
     price: 459,
     description:
       "Derby à lacets ouverts en cuir cognac. Un classique ville, souple dès le premier jour.",
@@ -68,7 +69,7 @@ const fallbackCatalog: Product[] = [
   {
     id: "mocassin-bit",
     name: "Mocassin Bit Or",
-    brand: "ELVARO",
+    brand: BRAND.name,
     price: 429,
     description:
       "Mocassin horsebit en cuir brûlé, mors doré. L’élégance sans lacet, du bureau au dîner.",
@@ -92,7 +93,7 @@ const fallbackCatalog: Product[] = [
   {
     id: "richelieu-brogue",
     name: "Richelieu Brogue",
-    brand: "ELVARO",
+    brand: BRAND.name,
     price: 479,
     description:
       "Wingtip perforé, cuir cognac patiné. Détail brogue pour un look cérémonie plus vivant.",
@@ -111,7 +112,7 @@ const fallbackCatalog: Product[] = [
   {
     id: "derby-navy",
     name: "Derby Navy",
-    brand: "ELVARO",
+    brand: BRAND.name,
     price: 449,
     description:
       "Derby patiné bleu nuit, reflets profonds et bijou de revers. Une alternative contemporaine au noir strict.",
@@ -130,7 +131,7 @@ const fallbackCatalog: Product[] = [
   {
     id: "mocassin-driver",
     name: "Mocassin Driver",
-    brand: "ELVARO",
+    brand: BRAND.name,
     price: 399,
     description:
       "Mocassin driving souple, mors métal et semelle picots. Confort de conduite pour la ville et le week-end.",
@@ -148,7 +149,7 @@ const fallbackCatalog: Product[] = [
   {
     id: "bottine-cognac",
     name: "Bottine Chelsea Cognac",
-    brand: "ELVARO",
+    brand: BRAND.name,
     price: 519,
     description:
       "Bottine chelsea en cuir cognac lustré, élastiques latéraux. Silhouette nette pour la ville et la mi-saison.",
@@ -174,7 +175,7 @@ const fallbackCatalog: Product[] = [
   {
     id: "sandale-soir",
     name: "Sandale Soir",
-    brand: "ELVARO",
+    brand: BRAND.name,
     price: 369,
     description:
       "Sandale à talon fin, brides croisées et boucle bijou. Pour les soirées, les mariages et les cérémonies.",

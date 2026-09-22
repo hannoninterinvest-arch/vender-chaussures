@@ -5,7 +5,8 @@ import Link from "next/link";
 import { fetchOrder, retryOrderPayment } from "@/lib/api";
 import { useCurrency } from "@/lib/useCurrency";
 import { paymentLabel, paymentStatusLabel } from "@/lib/tunisia";
-import { brand, whatsappHref } from "@/lib/brand";
+import { BRAND } from "@/constants/branding";
+import { whatsappHref } from "@/lib/brand";
 import { CheckoutSteps } from "@/components/Experience";
 import { useToast } from "@/components/Toast";
 
@@ -165,7 +166,7 @@ export default function OrderPage({
           Continuer les achats
         </Link>
         <a
-          href={whatsappHref(`Bonjour ELVARO, ma commande ${order.id}.`)}
+          href={whatsappHref(`Bonjour ${BRAND.name}, ma commande ${order.id}.`)}
           target="_blank"
           rel="noreferrer"
           className="inline-flex items-center rounded-sm border border-[#C5A059] px-6 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-[#C5A059]"
@@ -173,6 +174,9 @@ export default function OrderPage({
           WhatsApp
         </a>
       </div>
+      <p className="brand-mail-sign mt-10 text-center text-[11px] tracking-[0.18em] uppercase text-[var(--gold)]">
+        {BRAND.fullDisplay} — {BRAND.tagline}
+      </p>
     </div>
   );
 }

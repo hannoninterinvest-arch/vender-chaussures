@@ -9,6 +9,7 @@ import { CountrySelect } from "@/components/CountrySelect";
 import { useCart } from "@/lib/cart";
 import { useCatalog } from "@/lib/catalog";
 import { useLocale } from "@/lib/locale";
+import { BRAND } from "@/constants/branding";
 import { whatsappHref } from "@/lib/brand";
 
 const NAV = [
@@ -113,12 +114,12 @@ export function Header() {
         Aller au contenu
       </a>
       <div className="header-bar">
-        <Link href="/" aria-label="ELVARO accueil" className="header-logo">
+        <Link href="/" aria-label={`${BRAND.fullDisplay} accueil`} className="header-logo">
           <span className="md:hidden">
-            <Logo size="sm" />
+            <Logo size="sm" wordmark />
           </span>
           <span className="hidden md:block">
-            <Logo size="md" />
+            <Logo size="md" wordmark />
           </span>
         </Link>
 
