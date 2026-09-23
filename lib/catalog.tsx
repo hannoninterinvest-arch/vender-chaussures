@@ -42,6 +42,15 @@ function mapCategories(rows: unknown): ShopCategory[] {
   }));
 }
 
+function mergeMissing<T extends { id?: string; slug?: string }>(live: T[], extras: T[], key: (item: T) => string) {
+  const seen = new Set(live.map(key).filter(Boolean));
+  const add = extras.filter((item) => {
+    const id = key(item);
+    return id && !seen.has(id);
+  });
+  return add.length ? [...live, ...add] : live;
+}
+
 export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>(fallbackProducts);
   const [categories, setCategories] = useState<ShopCategory[]>(fallbackCategories);
@@ -56,11 +65,14 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     Promise.allSettled([fetchProducts(), fetchCategories()]).then(([p, c]) => {
       if (cancelled) return;
       if (p.status === "fulfilled" && Array.isArray(p.value) && p.value.length) {
-        setProducts(p.value.map((item) => withColorImages(item as Product)));
+        const live = p.value.map((item) => withColorImages(item as Product));
+        setProducts(mergeMissing(live, fallbackProducts, (item) => item.id));
       } else {
         setError("API indisponible — catalogue local");
       }
-      if (c.status === "fulfilled") setCategories(mapCategories(c.value));
+      if (c.status === "fulfilled") {
+        setCategories(mergeMissing(mapCategories(c.value), fallbackCategories, (item) => item.slug));
+      }
       setReady(true);
     });
     return () => {
