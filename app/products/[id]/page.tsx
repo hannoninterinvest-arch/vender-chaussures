@@ -4,7 +4,7 @@ import { use, useState } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { colorImage, galleryForColor } from "@/lib/product-media";
-import { relatedProducts } from "@/lib/products";
+import { relatedProducts, formatSize, isOneSize, ONE_SIZE } from "@/lib/products";
 import { useCatalog, useProduct } from "@/lib/catalog";
 import { useCurrency } from "@/lib/useCurrency";
 import { useCart } from "@/lib/cart";
@@ -46,12 +46,15 @@ export default function ProductPage({
   const mainPhoto = gallery[photo] || gallery[0] || product.images[0];
   const showModel = Boolean(modelSrc) && view3d;
 
+  const oneSize = isOneSize(product.sizes);
+  const chosenSize = oneSize ? (product.sizes[0] ?? ONE_SIZE) : size;
+
   const snapshot = {
     productId: product.id,
     name: product.name,
     image: colorImage(product, selectedColor),
     price: Number(product.price),
-    size: size ?? 0,
+    size: chosenSize ?? 0,
     color: selectedColor,
   };
 
@@ -61,13 +64,13 @@ export default function ProductPage({
   }
 
   function add() {
-    if (!size) {
+    if (!oneSize && size == null) {
       setSizeHint(true);
-      toast("Choisis une pointure.");
+      toast("Choisis une taille.");
       return;
     }
-    cart.add({ ...snapshot, size, qty });
-    toast(qty > 1 ? `${qty} paires ajoutées.` : "Ajouté au panier.");
+    cart.add({ ...snapshot, size: chosenSize ?? ONE_SIZE, qty });
+    toast(qty > 1 ? `${qty} articles ajoutés.` : "Ajouté au panier.");
   }
 
   return (
@@ -134,7 +137,7 @@ export default function ProductPage({
           </div>
           {hasPromo(product) && product.oldPrice ? (
             <p className="mt-1 text-sm text-[var(--promo)]">
-              Tu économises {formatPrice(product.oldPrice - product.price)} sur cette paire.
+              Tu économises {formatPrice(product.oldPrice - product.price)} sur cet article.
             </p>
           ) : null}
           <p className="mt-1 text-sm text-[var(--muted)]">Livraison calculée au checkout · Échange 7 jours</p>
@@ -153,9 +156,10 @@ export default function ProductPage({
             </div>
           </div>
 
+          {!oneSize ? (
           <div className="mt-6">
             <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">
-              Pointure EU
+              {product.sizes.some((s) => s >= 70) ? "Tour de taille (cm)" : "Pointure EU"}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               {product.sizes.map((s) => (
@@ -166,20 +170,25 @@ export default function ProductPage({
                     setSize(s);
                     setSizeHint(false);
                   }}
-                  className={`h-12 w-12 rounded-sm text-sm font-medium ${
+                  className={`h-12 min-w-12 rounded-sm px-2 text-sm font-medium ${
                     size === s
                       ? "bg-[#C5A059] text-[#1A1A1B]"
                       : "border border-[#C5A059]/35 text-[var(--fg)]"
                   }`}
                 >
-                  {s}
+                  {s >= 70 ? formatSize(s) : s}
                 </button>
               ))}
             </div>
             {sizeHint ? (
-              <p className="mt-2 text-sm text-[#C5A059]">Choisis une pointure pour continuer.</p>
+              <p className="mt-2 text-sm text-[#C5A059]">Choisis une taille pour continuer.</p>
             ) : null}
           </div>
+          ) : (
+            <p className="mt-6 text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">
+              {formatSize(ONE_SIZE)}
+            </p>
+          )}
 
           <div className="mt-6">
             <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">Quantité</p>
@@ -201,13 +210,13 @@ export default function ProductPage({
             <Link
               href="/checkout"
               onClick={(e) => {
-                if (!size) {
+                if (!oneSize && size == null) {
                   e.preventDefault();
                   setSizeHint(true);
-                  toast("Choisis une pointure.");
+                  toast("Choisis une taille.");
                   return;
                 }
-                cart.add({ ...snapshot, size, qty });
+                cart.add({ ...snapshot, size: chosenSize ?? ONE_SIZE, qty });
               }}
               className="flex h-12 w-full items-center justify-center rounded-sm border border-[#C5A059] text-xs font-semibold tracking-[0.08em] uppercase text-[#C5A059] hover:bg-[#C5A059]/10"
             >

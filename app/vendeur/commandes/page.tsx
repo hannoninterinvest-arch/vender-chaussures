@@ -5,6 +5,7 @@ import { formatTnd } from "@/lib/format";
 import { paymentLabel, paymentStatusLabel } from "@/lib/tunisia";
 import { sellerRequest, type SellerOrder } from "@/lib/seller";
 import { useToast } from "@/components/Toast";
+import { formatSize } from "@/lib/products";
 
 const LABELS: Record<string, string> = {
   paiement_en_cours: "Paiement en cours",
@@ -163,7 +164,7 @@ export default function SellerOrdersPage() {
                 {o.items.map((item, i) => (
                   <li key={`${item.productId}-${i}`} className="flex justify-between">
                     <span>
-                      {item.qty}× {item.name} · {item.color} · {item.size}
+                      {item.qty}× {item.name} · {item.color} · {formatSize(item.size)}
                     </span>
                     <span>{formatTnd(item.price * item.qty)}</span>
                   </li>

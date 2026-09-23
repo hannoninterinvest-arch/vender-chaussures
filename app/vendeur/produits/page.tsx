@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { allSizes } from "@/lib/products";
+import { allSizes, BELT_SIZES, formatSize, isAccessoryCategory, ONE_SIZE } from "@/lib/products";
 import { formatTnd } from "@/lib/format";
 import {
   isAdmin,
@@ -128,7 +128,7 @@ export default function SellerProductsPage() {
     e.preventDefault();
     const extras = form.images.map((s) => s.trim()).filter(Boolean);
     if (!form.sizes.length) {
-      toast("Choisis au moins une pointure");
+      toast("Choisis au moins une taille");
       return;
     }
     if (colors.length < 1) {
@@ -311,7 +311,18 @@ export default function SellerProductsPage() {
             <select
               required
               value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
+              onChange={(e) => {
+                const category = e.target.value;
+                const accessory = isAccessoryCategory(category);
+                const sizesFit = accessory
+                  ? form.sizes.every((s) => s === ONE_SIZE || s >= 70)
+                  : form.sizes.every((s) => s > 0 && s < 70);
+                setForm({
+                  ...form,
+                  category,
+                  sizes: sizesFit ? form.sizes : accessory ? [ONE_SIZE] : [40, 41, 42, 43, 44],
+                });
+              }}
               className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2"
             >
               {categories.map((c) => (
@@ -425,9 +436,11 @@ export default function SellerProductsPage() {
             + Ajouter une couleur
           </button>
         )}
-        <p className="text-sm font-bold">Pointures</p>
+        <p className="text-sm font-bold">
+          {isAccessoryCategory(form.category) ? "Tailles" : "Pointures"}
+        </p>
         <div className="flex flex-wrap gap-2">
-          {allSizes.map((n) => (
+          {(isAccessoryCategory(form.category) ? [ONE_SIZE, ...BELT_SIZES] : allSizes).map((n) => (
             <button
               key={n}
               type="button"
@@ -436,7 +449,7 @@ export default function SellerProductsPage() {
                 form.sizes.includes(n) ? "bg-[#1A1A1A] text-white" : "bg-[#F5F5F5]"
               }`}
             >
-              {n}
+              {formatSize(n)}
             </button>
           ))}
         </div>
@@ -558,6 +571,7 @@ export default function SellerProductsPage() {
                   · achat {formatTnd(p.cost || 0)}
                   {p.featured ? " · accueil" : ""}
                   {p.model ? " · 3D" : ""}
+                  {` · ${p.sizes.map(formatSize).join(", ")}`}
                 </p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                   {p.colors.map((c) => (

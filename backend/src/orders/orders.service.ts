@@ -41,7 +41,7 @@ export class OrdersService {
         throw new BadRequestException(`Produit inconnu: ${line.productId}`);
       }
       if (!product.sizes.includes(line.size)) {
-        throw new BadRequestException(`Pointure indisponible pour ${product.name}`);
+        throw new BadRequestException(`Taille indisponible pour ${product.name}`);
       }
       const price = sellingPrice(product);
       const cost = Number(product.cost) || 0;

@@ -19,6 +19,7 @@ import { CheckoutSteps } from "@/components/Experience";
 import Logo from "@/components/Logo";
 import { CountrySelect } from "@/components/CountrySelect";
 import { PaymentPicker } from "@/components/PaymentPicker";
+import { formatSize } from "@/lib/products";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -243,7 +244,7 @@ export default function CheckoutPage() {
                 <div className="flex-1">
                   <p className="font-medium">{l.name}</p>
                   <p className="text-[var(--muted)]">
-                    {l.color} · {l.size} · x{l.qty}
+                    {l.color} · {formatSize(l.size)} · x{l.qty}
                   </p>
                 </div>
                 <span className="text-[#C5A059]">{formatPrice(Number(l.price) * l.qty)}</span>

@@ -9,6 +9,7 @@ import { BRAND } from "@/constants/branding";
 import { whatsappHref } from "@/lib/brand";
 import { CheckoutSteps } from "@/components/Experience";
 import { useToast } from "@/components/Toast";
+import { formatSize } from "@/lib/products";
 
 type OrderView = {
   id: string;
@@ -139,7 +140,7 @@ export default function OrderPage({
           {order.items.map((item) => (
             <li key={`${item.productId}-${item.size}`} className="flex justify-between text-sm">
               <span>
-                {item.name} · {item.color} · {item.size} × {item.qty}
+                {item.name} · {item.color} · {formatSize(item.size)} × {item.qty}
               </span>
               <span className="text-[#C5A059]">{formatPrice(Number(item.price) * item.qty)}</span>
             </li>

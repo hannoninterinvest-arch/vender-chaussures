@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ProductCard } from "@/components/ProductCard";
 import { useCatalog } from "@/lib/catalog";
-import { allSizes, brandsOf, type Gender } from "@/lib/products";
+import { brandsOf, formatSize, type Gender } from "@/lib/products";
 
 type Sort = "new" | "price-asc" | "price-desc";
 
@@ -57,6 +57,13 @@ export function ShopClient() {
             ? categories.find((c) => c.slug === category)?.label
             : "Collection";
 
+  const sizeSource = category
+    ? products.filter((p) => p.category === category)
+    : products.filter((p) => p.sizes.some((s) => s > 0 && s < 70));
+  const sizePool = sizeSource.flatMap((p) => p.sizes.filter((s) => s > 0));
+  const shopSizes = [...new Set(sizePool)].sort((a, b) => a - b);
+  const sizeLabel = shopSizes.length && shopSizes.every((s) => s >= 70) ? "Tour de taille" : "Pointure";
+
   const active = [
     drop === "new" ? { label: "Nouveautés", href: href({ drop: null }) } : null,
     gender
@@ -66,11 +73,11 @@ export function ShopClient() {
       ? { label: categories.find((c) => c.slug === category)?.label || category, href: href({ category: null }) }
       : null,
     brand ? { label: brand, href: href({ brand: null }) } : null,
-    size ? { label: `EU ${size}`, href: href({ size: null }) } : null,
+    size ? { label: sizeLabel === "Tour de taille" ? `${size} cm` : `EU ${size}`, href: href({ size: null }) } : null,
   ].filter(Boolean) as { label: string; href: string }[];
 
   const pairLabel = ready
-    ? `${filtered.length} paire${filtered.length > 1 ? "s" : ""}`
+    ? `${filtered.length} article${filtered.length > 1 ? "s" : ""}`
     : "Chargement…";
 
   const sortControl = (
@@ -108,19 +115,21 @@ export function ShopClient() {
           </Chip>
         ))}
       </FilterGroup>
-      <FilterGroup title="Pointure">
+      {shopSizes.length > 0 ? (
+      <FilterGroup title={sizeLabel}>
         <div className="flex flex-wrap gap-2">
-          {allSizes.map((s) => (
+          {shopSizes.map((s) => (
             <Chip
               key={s}
               href={href({ size: size === String(s) ? null : String(s) })}
               active={size === String(s)}
             >
-              {s}
+              {formatSize(s).replace(/^EU /, "")}
             </Chip>
           ))}
         </div>
       </FilterGroup>
+      ) : null}
     </div>
   );
 
@@ -133,7 +142,7 @@ export function ShopClient() {
             {title}
           </h1>
           <p className="mt-4 max-w-xl text-sm leading-relaxed text-[var(--muted)]">
-            Cuir premium, allure de ville et de cérémonie. Choisis ta paire — commande sans compte.
+            Cuir premium : chaussures et accessoires. Commande sans compte.
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <span className="rounded-sm border border-[#C5A059]/50 bg-[#C5A059]/12 px-3 py-1.5 text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">
@@ -219,7 +228,7 @@ export function ShopClient() {
             {ready && filtered.length === 0 && (
               <div className="store-panel col-span-full px-6 py-16 text-center">
                 <p className="font-[family-name:var(--font-display)] text-xl tracking-[0.12em] uppercase">
-                  Aucune paire pour ces filtres
+                  Aucun article pour ces filtres
                 </p>
                 <Link href="/shop" className="gold-btn mt-5 inline-flex rounded-sm px-6 py-3 text-xs uppercase">
                   Toute la collection

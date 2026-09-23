@@ -5,6 +5,7 @@ import { CheckoutSteps } from "@/components/Experience";
 import Logo from "@/components/Logo";
 import { useCart } from "@/lib/cart";
 import { useCurrency } from "@/lib/useCurrency";
+import { formatSize } from "@/lib/products";
 
 export default function CartPage() {
   const { lines, setQty, remove, subtotal, count } = useCart();
@@ -63,7 +64,7 @@ export default function CartPage() {
                           {line.name}
                         </Link>
                         <p className="text-sm text-[var(--muted)]">
-                          {line.color} · EU {line.size}
+                          {line.color} · {formatSize(line.size)}
                         </p>
                       </div>
                       <p className="font-bold text-[#C5A059]">

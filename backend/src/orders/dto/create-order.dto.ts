@@ -17,7 +17,7 @@ export class CreateOrderItemDto {
 
   @Type(() => Number)
   @IsInt()
-  @Min(36)
+  @Min(0)
   size: number;
 
   @IsString()

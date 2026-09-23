@@ -15,6 +15,7 @@ import { whatsappHref } from "@/lib/brand";
 const NAV = [
   { href: "/shop?gender=femme", label: "Femme" },
   { href: "/shop?gender=homme", label: "Homme" },
+  { href: "/shop?category=accessoires", label: "Accessoires" },
   { href: "/shop?drop=new", label: "Nouveautés" },
   { href: "/shop", label: "Collection" },
 ];
@@ -210,7 +211,7 @@ export function Header() {
               autoFocus
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Rechercher une paire, une marque…"
+              placeholder="Rechercher une paire, un accessoire…"
               className="field"
             />
             <p className="mt-2 text-[11px] text-[var(--muted)]">Échap pour fermer</p>

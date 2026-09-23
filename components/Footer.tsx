@@ -59,6 +59,9 @@ export function Footer() {
               <Link href="/shop?category=femme">Femme</Link>
             </li>
             <li>
+              <Link href="/shop?category=accessoires">Accessoires</Link>
+            </li>
+            <li>
               <Link href="/cart">Panier</Link>
             </li>
             <li>

@@ -5,7 +5,10 @@ export type ColorMedia = { name: string; hex: string; image?: string };
 /** True when every photo is one of the bundled catalog files rather than a
  *  Cloudinary upload made from the dashboard. */
 export function isSeedMedia(images: string[] = []) {
-  return images.length > 0 && images.every((src) => src.startsWith('/chaussures/'));
+  return (
+    images.length > 0 &&
+    images.every((src) => src.startsWith('/chaussures/') || src.startsWith('/accessoires/'))
+  );
 }
 
 export function hydrateColors(colors: ColorMedia[] = [], images: string[] = []): ColorMedia[] {

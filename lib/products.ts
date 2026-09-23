@@ -27,7 +27,25 @@ export type Product = {
 
 export type ShopCategory = { slug: string; label: string; image: string };
 
+export const ONE_SIZE = 0;
+export const ACCESSORY_CATEGORIES = ["accessoires"] as const;
+
+export function isAccessoryCategory(category: string) {
+  return (ACCESSORY_CATEGORIES as readonly string[]).includes(category);
+}
+
+export function isOneSize(sizes: number[] = []) {
+  return sizes.length === 1 && sizes[0] === ONE_SIZE;
+}
+
+export function formatSize(size: number) {
+  if (size === ONE_SIZE || size === 0) return "Taille unique";
+  if (size >= 70) return `${size} cm`;
+  return `EU ${size}`;
+}
+
 const shot = (file: string) => `/chaussures/${file}`;
+const acc = (file: string) => `/accessoires/${file}`;
 
 const fallbackCatalog: Product[] = [
   {
@@ -199,6 +217,102 @@ const fallbackCatalog: Product[] = [
       shot("escarpin-nude.jpg"),
     ],
   },
+  {
+    id: "porte-cle-blason",
+    name: "Porte-clés Blason",
+    brand: BRAND.name,
+    price: 79,
+    description:
+      "Porte-clés en cuir sellier, anneau doré et blason métal. L’accessoire du quotidien, à la marque.",
+    gender: "unisexe",
+    category: "accessoires",
+    isNew: true,
+    featured: true,
+    colors: [
+      { name: "Cognac", hex: "#8B5A2B", image: acc("porte-cle-cognac.jpg") },
+      { name: "Noir", hex: "#1A1612", image: acc("porte-cle-noir.jpg") },
+    ],
+    sizes: [ONE_SIZE],
+    images: [acc("porte-cle-cognac.jpg"), acc("porte-cle-noir.jpg")],
+  },
+  {
+    id: "ceinture-sellier",
+    name: "Ceinture Sellier",
+    brand: BRAND.name,
+    price: 189,
+    description:
+      "Ceinture en cuir de veau, boucle dorée. Taille en centimètres, pour la ville comme la cérémonie.",
+    gender: "unisexe",
+    category: "accessoires",
+    isNew: true,
+    featured: true,
+    colors: [
+      { name: "Noir", hex: "#1A1612", image: acc("ceinture-noir.jpg") },
+      { name: "Cognac", hex: "#8B5A2B", image: acc("ceinture-cognac.jpg") },
+    ],
+    sizes: [85, 90, 95, 100, 105],
+    images: [acc("ceinture-noir.jpg"), acc("ceinture-cognac.jpg")],
+  },
+  {
+    id: "porte-cartes-cuir",
+    name: "Porte-cartes Cuir",
+    brand: BRAND.name,
+    price: 129,
+    description:
+      "Porte-cartes slim en cuir cognac, coutures sellier. Assez fin pour la poche, assez noble pour le soir.",
+    gender: "unisexe",
+    category: "accessoires",
+    isNew: true,
+    featured: false,
+    colors: [{ name: "Cognac", hex: "#8B5A2B", image: acc("porte-cartes.jpg") }],
+    sizes: [ONE_SIZE],
+    images: [acc("porte-cartes.jpg")],
+  },
+  {
+    id: "portefeuille-compact",
+    name: "Portefeuille Compact",
+    brand: BRAND.name,
+    price: 159,
+    description:
+      "Portefeuille compact en cuir noir, finitions atelier. Cartes, billets, sans l’épaisseur d’un classico.",
+    gender: "unisexe",
+    category: "accessoires",
+    isNew: false,
+    featured: false,
+    colors: [{ name: "Noir", hex: "#1A1612", image: acc("portefeuille-noir.jpg") }],
+    sizes: [ONE_SIZE],
+    images: [acc("portefeuille-noir.jpg")],
+  },
+  {
+    id: "kit-cirage-atelier",
+    name: "Kit Cirage Atelier",
+    brand: BRAND.name,
+    price: 49,
+    description:
+      "Coffret bois : cirages, brosse crin et chiffon. Pour entretenir le cuir à la maison.",
+    gender: "unisexe",
+    category: "accessoires",
+    isNew: true,
+    featured: false,
+    colors: [{ name: "Atelier", hex: "#2C261C", image: acc("kit-cirage.jpg") }],
+    sizes: [ONE_SIZE],
+    images: [acc("kit-cirage.jpg")],
+  },
+  {
+    id: "sachet-coton",
+    name: "Sac à chaussures Coton",
+    brand: BRAND.name,
+    price: 35,
+    description:
+      "Housse coton à cordon doré. Protège la paire dans la valise ou au dressing.",
+    gender: "unisexe",
+    category: "accessoires",
+    isNew: false,
+    featured: false,
+    colors: [{ name: "Ivoire", hex: "#EFE6D6", image: acc("sachet-chaussures.jpg") }],
+    sizes: [ONE_SIZE],
+    images: [acc("sachet-chaussures.jpg")],
+  },
 ];
 
 export const fallbackProducts: Product[] = fallbackCatalog.map(withColorImages);
@@ -209,6 +323,7 @@ export const categories: ShopCategory[] = [
   { slug: "mocassins", label: "Mocassins", image: shot("mocassin-cognac.jpg") },
   { slug: "bottes", label: "Bottes", image: shot("bottine-cognac.jpg") },
   { slug: "femme", label: "Femme", image: shot("sandale-or.jpg") },
+  { slug: "accessoires", label: "Accessoires", image: acc("porte-cle-cognac.jpg") },
 ];
 
 export function relatedProducts(list: Product[], id: string, limit = 4) {
@@ -225,6 +340,7 @@ export function relatedProducts(list: Product[], id: string, limit = 4) {
 }
 
 export const allSizes = [36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46];
+export const BELT_SIZES = [85, 90, 95, 100, 105];
 
 export function brandsOf(list: Product[]) {
   return [...new Set(list.map((p) => p.brand))];

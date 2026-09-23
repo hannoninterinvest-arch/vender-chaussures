@@ -46,6 +46,8 @@ const HEADERS: Record<string, string> = {
   colors: "colors",
   pointures: "sizes",
   sizes: "sizes",
+  tailles: "sizes",
+  taille: "sizes",
   images: "images",
   photos: "images",
   photo: "images",
@@ -147,8 +149,21 @@ function parseSizes(value: string) {
         .split(/[, ]+/)
         .map((p) => p.trim())
         .filter(Boolean);
-  const sizes = raw.map((n) => Number(n)).filter((n) => Number.isFinite(n) && n > 0);
-  return sizes.length ? sizes : [40, 41, 42, 43, 44];
+  const sizes: number[] = [];
+  for (const token of raw) {
+    const key = token
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[\s_-]+/g, "");
+    if (/^(unique|onesize|os|tu|tailleunique)$/.test(key)) {
+      sizes.push(0);
+      continue;
+    }
+    const n = Number(token);
+    if (Number.isFinite(n) && n >= 0) sizes.push(n);
+  }
+  return sizes.length ? [...new Set(sizes)] : [40, 41, 42, 43, 44];
 }
 
 function parseImages(value: string) {
