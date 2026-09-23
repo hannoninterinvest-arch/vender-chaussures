@@ -31,7 +31,11 @@ export const ONE_SIZE = 0;
 export const ACCESSORY_CATEGORIES = ["accessoires"] as const;
 
 export function isAccessoryCategory(category: string) {
-  return (ACCESSORY_CATEGORIES as readonly string[]).includes(category);
+  const key = (category || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  return key === "accessoires" || key.includes("accessoire");
 }
 
 export function isOneSize(sizes: number[] = []) {

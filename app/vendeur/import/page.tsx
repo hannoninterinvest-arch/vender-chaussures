@@ -67,7 +67,7 @@ export default function SellerImportPage() {
     <div className="mx-auto max-w-3xl">
       <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase">Import CSV</h1>
       <p className="mt-2 text-sm text-[#666]">
-        Ajoute plusieurs paires d’un coup. Chaque ligne = un produit. Les photos sont des{" "}
+        Ajoute plusieurs chaussures ou accessoires d’un coup. Chaque ligne = un produit. Les photos sont des{" "}
         <strong>liens HTTPS</strong> (Cloudinary, Unsplash, etc.), séparés par{" "}
         <code>|</code>. Une photo par couleur peut aussi être indiquée dans la colonne <code>couleurs</code>.
       </p>
@@ -86,7 +86,8 @@ export default function SellerImportPage() {
             boutique barre alors le prix normal.
           </li>
           <li>
-            <strong>pointures</strong> : <code>40|41|42|43</code>
+            <strong>pointures</strong> : <code>40|41|42|43</code> pour une paire, <code>unique</code> ou{" "}
+            <code>85|90|95</code> (cm) pour un accessoire
           </li>
           <li>
             <strong>couleurs</strong> : <code>Noir:#171717@https://…/noir.jpg|Blanc:#ffffff@https://…/blanc.jpg</code>
@@ -96,7 +97,7 @@ export default function SellerImportPage() {
             <strong>glb</strong> : chemin ou URL du fichier 3D s’il existe, ex. <code>/models/oxford-noir.glb</code>. Laisse vide s’il n’y a pas de 3D.
           </li>
           <li>
-            <strong>categorie</strong> : id ou nom déjà créé (ex. <code>ville</code>, <code>ceremonie</code>)
+            <strong>categorie</strong> : id ou nom déjà créé (ex. <code>ville</code>, <code>accessoires</code>)
           </li>
           <li>
             <strong>genre</strong> : homme, femme ou unisexe

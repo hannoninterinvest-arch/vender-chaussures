@@ -2,7 +2,14 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { allSizes, BELT_SIZES, formatSize, isAccessoryCategory, ONE_SIZE } from "@/lib/products";
+import {
+  allSizes,
+  BELT_SIZES,
+  formatSize,
+  isAccessoryCategory,
+  isOneSize,
+  ONE_SIZE,
+} from "@/lib/products";
 import { formatTnd } from "@/lib/format";
 import {
   isAdmin,
@@ -33,7 +40,24 @@ const emptyForm = {
   sizes: [40, 41, 42, 43, 44] as number[],
   images: ["", "", "", "", ""] as string[],
   model: "",
+  kind: "chaussure" as "chaussure" | "accessoire",
 };
+
+function looksLikeAccessory(category: string, sizes: number[] = []) {
+  return (
+    isAccessoryCategory(category) ||
+    isOneSize(sizes) ||
+    (sizes.length > 0 && sizes.every((s) => s === ONE_SIZE || s >= 70))
+  );
+}
+
+function accessoryCategoryId(cats: SellerCategory[]) {
+  return cats.find((c) => isAccessoryCategory(c.id) || isAccessoryCategory(c.label))?.id || "accessoires";
+}
+
+function shoeCategoryId(cats: SellerCategory[], fallback = "") {
+  return cats.find((c) => !isAccessoryCategory(c.id) && !isAccessoryCategory(c.label))?.id || fallback;
+}
 
 export default function SellerProductsPage() {
   const toast = useToast();
@@ -43,7 +67,18 @@ export default function SellerProductsPage() {
   const [editing, setEditing] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState<string | null>(null);
+  const [customSize, setCustomSize] = useState("");
+  const [listFilter, setListFilter] = useState<"all" | "chaussure" | "accessoire">("all");
   const admin = isAdmin();
+  const accessoryMode = form.kind === "accessoire" || isAccessoryCategory(form.category);
+
+  const categoryOptions = useMemo(() => {
+    const rows = [...categories];
+    if (!rows.some((c) => isAccessoryCategory(c.id) || isAccessoryCategory(c.label))) {
+      rows.push({ id: "accessoires", label: "Accessoires", image: "" });
+    }
+    return rows;
+  }, [categories]);
 
   async function load() {
     const [p, c] = await Promise.all([
@@ -52,7 +87,10 @@ export default function SellerProductsPage() {
     ]);
     setProducts(p);
     setCategories(c);
-    setForm((f) => ({ ...f, category: f.category || c[0]?.id || "" }));
+    setForm((f) => ({
+      ...f,
+      category: f.category || (f.kind === "accessoire" ? accessoryCategoryId(c) : c[0]?.id) || "",
+    }));
   }
 
   useEffect(() => {
@@ -65,7 +103,20 @@ export default function SellerProductsPage() {
         if (cancelled) return;
         setProducts(p);
         setCategories(c);
-        setForm((f) => ({ ...f, category: f.category || c[0]?.id || "" }));
+        const wantAccessory =
+          typeof window !== "undefined" &&
+          new URLSearchParams(window.location.search).get("type") === "accessoire";
+        setForm((f) => {
+          if (wantAccessory) {
+            return {
+              ...f,
+              kind: "accessoire",
+              category: accessoryCategoryId(c),
+              sizes: f.kind === "accessoire" && f.sizes.length ? f.sizes : [ONE_SIZE],
+            };
+          }
+          return { ...f, category: f.category || c[0]?.id || "" };
+        });
       })
       .catch((err: Error) => {
         if (!cancelled) toast(err.message);
@@ -97,6 +148,7 @@ export default function SellerProductsPage() {
       sizes: p.sizes,
       images: [0, 1, 2, 3, 4].map((i) => p.images[i] || ""),
       model: p.model || "",
+      kind: looksLikeAccessory(p.category, p.sizes) ? "accessoire" : "chaussure",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -177,7 +229,7 @@ export default function SellerProductsPage() {
         toast("Produit ajouté à la boutique");
       }
       setEditing(null);
-      setForm({ ...emptyForm, category: categories[0]?.id || "" });
+      resetForm(accessoryMode);
       await load();
     } catch (err) {
       toast(err instanceof Error ? err.message : "Enregistrement impossible");
@@ -197,11 +249,57 @@ export default function SellerProductsPage() {
     }
   }
 
+  function resetForm(keepAccessory = false) {
+    setForm({
+      ...emptyForm,
+      kind: keepAccessory ? "accessoire" : "chaussure",
+      category: keepAccessory ? accessoryCategoryId(categoryOptions) : categoryOptions[0]?.id || "",
+      sizes: keepAccessory ? [ONE_SIZE] : emptyForm.sizes,
+    });
+    setCustomSize("");
+  }
+
   function toggleSize(n: number) {
     setForm((f) => ({
       ...f,
       sizes: f.sizes.includes(n) ? f.sizes.filter((s) => s !== n) : [...f.sizes, n].sort((a, b) => a - b),
     }));
+  }
+
+  function setKind(kind: "chaussure" | "accessoire") {
+    setForm((f) => {
+      if (kind === "accessoire") {
+        return {
+          ...f,
+          kind,
+          category: accessoryCategoryId(categoryOptions),
+          sizes: looksLikeAccessory(f.category, f.sizes) ? f.sizes : [ONE_SIZE],
+        };
+      }
+      return {
+        ...f,
+        kind,
+        category: shoeCategoryId(categoryOptions, f.category),
+        sizes: looksLikeAccessory(f.category, f.sizes) ? [40, 41, 42, 43, 44] : f.sizes,
+      };
+    });
+  }
+
+  function addCustomSize() {
+    const raw = customSize.trim().toLowerCase();
+    const n =
+      raw === "unique" || raw === "tu" || raw === "0"
+        ? ONE_SIZE
+        : Number(raw.replace(/[^\d.]/g, ""));
+    if (!Number.isFinite(n) || n < 0) {
+      toast("Indique une taille (ex. unique, 95).");
+      return;
+    }
+    setForm((f) => ({
+      ...f,
+      sizes: f.sizes.includes(n) ? f.sizes : [...f.sizes, n].sort((a, b) => a - b),
+    }));
+    setCustomSize("");
   }
 
   async function onUpload(slot: string, file: File) {
@@ -247,15 +345,41 @@ export default function SellerProductsPage() {
     <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr]">
       <form onSubmit={onSubmit} className="space-y-4 rounded-[4px] border border-[#C5A059]/35 bg-white p-6">
         <h1 className="font-[family-name:var(--font-display)] text-2xl tracking-[0.08em] uppercase">
-          {editing ? "Modifier le produit" : "Nouveau produit"}
+          {editing ? "Modifier le produit" : accessoryMode ? "Nouvel accessoire" : "Nouveau produit"}
         </h1>
         <p className="text-sm text-[#666]">
-          Pour plusieurs paires d’un coup, utilise{" "}
+          {admin
+            ? "En admin, tu ajoutes une chaussure ou un accessoire (porte-clés, ceinture, portefeuille…), avec photo."
+            : "Ajoute une chaussure ou un accessoire, avec photo."}{" "}
+          Pour plusieurs articles, utilise{" "}
           <Link href="/vendeur/import" className="font-bold text-[#C5A059]">
             Import CSV
-          </Link>{" "}
-          (liens photos dans le fichier).
+          </Link>
+          .
         </p>
+        <div>
+          <p className="text-sm font-bold">Type d’article</p>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setKind("chaussure")}
+              className={`rounded-lg px-3 py-2 text-sm font-medium ${
+                !accessoryMode ? "bg-[#1A1A1A] text-white" : "bg-[#F5F5F5]"
+              }`}
+            >
+              Chaussure
+            </button>
+            <button
+              type="button"
+              onClick={() => setKind("accessoire")}
+              className={`rounded-lg px-3 py-2 text-sm font-medium ${
+                accessoryMode ? "bg-[#1A1A1A] text-white" : "bg-[#F5F5F5]"
+              }`}
+            >
+              Accessoire
+            </button>
+          </div>
+        </div>
         <Field label="Nom" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
         <Field label="Marque" value={form.brand} onChange={(v) => setForm({ ...form, brand: v })} required />
         <div className="grid grid-cols-2 gap-3">
@@ -320,12 +444,13 @@ export default function SellerProductsPage() {
                 setForm({
                   ...form,
                   category,
+                  kind: accessory ? "accessoire" : "chaussure",
                   sizes: sizesFit ? form.sizes : accessory ? [ONE_SIZE] : [40, 41, 42, 43, 44],
                 });
               }}
               className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2"
             >
-              {categories.map((c) => (
+              {categoryOptions.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.label}
                 </option>
@@ -436,11 +561,19 @@ export default function SellerProductsPage() {
             + Ajouter une couleur
           </button>
         )}
-        <p className="text-sm font-bold">
-          {isAccessoryCategory(form.category) ? "Tailles" : "Pointures"}
-        </p>
+        <p className="text-sm font-bold">{accessoryMode ? "Tailles" : "Pointures"}</p>
+        {accessoryMode ? (
+          <p className="text-xs text-[#666]">
+            Taille unique pour un porte-clés ou un portefeuille. Tour de taille en cm pour une ceinture.
+          </p>
+        ) : null}
         <div className="flex flex-wrap gap-2">
-          {(isAccessoryCategory(form.category) ? [ONE_SIZE, ...BELT_SIZES] : allSizes).map((n) => (
+          {(accessoryMode
+            ? [...new Set([ONE_SIZE, ...BELT_SIZES, ...form.sizes])]
+            : [...new Set([...allSizes, ...form.sizes])]
+          )
+            .sort((a, b) => a - b)
+            .map((n) => (
             <button
               key={n}
               type="button"
@@ -453,6 +586,22 @@ export default function SellerProductsPage() {
             </button>
           ))}
         </div>
+        {accessoryMode ? (
+          <div className="flex flex-wrap items-end gap-2">
+            <label className="block text-sm font-medium">
+              Autre taille
+              <input
+                value={customSize}
+                onChange={(e) => setCustomSize(e.target.value)}
+                placeholder="unique ou 110"
+                className="mt-1 w-36 rounded-lg border border-[#E5E5E5] px-3 py-2"
+              />
+            </label>
+            <button type="button" className="rounded-lg bg-[#F5F5F5] px-3 py-2 text-sm" onClick={addCustomSize}>
+              Ajouter
+            </button>
+          </div>
+        ) : null}
         <p className="text-sm font-bold">Photos supplémentaires (optionnel)</p>
         <p className="text-xs text-[#666]">
           Galerie libre en plus des photos de couleur. Envoi Cloudinary, lien HTTPS en base.
@@ -500,6 +649,8 @@ export default function SellerProductsPage() {
             </div>
           ))}
         </div>
+        {!accessoryMode ? (
+        <>
         <label className="block text-sm font-medium">
           Fichier 3D GLB (optionnel)
           <input
@@ -526,6 +677,8 @@ export default function SellerProductsPage() {
         <p className="text-xs text-[#666]">
           La fiche produit affiche le modèle 3D (rotation, zoom). Les photos restent en miniature.
         </p>
+        </>
+        ) : null}
         <div className="flex gap-3">
           <button
             type="submit"
@@ -540,7 +693,7 @@ export default function SellerProductsPage() {
               className="rounded-lg bg-[#F5F5F5] px-5 py-3 font-medium"
               onClick={() => {
                 setEditing(null);
-                setForm({ ...emptyForm, category: categories[0]?.id || "" });
+                resetForm(false);
               }}
             >
               Annuler
@@ -550,14 +703,51 @@ export default function SellerProductsPage() {
       </form>
 
       <div>
-        <h2 className="text-xl font-black">{products.length} produits</h2>
+        <h2 className="text-xl font-black">
+          {listFilter === "all"
+            ? `${products.length} produits`
+            : `${products.filter((p) => (looksLikeAccessory(p.category, p.sizes) ? "accessoire" : "chaussure") === listFilter).length} ${listFilter === "accessoire" ? "accessoires" : "chaussures"}`}
+        </h2>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {(
+            [
+              ["all", "Tous"],
+              ["chaussure", "Chaussures"],
+              ["accessoire", "Accessoires"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setListFilter(id)}
+              className={`rounded-lg px-3 py-1.5 text-sm ${
+                listFilter === id ? "bg-[#1A1A1A] text-white" : "bg-[#F5F5F5]"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         <ul className="mt-4 space-y-3">
-          {products.map((p) => (
+          {products
+            .filter((p) =>
+              listFilter === "all"
+                ? true
+                : listFilter === "accessoire"
+                  ? looksLikeAccessory(p.category, p.sizes)
+                  : !looksLikeAccessory(p.category, p.sizes),
+            )
+            .map((p) => (
             <li key={p.id} className="flex gap-3 rounded-[4px] border border-[#C5A059]/30 bg-white p-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.images[0]} alt="" className="h-20 w-20 rounded-xl object-cover bg-[#EEE]" />
               <div className="min-w-0 flex-1">
-                <p className="font-bold">{p.name}</p>
+                <p className="font-bold">
+                  {p.name}
+                  <span className="ml-2 rounded bg-[#F5F5F5] px-1.5 py-0.5 text-[10px] font-semibold uppercase text-[#666]">
+                    {looksLikeAccessory(p.category, p.sizes) ? "Accessoire" : "Chaussure"}
+                  </span>
+                </p>
                 <p className="text-sm text-[#666]">
                   {p.brand} ·{" "}
                   {p.promoPrice ? (

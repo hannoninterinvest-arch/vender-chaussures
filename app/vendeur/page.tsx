@@ -145,7 +145,10 @@ export default function SellerHomePage() {
 
       <div className="mt-8 flex flex-wrap gap-3">
         <Link href="/vendeur/produits" className="gold-btn rounded-sm px-4 py-3 text-xs uppercase">
-          Ajouter un produit
+          Ajouter une chaussure
+        </Link>
+        <Link href="/vendeur/produits?type=accessoire" className="rounded-sm border border-[#C5A059]/50 bg-white px-4 py-3 text-sm font-bold">
+          Ajouter un accessoire
         </Link>
         <Link href="/vendeur/commandes" className="rounded-sm border border-[#C5A059]/50 bg-white px-4 py-3 text-sm font-bold">
           Voir les commandes

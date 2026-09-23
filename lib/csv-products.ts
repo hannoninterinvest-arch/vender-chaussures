@@ -247,4 +247,5 @@ export function parseProductCsv(text: string): { products: CsvProduct[]; errors:
 export const CSV_TEMPLATE = `nom;marque;prix;promo;achat;description;genre;categorie;nouveau;couleurs;pointures;images;glb
 Oxford Noir;${BRAND.name};489;399;280;Richelieu cuir lustré;homme;ceremonie;oui;Noir:#141210@/chaussures/oxford-noir.jpg|Cognac:#B5763A@/chaussures/oxford-cognac.jpg;40|41|42|43|44;/chaussures/oxford-noir.jpg|/chaussures/oxford-cognac.jpg;
 Derby Cognac;${BRAND.name};459;;260;Derby ville en cuir;homme;ville;oui;Cognac:#8B5A2B@/chaussures/derby-cognac.jpg;40|41|42|43;/chaussures/derby-cognac.jpg|/chaussures/derby-tabac.jpg;
+Porte-clés Blason;${BRAND.name};79;;35;Porte-clés cuir sellier;unisexe;accessoires;oui;Cognac:#8B5A2B@/accessoires/porte-cle-cognac.jpg;unique;/accessoires/porte-cle-cognac.jpg;
 `;

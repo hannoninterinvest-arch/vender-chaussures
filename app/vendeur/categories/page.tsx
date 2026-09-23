@@ -66,7 +66,8 @@ export default function SellerCategoriesPage() {
       <form onSubmit={onSubmit} className="space-y-4 rounded-[4px] border border-[#C5A059]/35 bg-white p-6">
         <h1 className="font-[family-name:var(--font-display)] text-2xl tracking-[0.08em] uppercase">Nouvelle catégorie</h1>
         <p className="text-sm text-[#666]">
-          Ex. Running, Basketball, Enfants… Elle apparaît sur l’accueil et dans la boutique.
+          Ex. Accessoires, Maroquinerie… La catégorie Accessoires sert aux porte-clés, ceintures et
+          autres articles hors chaussures. Elle apparaît sur l’accueil et dans la boutique.
         </p>
         <label className="block text-sm font-medium">
           Nom
