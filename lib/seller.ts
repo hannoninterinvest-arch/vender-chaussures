@@ -120,7 +120,7 @@ export type SellerProduct = {
   category: string;
   isNew: boolean;
   featured: boolean;
-  colors: { name: string; hex: string; image?: string }[];
+  colors: { name: string; hex: string; image?: string; images?: string[] }[];
   sizes: number[];
   images: string[];
 };

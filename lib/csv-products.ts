@@ -8,7 +8,7 @@ export type CsvProduct = {
   gender: "homme" | "femme" | "unisexe";
   category: string;
   isNew: boolean;
-  colors: { name: string; hex: string; image?: string }[];
+  colors: { name: string; hex: string; image?: string; images?: string[] }[];
   sizes: number[];
   images: string[];
 };
@@ -110,16 +110,21 @@ function parseGender(value: string): CsvProduct["gender"] {
   return "unisexe";
 }
 
+function parseColorPhotos(value: string) {
+  return value
+    .split("+")
+    .map((url) => url.trim())
+    .filter((url) => /^https?:\/\//i.test(url) || url.startsWith("/"))
+    .slice(0, 5);
+}
+
 function parseColors(value: string) {
-  const parts = splitList(value).length
-    ? splitList(value)
-    : value
-        .split(",")
-        .map((p) => p.trim())
-        .filter(Boolean);
+  const parts = (value.includes("|") ? value.split("|") : value.split(","))
+    .map((part) => part.trim())
+    .filter(Boolean);
   const colors = parts.map((part) => {
     const at = part.indexOf("@");
-    const image = at >= 0 ? part.slice(at + 1).trim() : "";
+    const photos = at >= 0 ? parseColorPhotos(part.slice(at + 1)) : [];
     const head = at >= 0 ? part.slice(0, at) : part;
     const colon = head.indexOf(":");
     const name = (colon >= 0 ? head.slice(0, colon) : head).trim() || "Noir";
@@ -127,10 +132,11 @@ function parseColors(value: string) {
     return {
       name,
       hex: hex.startsWith("#") ? hex : "#171717",
-      image: image || undefined,
+      image: photos[0],
+      images: photos.slice(1),
     };
   });
-  return colors.length ? colors : [{ name: "Noir", hex: "#171717", image: undefined }];
+  return colors.length ? colors : [{ name: "Noir", hex: "#171717", image: undefined, images: [] }];
 }
 
 function parseSizes(value: string) {
@@ -187,7 +193,31 @@ export function parseProductCsv(text: string): { products: CsvProduct[]; errors:
       const name = get("name");
       const images = parseImages(get("images"));
       if (!name) throw new Error("Nom manquant");
-      if (!images.length) throw new Error("Ajoute au moins un lien photo (https://…)");
+      const parsedColors = parseColors(get("colors")).map((color, index) => {
+        const own = [color.image, ...(color.images || [])].filter((src): src is string => Boolean(src));
+        const photos = own.length ? own : [images[index] || images[0]].filter((src): src is string => Boolean(src));
+        return {
+          ...color,
+          image: photos[0],
+          images: photos.slice(1, 5),
+        };
+      });
+      const used = new Set(parsedColors.flatMap((color) => [color.image, ...(color.images || [])].filter(Boolean)));
+      const loose = images.filter((src) => !used.has(src));
+      if (parsedColors[0] && loose.length) {
+        const photos = [...new Set([parsedColors[0].image, ...(parsedColors[0].images || []), ...loose])].filter(
+          (src): src is string => Boolean(src),
+        );
+        parsedColors[0] = {
+          ...parsedColors[0],
+          image: photos[0],
+          images: photos.slice(1, 5),
+        };
+      }
+      const gallery = images.length
+        ? images
+        : [...new Set(parsedColors.flatMap((color) => [color.image, ...(color.images || [])].filter(Boolean)))];
+      if (!gallery.length) throw new Error("Ajoute au moins un lien photo (https://…)");
       const price = Number(get("price").replace(",", "."));
       if (!Number.isFinite(price) || price < 0) throw new Error("Prix invalide");
       const costRaw = get("cost").replace(",", ".");
@@ -203,12 +233,9 @@ export function parseProductCsv(text: string): { products: CsvProduct[]; errors:
         gender: parseGender(get("gender")),
         category: get("category") || "ville",
         isNew: parseBool(get("isNew")),
-        colors: parseColors(get("colors")).map((color, index) => ({
-          ...color,
-          image: color.image || images[index] || images[0],
-        })),
+        colors: parsedColors,
         sizes: parseSizes(get("sizes")),
-        images,
+        images: gallery,
       });
     } catch (err) {
       errors.push({
@@ -222,6 +249,6 @@ export function parseProductCsv(text: string): { products: CsvProduct[]; errors:
 }
 
 export const CSV_TEMPLATE = `nom;marque;prix;promo;achat;description;genre;categorie;nouveau;couleurs;pointures;images
-Oxford Noir;ELVARO;489;399;280;Richelieu cuir lustré;homme;ceremonie;oui;Noir:#141210@/chaussures/oxford-noir.jpg|Cognac:#B5763A@/chaussures/oxford-cognac.jpg;40|41|42|43|44;/chaussures/oxford-noir.jpg|/chaussures/oxford-cognac.jpg
+Oxford Noir;ELVARO;489;399;280;Richelieu cuir lustré;homme;ceremonie;oui;Noir:#141210@/chaussures/oxford-noir.jpg+/chaussures/oxford-noir-2.jpg+/chaussures/oxford-noir-3.jpg+/chaussures/oxford-noir-4.jpg|Cognac:#B5763A@/chaussures/oxford-cognac.jpg;40|41|42|43|44;/chaussures/oxford-noir.jpg|/chaussures/oxford-cognac.jpg
 Derby Cognac;ELVARO;459;;260;Derby ville en cuir;homme;ville;oui;Cognac:#8B5A2B@/chaussures/derby-cognac.jpg;40|41|42|43;/chaussures/derby-cognac.jpg|/chaussures/derby-tabac.jpg
 `;

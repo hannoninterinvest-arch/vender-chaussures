@@ -80,20 +80,22 @@ export default function ProductPage({
             alt={product.name}
             className="aspect-square w-full object-cover"
           />
-          <div className="grid grid-cols-5 gap-3">
-            {gallery.map((src, i) => (
-              <button
-                key={`${src}-${i}`}
-                type="button"
-                onClick={() => setPhoto(i)}
-                aria-label={`Photo ${i + 1}`}
-                className={`overflow-hidden ${photo === i ? "ring-1 ring-[var(--gold)]" : "opacity-70"}`}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} alt="" className="aspect-square w-full object-cover" />
-              </button>
-            ))}
-          </div>
+          {gallery.length > 1 ? (
+            <div className={`grid gap-3 ${gallery.length > 4 ? "grid-cols-5" : "grid-cols-4"}`}>
+              {gallery.map((src, i) => (
+                <button
+                  key={`${src}-${i}`}
+                  type="button"
+                  onClick={() => setPhoto(i)}
+                  aria-label={`Photo ${i + 1}`}
+                  className={`overflow-hidden ${photo === i ? "ring-1 ring-[var(--gold)]" : "opacity-70"}`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={src} alt="" className="aspect-square w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         <div>

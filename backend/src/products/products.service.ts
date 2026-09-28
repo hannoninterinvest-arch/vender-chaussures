@@ -92,7 +92,9 @@ export class ProductsService implements OnModuleInit {
       const row = await this.products.findOne({ where: { id: item.id } });
       if (!row || !isSeedMedia(row.images)) continue;
       const media = attachProductMedia(item.colors, item.images);
-      if (JSON.stringify(media.images) === JSON.stringify(row.images)) continue;
+      const sameImages = JSON.stringify(media.images) === JSON.stringify(row.images);
+      const sameColors = JSON.stringify(media.colors) === JSON.stringify(row.colors);
+      if (sameImages && sameColors) continue;
       row.colors = media.colors;
       row.images = media.images;
       await this.products.save(row);

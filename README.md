@@ -9,7 +9,7 @@ Boutique **ELVARO** (noir, crème, or) — commande **sans compte**.
 - Back : NestJS + TypeORM + PostgreSQL (Neon)
 - Commandes et produits en base
 - Paiement : **en ligne (Konnect)** ou **à la livraison**
-- Photos produit : jusqu’à 5 images via Cloudinary, URL en PostgreSQL
+- Photos produit : 4 ou 5 photos par couleur (max 5) via Cloudinary, URL en PostgreSQL
 - Page d’accueil : l’admin choisit les photos de garde (pas d’images statiques)
 - Espace vendeur : produits, vitrine, catégories, livraisons, bénéfices
 
@@ -45,7 +45,7 @@ Connecté en **admin** → onglet **Équipe** → créer un compte rôle `vendeu
 
 ### Import CSV
 
-Onglet **Import CSV** : fichier `.csv` avec les liens photos (`https://…|https://…`, max 5). Télécharge le modèle depuis la page.
+Onglet **Import CSV** : fichier `.csv` avec les liens photos. Chaque couleur accepte 4 ou 5 photos (`url1+url2+url3+url4`). Télécharge le modèle depuis la page.
 
 ## API
 

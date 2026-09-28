@@ -17,7 +17,7 @@ export type Product = {
   category: string;
   isNew: boolean;
   featured?: boolean;
-  colors: { name: string; hex: string; image?: string }[];
+  colors: { name: string; hex: string; image?: string; images?: string[] }[];
   sizes: number[];
   images: string[];
 };
@@ -157,7 +157,7 @@ const fallbackCatalog: Product[] = [
     isNew: false,
     featured: true,
     colors: [
-      { name: "Cognac", hex: "#8B5A2B", image: shot("bottine-cognac.jpg") },
+      { name: "Cognac", hex: "#8B5A2B", image: shot("bottine-cognac.jpg"), images: [shot("bottine-studio.jpg")] },
       { name: "Noir", hex: "#1A1612", image: shot("bottine-noire.jpg") },
       { name: "Daim tabac", hex: "#A96B36", image: shot("bottine-daim.jpg") },
       { name: "Fauve", hex: "#C08A4A", image: shot("bottine-tabac.jpg") },

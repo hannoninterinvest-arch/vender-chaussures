@@ -24,6 +24,13 @@ export class ProductColorDto {
   @IsOptional()
   @IsString()
   image?: string;
+
+  /** Autres vues de cette couleur. Avec la photo principale : 4 ou 5 au total. */
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @ArrayMaxSize(4)
+  images?: string[];
 }
 
 export class CreateProductDto {
@@ -89,6 +96,6 @@ export class CreateProductDto {
   @IsArray()
   @IsString({ each: true })
   @ArrayMinSize(1)
-  @ArrayMaxSize(16)
+  @ArrayMaxSize(40)
   images: string[];
 }

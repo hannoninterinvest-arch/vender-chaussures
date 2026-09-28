@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { PHOTOS_PER_COLOR } from "@/lib/product-media";
 import { allSizes } from "@/lib/products";
 import { formatTnd } from "@/lib/format";
 import {
@@ -12,6 +13,24 @@ import {
   type SellerProduct,
 } from "@/lib/seller";
 import { useToast } from "@/components/Toast";
+
+type ColorSlot = { name: string; hex: string; photos: string[] };
+
+function blankPhotos() {
+  return Array.from({ length: PHOTOS_PER_COLOR }, () => "");
+}
+
+function slotFromColor(color: { name: string; hex: string; image?: string; images?: string[] }): ColorSlot {
+  const own = [...new Set([color.image || "", ...(color.images || [])].map((src) => src.trim()).filter(Boolean))].slice(
+    0,
+    PHOTOS_PER_COLOR,
+  );
+  return { name: color.name, hex: color.hex, photos: [...own, ...blankPhotos()].slice(0, PHOTOS_PER_COLOR) };
+}
+
+function emptyColor(name = "", hex = "#D4AF37"): ColorSlot {
+  return { name, hex, photos: blankPhotos() };
+}
 
 const emptyForm = {
   name: "",
@@ -25,12 +44,11 @@ const emptyForm = {
   isNew: true,
   featured: false,
   colorSlots: [
-    { name: "Noir", hex: "#1A1612", image: "" },
-    { name: "Or", hex: "#D4AF37", image: "" },
-    { name: "Crème", hex: "#F3EDE2", image: "" },
-  ],
+    emptyColor("Noir", "#1A1612"),
+    emptyColor("Or", "#D4AF37"),
+    emptyColor("Crème", "#F3EDE2"),
+  ] as ColorSlot[],
   sizes: [40, 41, 42, 43, 44] as number[],
-  images: ["", "", "", "", ""] as string[],
 };
 
 export default function SellerProductsPage() {
@@ -86,14 +104,24 @@ export default function SellerProductsPage() {
       category: p.category,
       isNew: p.isNew,
       featured: Boolean(p.featured),
-      colorSlots: p.colors.length
-        ? p.colors.map((c) => ({ name: c.name, hex: c.hex, image: c.image || "" }))
-        : [
-            { name: "Noir", hex: "#1A1612", image: "" },
-            { name: "Or", hex: "#D4AF37", image: "" },
-          ],
+      colorSlots: (() => {
+        const slots = p.colors.length
+          ? p.colors.map((c) => slotFromColor(c))
+          : [emptyColor("Noir", "#1A1612"), emptyColor("Or", "#D4AF37")];
+        const used = new Set(slots.flatMap((slot) => slot.photos.filter(Boolean)));
+        const loose = p.images.filter((src) => src && !used.has(src));
+        if (slots[0] && loose.length) {
+          const photos = [...slots[0].photos];
+          for (const src of loose) {
+            const empty = photos.findIndex((photo) => !photo);
+            if (empty < 0) break;
+            photos[empty] = src;
+          }
+          slots[0] = { ...slots[0], photos };
+        }
+        return slots;
+      })(),
       sizes: p.sizes,
-      images: [0, 1, 2, 3, 4].map((i) => p.images[i] || ""),
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -112,18 +140,21 @@ export default function SellerProductsPage() {
   const colors = useMemo(
     () =>
       form.colorSlots
-        .map((c) => ({
-          name: c.name.trim(),
-          hex: c.hex || "#1A1612",
-          image: c.image.trim(),
-        }))
+        .map((c) => {
+          const photos = [...new Set(c.photos.map((src) => src.trim()).filter(Boolean))].slice(0, PHOTOS_PER_COLOR);
+          return {
+            name: c.name.trim(),
+            hex: c.hex || "#1A1612",
+            image: photos[0] || "",
+            images: photos.slice(1),
+          };
+        })
         .filter((c) => c.name),
     [form.colorSlots],
   );
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    const extras = form.images.map((s) => s.trim()).filter(Boolean);
     if (!form.sizes.length) {
       toast("Choisis au moins une pointure");
       return;
@@ -133,7 +164,7 @@ export default function SellerProductsPage() {
       return;
     }
     if (colors.some((c) => !c.image)) {
-      toast("Ajoute une photo pour chaque couleur");
+      toast("Ajoute au moins une photo pour chaque couleur (4 ou 5 de préférence)");
       return;
     }
     const promo = Number(form.promoPrice || 0);
@@ -141,7 +172,7 @@ export default function SellerProductsPage() {
       toast("Le prix promo doit être inférieur au prix normal");
       return;
     }
-    const images = [...new Set([...colors.map((c) => c.image), ...extras])];
+    const images = [...new Set(colors.flatMap((c) => [c.image, ...c.images]))];
     setBusy(true);
     const body = {
       name: form.name,
@@ -204,20 +235,19 @@ export default function SellerProductsPage() {
     setUploading(slot);
     try {
       const { url } = await sellerUploadImage(file);
-      if (slot.startsWith("color-")) {
-        const index = Number(slot.slice(6));
-        setForm((f) => ({
-          ...f,
-          colorSlots: f.colorSlots.map((c, idx) => (idx === index ? { ...c, image: url } : c)),
-        }));
-      } else {
-        const index = Number(slot.slice(8));
-        setForm((f) => {
-          const images = [...f.images];
-          images[index] = url;
-          return { ...f, images };
-        });
-      }
+      const match = /^color-(\d+)-photo-(\d+)$/.exec(slot);
+      if (!match) return;
+      const colorIndex = Number(match[1]);
+      const photoIndex = Number(match[2]);
+      setForm((f) => ({
+        ...f,
+        colorSlots: f.colorSlots.map((c, idx) => {
+          if (idx !== colorIndex) return c;
+          const photos = [...c.photos];
+          photos[photoIndex] = url;
+          return { ...c, photos };
+        }),
+      }));
       toast("Photo enregistrée sur Cloudinary");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Upload Cloudinary impossible");
@@ -321,51 +351,29 @@ export default function SellerProductsPage() {
           />
           Afficher sur la page d’accueil
         </label>
-        <p className="text-sm font-bold">Couleurs (jusqu’à 6) — une photo par couleur</p>
+        <p className="text-sm font-bold">Couleurs (jusqu’à 6) — 4 ou 5 photos chacune</p>
         <p className="text-xs text-[#666]">
-          Sur la boutique, la photo change automatiquement selon la couleur choisie.
+          Chaque couleur a sa propre galerie, 5 emplacements maximum. Sur la boutique, changer de
+          couleur n’affiche que les photos de cette teinte.
         </p>
         <div className="space-y-3">
-          {form.colorSlots.map((slot, i) => (
-            <div
-              key={i}
-              className="grid grid-cols-[88px_1fr_auto] items-end gap-3 rounded-lg border border-[#E5E5E5] p-3"
-            >
-              <div className="space-y-1">
-                <div className="relative aspect-square overflow-hidden rounded-lg bg-[#F5F5F5]">
-                  {slot.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={slot.image} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="grid h-full place-items-center text-[10px] text-[#888]">Photo</span>
-                  )}
-                </div>
-                <label className="block cursor-pointer rounded-lg bg-[#1A1A1A] px-2 py-1.5 text-center text-[11px] font-bold text-white">
-                  {uploading === `color-${i}` ? "Envoi…" : slot.image ? "Changer" : "Upload"}
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    className="hidden"
-                    disabled={uploading !== null}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      e.target.value = "";
-                      if (file) void onUpload(`color-${i}`, file);
-                    }}
+          {form.colorSlots.map((slot, i) => {
+            const filled = slot.photos.filter(Boolean).length;
+            return (
+            <div key={i} className="space-y-3 rounded-lg border border-[#E5E5E5] p-3">
+              <div className="flex items-end gap-3">
+                <div className="min-w-0 flex-1">
+                  <Field
+                    label={`Couleur ${i + 1}`}
+                    value={slot.name}
+                    onChange={(v) =>
+                      setForm({
+                        ...form,
+                        colorSlots: form.colorSlots.map((c, idx) => (idx === i ? { ...c, name: v } : c)),
+                      })
+                    }
                   />
-                </label>
-              </div>
-              <Field
-                label={`Couleur ${i + 1}`}
-                value={slot.name}
-                onChange={(v) =>
-                  setForm({
-                    ...form,
-                    colorSlots: form.colorSlots.map((c, idx) => (idx === i ? { ...c, name: v } : c)),
-                  })
-                }
-              />
-              <div className="flex flex-col items-center gap-2">
+                </div>
                 <input
                   type="color"
                   value={slot.hex}
@@ -378,6 +386,7 @@ export default function SellerProductsPage() {
                     })
                   }
                   className="h-10 w-14 rounded"
+                  aria-label={`Teinte ${slot.name || i + 1}`}
                 />
                 {form.colorSlots.length > 1 && (
                   <button
@@ -391,8 +400,61 @@ export default function SellerProductsPage() {
                   </button>
                 )}
               </div>
+              <p className="text-[11px] font-medium text-[#666]">
+                Photos de {slot.name || "cette couleur"} · {filled}/{PHOTOS_PER_COLOR}
+              </p>
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
+                {slot.photos.map((url, j) => (
+                  <div key={j} className="space-y-1">
+                    <div className="relative aspect-square overflow-hidden rounded-lg bg-[#F5F5F5]">
+                      {url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={url} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="grid h-full place-items-center text-[10px] text-[#888]">
+                          {j === 0 ? "Principale" : j + 1}
+                        </span>
+                      )}
+                    </div>
+                    <label className="block cursor-pointer rounded-lg bg-[#1A1A1A] px-2 py-1.5 text-center text-[11px] font-bold text-white">
+                      {uploading === `color-${i}-photo-${j}` ? "Envoi…" : url ? "Changer" : "Upload"}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        className="hidden"
+                        disabled={uploading !== null}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          e.target.value = "";
+                          if (file) void onUpload(`color-${i}-photo-${j}`, file);
+                        }}
+                      />
+                    </label>
+                    {url && (
+                      <button
+                        type="button"
+                        className="w-full text-[11px] text-red-600"
+                        onClick={() =>
+                          setForm((f) => ({
+                            ...f,
+                            colorSlots: f.colorSlots.map((c, idx) => {
+                              if (idx !== i) return c;
+                              const photos = [...c.photos];
+                              photos[j] = "";
+                              return { ...c, photos };
+                            }),
+                          }))
+                        }
+                      >
+                        Retirer
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
+            );
+          })}
         </div>
         {form.colorSlots.length < 6 && (
           <button
@@ -401,7 +463,7 @@ export default function SellerProductsPage() {
             onClick={() =>
               setForm({
                 ...form,
-                colorSlots: [...form.colorSlots, { name: "", hex: "#D4AF37", image: "" }],
+                colorSlots: [...form.colorSlots, emptyColor()],
               })
             }
           >
@@ -421,53 +483,6 @@ export default function SellerProductsPage() {
             >
               {n}
             </button>
-          ))}
-        </div>
-        <p className="text-sm font-bold">Photos supplémentaires (optionnel)</p>
-        <p className="text-xs text-[#666]">
-          Galerie libre en plus des photos de couleur. Envoi Cloudinary, lien HTTPS en base.
-        </p>
-        <div className="grid grid-cols-5 gap-2">
-          {form.images.map((url, i) => (
-            <div key={i} className="space-y-1">
-              <div className="relative aspect-square overflow-hidden rounded-xl bg-[#F5F5F5]">
-                {url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={url} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <span className="grid h-full place-items-center text-xs text-[#888]">{i + 1}</span>
-                )}
-              </div>
-              <label className="block cursor-pointer rounded-lg bg-[#1A1A1A] px-2 py-1.5 text-center text-[11px] font-bold text-white">
-                {uploading === `gallery-${i}` ? "Envoi…" : url ? "Changer" : "Upload"}
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  className="hidden"
-                  disabled={uploading !== null}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    e.target.value = "";
-                    if (file) void onUpload(`gallery-${i}`, file);
-                  }}
-                />
-              </label>
-              {url && (
-                <button
-                  type="button"
-                  className="w-full text-[11px] text-red-600"
-                  onClick={() =>
-                    setForm((f) => {
-                      const images = [...f.images];
-                      images[i] = "";
-                      return { ...f, images };
-                    })
-                  }
-                >
-                  Retirer
-                </button>
-              )}
-            </div>
           ))}
         </div>
         <div className="flex gap-3">
