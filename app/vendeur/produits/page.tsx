@@ -637,7 +637,7 @@ export default function SellerProductsPage() {
                       ),
                     })
                   }
-                  placeholder="/models/oxford-noir-cognac.glb"
+                  placeholder="/models/produit-noir.glb"
                   className="w-full rounded-lg border border-[#E5E5E5] px-3 py-2 text-sm"
                 />
                 <label className="inline-flex cursor-pointer rounded-sm bg-[#C9A227] px-3 py-1.5 text-[11px] font-bold tracking-[0.08em] uppercase text-[#1C1812]">
