@@ -40,6 +40,14 @@ function slotFromColor(color: {
   };
 }
 
+function sellerSaveError(err: unknown) {
+  const message = err instanceof Error ? err.message : "Enregistrement impossible";
+  if (message.includes("should not exist")) {
+    return "Aucune paire enregistrée. Le serveur en ligne n’accepte pas encore les photos en plus ni le fichier 3D. Mets une seule photo par couleur, sans modèle 3D, ou déploie la nouvelle API.";
+  }
+  return message;
+}
+
 function emptyColor(name = "", hex = "#D4AF37"): ColorSlot {
   return { name, hex, photos: blankPhotos(), model: "" };
 }
@@ -188,6 +196,7 @@ export default function SellerProductsPage() {
       return;
     }
     const images = [...new Set(colors.flatMap((c) => [c.image, ...c.images]))];
+    const fallbackModel = form.model.trim();
     setBusy(true);
     const body = {
       name: form.name,
@@ -200,10 +209,16 @@ export default function SellerProductsPage() {
       category: form.category,
       isNew: form.isNew,
       featured: form.featured,
-      colors,
+      colors: colors.map((c) => ({
+        name: c.name,
+        hex: c.hex,
+        image: c.image,
+        ...(c.images.length ? { images: c.images } : {}),
+        ...(c.model ? { model: c.model } : {}),
+      })),
       sizes: form.sizes,
       images,
-      model: form.model.trim(),
+      ...(fallbackModel ? { model: fallbackModel } : {}),
     };
     try {
       if (editing) {
@@ -223,7 +238,7 @@ export default function SellerProductsPage() {
       setForm({ ...emptyForm, category: categories[0]?.id || "" });
       await load();
     } catch (err) {
-      toast(err instanceof Error ? err.message : "Enregistrement impossible");
+      toast(sellerSaveError(err));
     } finally {
       setBusy(false);
     }
