@@ -1,4 +1,6 @@
 import { BRAND } from "@/constants/branding";
+import type { ColorOption } from "@/lib/products";
+import { isGlbUrl } from "@/lib/product-models";
 
 export type CsvProduct = {
   name: string;
@@ -10,7 +12,7 @@ export type CsvProduct = {
   gender: "homme" | "femme" | "unisexe";
   category: string;
   isNew: boolean;
-  colors: { name: string; hex: string; image?: string }[];
+  colors: ColorOption[];
   sizes: number[];
   images: string[];
   model?: string;
@@ -119,7 +121,7 @@ function parseGender(value: string): CsvProduct["gender"] {
   return "unisexe";
 }
 
-function parseColors(value: string) {
+function parseColors(value: string): ColorOption[] {
   const parts = splitList(value).length
     ? splitList(value)
     : value
@@ -127,19 +129,28 @@ function parseColors(value: string) {
         .map((p) => p.trim())
         .filter(Boolean);
   const colors = parts.map((part) => {
-    const at = part.indexOf("@");
-    const image = at >= 0 ? part.slice(at + 1).trim() : "";
-    const head = at >= 0 ? part.slice(0, at) : part;
+    const bits = part.split("@").map((p) => p.trim()).filter(Boolean);
+    const head = bits[0] || part;
     const colon = head.indexOf(":");
     const name = (colon >= 0 ? head.slice(0, colon) : head).trim() || "Noir";
     const hex = colon >= 0 ? head.slice(colon + 1).trim() : "";
+    const photos: string[] = [];
+    let model = "";
+    for (const bit of bits.slice(1)) {
+      for (const piece of bit.split("+").map((p) => p.trim()).filter(Boolean)) {
+        if (isGlbUrl(piece)) model = piece;
+        else photos.push(piece);
+      }
+    }
     return {
       name,
       hex: hex.startsWith("#") ? hex : "#171717",
-      image: image || undefined,
+      image: photos[0] || undefined,
+      images: photos.slice(1),
+      model: model || undefined,
     };
   });
-  return colors.length ? colors : [{ name: "Noir", hex: "#171717", image: undefined }];
+  return colors.length ? colors : [{ name: "Noir", hex: "#171717" }];
 }
 
 function parseSizes(value: string) {
@@ -245,7 +256,7 @@ export function parseProductCsv(text: string): { products: CsvProduct[]; errors:
 }
 
 export const CSV_TEMPLATE = `nom;marque;prix;promo;achat;description;genre;categorie;nouveau;couleurs;pointures;images;glb
-Oxford Noir;${BRAND.name};489;399;280;Richelieu cuir lustré;homme;ceremonie;oui;Noir:#141210@/chaussures/oxford-noir.jpg|Cognac:#B5763A@/chaussures/oxford-cognac.jpg;40|41|42|43|44;/chaussures/oxford-noir.jpg|/chaussures/oxford-cognac.jpg;
+Oxford Noir;${BRAND.name};489;399;280;Richelieu cuir lustré;homme;ceremonie;oui;Noir:#141210@/chaussures/oxford-noir.jpg@/models/oxford-noir-noir.glb|Cognac:#B5763A@/chaussures/oxford-cognac.jpg@/models/oxford-noir-cognac.glb;40|41|42|43|44;/chaussures/oxford-noir.jpg|/chaussures/oxford-cognac.jpg;
 Derby Cognac;${BRAND.name};459;;260;Derby ville en cuir;homme;ville;oui;Cognac:#8B5A2B@/chaussures/derby-cognac.jpg;40|41|42|43;/chaussures/derby-cognac.jpg|/chaussures/derby-tabac.jpg;
 Porte-clés Blason;${BRAND.name};79;;35;Porte-clés cuir sellier;unisexe;accessoires;oui;Cognac:#8B5A2B@/accessoires/porte-cle-cognac.jpg;unique;/accessoires/porte-cle-cognac.jpg;
 `;

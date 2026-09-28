@@ -1,39 +1,52 @@
-export type ColorOption = { name: string; hex: string; image?: string };
+import type { ColorOption } from "@/lib/products";
 
 type MediaProduct = {
   images: string[];
   colors: ColorOption[];
 };
 
-export function colorImage(
-  product: MediaProduct,
-  colorName?: string | null,
-): string {
-  const fallback = product.images[0] ?? "";
-  if (!colorName) return fallback;
-  const index = product.colors.findIndex(
-    (c) => c.name.toLowerCase() === colorName.toLowerCase(),
-  );
-  if (index < 0) return fallback;
-  const match = product.colors[index];
-  return match.image || product.images[index] || fallback;
+function uniq(urls: (string | undefined)[]) {
+  return [...new Set(urls.map((src) => (src || "").trim()).filter(Boolean))];
 }
 
-export function galleryForColor(
-  product: MediaProduct,
-  colorName?: string | null,
-): string[] {
+export function findColor(product: MediaProduct, colorName?: string | null) {
+  if (!colorName) return product.colors[0];
+  const key = colorName.toLowerCase();
+  return product.colors.find((c) => c.name.toLowerCase() === key) ?? product.colors[0];
+}
+
+export function colorImage(product: MediaProduct, colorName?: string | null): string {
+  const fallback = product.images[0] ?? "";
+  const match = findColor(product, colorName);
+  if (!match) return fallback;
+  return match.image || match.images?.[0] || fallback;
+}
+
+/** Photos de la couleur choisie seulement — pas celles des autres teintes. */
+export function galleryForColor(product: MediaProduct, colorName?: string | null): string[] {
+  const match = findColor(product, colorName);
+  const own = match ? uniq([match.image, ...(match.images || [])]) : [];
+  if (own.length) return own;
+  const covers = new Set(
+    product.colors.flatMap((c) => uniq([c.image, ...(c.images || [])])),
+  );
+  const shared = product.images.filter((src) => !covers.has(src));
   const primary = colorImage(product, colorName);
-  const rest = product.images.filter((src) => src !== primary);
-  return primary ? [primary, ...rest] : rest;
+  return uniq([primary, ...shared]);
 }
 
 export function withColorImages<T extends MediaProduct>(product: T): T {
-  const colors = product.colors.map((color, index) => ({
-    ...color,
-    image: color.image || product.images[index] || product.images[0],
-  }));
-  const extra = colors.map((c) => c.image).filter((src): src is string => Boolean(src));
-  const images = [...new Set([...extra, ...product.images])];
+  const colors = product.colors.map((color, index) => {
+    const extras = uniq(color.images || []);
+    const image = color.image || extras[0] || product.images[index] || product.images[0];
+    return {
+      ...color,
+      image,
+      images: extras.filter((src) => src !== image),
+      model: color.model?.trim() || "",
+    };
+  });
+  const extra = colors.flatMap((c) => uniq([c.image, ...(c.images || [])]));
+  const images = uniq([...extra, ...product.images]);
   return { ...product, colors, images };
 }

@@ -10,11 +10,14 @@ export function ProductModel({
   poster,
   alt,
   colorName,
+  useVariants = false,
 }: {
   src: string;
   poster?: string;
   alt: string;
   colorName?: string;
+  /** True when one GLB file holds every color as material variants. */
+  useVariants?: boolean;
 }) {
   const ref = useRef<ViewerEl>(null);
 
@@ -26,12 +29,12 @@ export function ProductModel({
     const el = ref.current;
     if (!el) return;
     const apply = () => {
-      el.variantName = variantForColor(colorName);
+      if (useVariants) el.variantName = variantForColor(colorName);
     };
     el.addEventListener("load", apply);
     apply();
     return () => el.removeEventListener("load", apply);
-  }, [colorName, src]);
+  }, [colorName, src, useVariants]);
 
   return (
     <div className="product-model-stage">

@@ -21,6 +21,22 @@ import {
 } from "@/lib/seller";
 import { useToast } from "@/components/Toast";
 
+type ColorSlot = {
+  name: string;
+  hex: string;
+  image: string;
+  extras: string[];
+  model: string;
+};
+
+const emptyColor = (): ColorSlot => ({
+  name: "",
+  hex: "#D4AF37",
+  image: "",
+  extras: ["", ""],
+  model: "",
+});
+
 const emptyForm = {
   name: "",
   brand: "",
@@ -33,10 +49,10 @@ const emptyForm = {
   isNew: true,
   featured: false,
   colorSlots: [
-    { name: "Noir", hex: "#1A1612", image: "" },
-    { name: "Or", hex: "#D4AF37", image: "" },
-    { name: "Crème", hex: "#F3EDE2", image: "" },
-  ],
+    { name: "Noir", hex: "#1A1612", image: "", extras: ["", ""], model: "" },
+    { name: "Or", hex: "#D4AF37", image: "", extras: ["", ""], model: "" },
+    { name: "Crème", hex: "#F3EDE2", image: "", extras: ["", ""], model: "" },
+  ] as ColorSlot[],
   sizes: [40, 41, 42, 43, 44] as number[],
   images: ["", "", "", "", ""] as string[],
   model: "",
@@ -140,10 +156,16 @@ export default function SellerProductsPage() {
       isNew: p.isNew,
       featured: Boolean(p.featured),
       colorSlots: p.colors.length
-        ? p.colors.map((c) => ({ name: c.name, hex: c.hex, image: c.image || "" }))
+        ? p.colors.map((c) => ({
+            name: c.name,
+            hex: c.hex,
+            image: c.image || "",
+            extras: [0, 1].map((i) => c.images?.[i] || ""),
+            model: c.model || "",
+          }))
         : [
-            { name: "Noir", hex: "#1A1612", image: "" },
-            { name: "Or", hex: "#D4AF37", image: "" },
+            { name: "Noir", hex: "#1A1612", image: "", extras: ["", ""], model: "" },
+            { name: "Or", hex: "#D4AF37", image: "", extras: ["", ""], model: "" },
           ],
       sizes: p.sizes,
       images: [0, 1, 2, 3, 4].map((i) => p.images[i] || ""),
@@ -171,6 +193,8 @@ export default function SellerProductsPage() {
           name: c.name.trim(),
           hex: c.hex || "#1A1612",
           image: c.image.trim(),
+          images: c.extras.map((s) => s.trim()).filter(Boolean),
+          model: c.model.trim(),
         }))
         .filter((c) => c.name),
     [form.colorSlots],
@@ -196,7 +220,12 @@ export default function SellerProductsPage() {
       toast("Le prix promo doit être inférieur au prix normal");
       return;
     }
-    const images = [...new Set([...colors.map((c) => c.image), ...extras])];
+    const images = [
+      ...new Set([
+        ...colors.flatMap((c) => [c.image, ...c.images]),
+        ...extras,
+      ]),
+    ];
     setBusy(true);
     const body = {
       name: form.name,
@@ -306,8 +335,22 @@ export default function SellerProductsPage() {
     setUploading(slot);
     try {
       const { url } = await sellerUploadImage(file);
-      if (slot.startsWith("color-")) {
-        const index = Number(slot.slice(6));
+      const extraMatch = /^color-(\d+)-extra-(\d+)$/.exec(slot);
+      const colorMatch = /^color-(\d+)$/.exec(slot);
+      if (extraMatch) {
+        const index = Number(extraMatch[1]);
+        const extra = Number(extraMatch[2]);
+        setForm((f) => ({
+          ...f,
+          colorSlots: f.colorSlots.map((c, idx) => {
+            if (idx !== index) return c;
+            const extras = [...c.extras];
+            extras[extra] = url;
+            return { ...c, extras };
+          }),
+        }));
+      } else if (colorMatch) {
+        const index = Number(colorMatch[1]);
         setForm((f) => ({
           ...f,
           colorSlots: f.colorSlots.map((c, idx) => (idx === index ? { ...c, image: url } : c)),
@@ -328,11 +371,20 @@ export default function SellerProductsPage() {
     }
   }
 
-  async function onUploadGlb(file: File) {
-    setUploading("model");
+  async function onUploadGlb(file: File, slot?: string) {
+    setUploading(slot || "model");
     try {
       const { url } = await sellerUploadGlb(file);
-      setForm((f) => ({ ...f, model: url }));
+      const colorMatch = /^color-(\d+)(?:-glb)?$/.exec(slot || "");
+      if (colorMatch) {
+        const index = Number(colorMatch[1]);
+        setForm((f) => ({
+          ...f,
+          colorSlots: f.colorSlots.map((c, idx) => (idx === index ? { ...c, model: url } : c)),
+        }));
+      } else {
+        setForm((f) => ({ ...f, model: url }));
+      }
       toast("Fichier 3D GLB enregistré");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Upload GLB impossible");
@@ -474,75 +526,134 @@ export default function SellerProductsPage() {
           />
           Afficher sur la page d’accueil
         </label>
-        <p className="text-sm font-bold">Couleurs (jusqu’à 6) — une photo par couleur</p>
+        <p className="text-sm font-bold">Couleurs — photos et 3D pour chacune</p>
         <p className="text-xs text-[#666]">
-          Sur la boutique, la photo change automatiquement selon la couleur choisie.
+          Chaque couleur a ses propres photos et, si tu as le fichier, son propre modèle 3D. Sur la
+          boutique, changer de couleur change l’image et le 3D.
         </p>
         <div className="space-y-3">
           {form.colorSlots.map((slot, i) => (
-            <div
-              key={i}
-              className="grid grid-cols-[88px_1fr_auto] items-end gap-3 rounded-lg border border-[#E5E5E5] p-3"
-            >
-              <div className="space-y-1">
-                <div className="relative aspect-square overflow-hidden rounded-lg bg-[#F5F5F5]">
-                  {slot.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={slot.image} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="grid h-full place-items-center text-[10px] text-[#888]">Photo</span>
+            <div key={i} className="space-y-3 rounded-lg border border-[#E5E5E5] p-3">
+              <div className="grid grid-cols-[88px_1fr_auto] items-end gap-3">
+                <div className="space-y-1">
+                  <div className="relative aspect-square overflow-hidden rounded-lg bg-[#F5F5F5]">
+                    {slot.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={slot.image} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="grid h-full place-items-center text-[10px] text-[#888]">Photo</span>
+                    )}
+                  </div>
+                  <label className="block cursor-pointer rounded-lg bg-[#1A1A1A] px-2 py-1.5 text-center text-[11px] font-bold text-white">
+                    {uploading === `color-${i}` ? "Envoi…" : slot.image ? "Changer" : "Upload"}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      className="hidden"
+                      disabled={uploading !== null}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        e.target.value = "";
+                        if (file) void onUpload(`color-${i}`, file);
+                      }}
+                    />
+                  </label>
+                </div>
+                <Field
+                  label={`Couleur ${i + 1}`}
+                  value={slot.name}
+                  onChange={(v) =>
+                    setForm({
+                      ...form,
+                      colorSlots: form.colorSlots.map((c, idx) => (idx === i ? { ...c, name: v } : c)),
+                    })
+                  }
+                />
+                <div className="flex flex-col items-center gap-2">
+                  <input
+                    type="color"
+                    value={slot.hex}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        colorSlots: form.colorSlots.map((c, idx) =>
+                          idx === i ? { ...c, hex: e.target.value } : c,
+                        ),
+                      })
+                    }
+                    className="h-10 w-14 rounded"
+                  />
+                  {form.colorSlots.length > 1 && (
+                    <button
+                      type="button"
+                      className="text-xs text-red-600"
+                      onClick={() =>
+                        setForm({ ...form, colorSlots: form.colorSlots.filter((_, idx) => idx !== i) })
+                      }
+                    >
+                      Retirer
+                    </button>
                   )}
                 </div>
-                <label className="block cursor-pointer rounded-lg bg-[#1A1A1A] px-2 py-1.5 text-center text-[11px] font-bold text-white">
-                  {uploading === `color-${i}` ? "Envoi…" : slot.image ? "Changer" : "Upload"}
+              </div>
+              <p className="text-[11px] font-medium text-[#666]">Autres photos de {slot.name || "cette couleur"}</p>
+              <div className="grid grid-cols-2 gap-2">
+                {slot.extras.map((url, j) => (
+                  <div key={j} className="space-y-1">
+                    <div className="relative aspect-square overflow-hidden rounded-lg bg-[#F5F5F5]">
+                      {url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={url} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="grid h-full place-items-center text-[10px] text-[#888]">+ photo</span>
+                      )}
+                    </div>
+                    <label className="block cursor-pointer rounded-lg bg-[#F5F5F5] px-2 py-1 text-center text-[11px] font-medium">
+                      {uploading === `color-${i}-extra-${j}` ? "Envoi…" : url ? "Changer" : "Upload"}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        className="hidden"
+                        disabled={uploading !== null}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          e.target.value = "";
+                          if (file) void onUpload(`color-${i}-extra-${j}`, file);
+                        }}
+                      />
+                    </label>
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-1">
+                <p className="text-[11px] font-medium text-[#666]">Modèle 3D de cette couleur (.glb)</p>
+                <input
+                  value={slot.model}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      colorSlots: form.colorSlots.map((c, idx) =>
+                        idx === i ? { ...c, model: e.target.value } : c,
+                      ),
+                    })
+                  }
+                  placeholder="/models/oxford-noir-cognac.glb"
+                  className="w-full rounded-lg border border-[#E5E5E5] px-3 py-2 text-sm"
+                />
+                <label className="inline-flex cursor-pointer rounded-sm bg-[#C9A227] px-3 py-1.5 text-[11px] font-bold tracking-[0.08em] uppercase text-[#1C1812]">
+                  {uploading === `color-${i}-glb` ? "Envoi…" : slot.model ? "Changer le GLB" : "Uploader le GLB"}
                   <input
                     type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    accept=".glb,model/gltf-binary,application/octet-stream"
                     className="hidden"
                     disabled={uploading !== null}
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       e.target.value = "";
-                      if (file) void onUpload(`color-${i}`, file);
+                      if (file) void onUploadGlb(file, `color-${i}-glb`);
                     }}
                   />
                 </label>
-              </div>
-              <Field
-                label={`Couleur ${i + 1}`}
-                value={slot.name}
-                onChange={(v) =>
-                  setForm({
-                    ...form,
-                    colorSlots: form.colorSlots.map((c, idx) => (idx === i ? { ...c, name: v } : c)),
-                  })
-                }
-              />
-              <div className="flex flex-col items-center gap-2">
-                <input
-                  type="color"
-                  value={slot.hex}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      colorSlots: form.colorSlots.map((c, idx) =>
-                        idx === i ? { ...c, hex: e.target.value } : c,
-                      ),
-                    })
-                  }
-                  className="h-10 w-14 rounded"
-                />
-                {form.colorSlots.length > 1 && (
-                  <button
-                    type="button"
-                    className="text-xs text-red-600"
-                    onClick={() =>
-                      setForm({ ...form, colorSlots: form.colorSlots.filter((_, idx) => idx !== i) })
-                    }
-                  >
-                    Retirer
-                  </button>
-                )}
               </div>
             </div>
           ))}
@@ -554,7 +665,7 @@ export default function SellerProductsPage() {
             onClick={() =>
               setForm({
                 ...form,
-                colorSlots: [...form.colorSlots, { name: "", hex: "#D4AF37", image: "" }],
+                colorSlots: [...form.colorSlots, emptyColor()],
               })
             }
           >
@@ -652,16 +763,16 @@ export default function SellerProductsPage() {
         {!accessoryMode ? (
         <>
         <label className="block text-sm font-medium">
-          Fichier 3D GLB (optionnel)
+          Fichier 3D de repli (optionnel)
           <input
             value={form.model}
             onChange={(e) => setForm({ ...form, model: e.target.value })}
-            placeholder="/models/oxford-noir.glb ou https://…"
+            placeholder="Si une couleur n’a pas son GLB"
             className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#C5A059]"
           />
         </label>
         <label className="inline-flex cursor-pointer rounded-sm bg-[#C9A227] px-4 py-2 text-xs font-bold tracking-[0.08em] uppercase text-[#1C1812]">
-          {uploading === "model" ? "Envoi…" : form.model ? "Changer le GLB" : "Uploader un .glb"}
+          {uploading === "model" ? "Envoi…" : form.model ? "Changer le GLB de repli" : "Uploader un .glb de repli"}
           <input
             type="file"
             accept=".glb,model/gltf-binary,application/octet-stream"
@@ -675,7 +786,7 @@ export default function SellerProductsPage() {
           />
         </label>
         <p className="text-xs text-[#666]">
-          La fiche produit affiche le modèle 3D (rotation, zoom). Les photos restent en miniature.
+          Utilisé seulement si la couleur choisie n’a pas son propre fichier 3D.
         </p>
         </>
         ) : null}
@@ -760,7 +871,7 @@ export default function SellerProductsPage() {
                   )}{" "}
                   · achat {formatTnd(p.cost || 0)}
                   {p.featured ? " · accueil" : ""}
-                  {p.model ? " · 3D" : ""}
+                  {p.model || p.colors.some((c) => c.model) ? " · 3D" : ""}
                   {` · ${p.sizes.map(formatSize).join(", ")}`}
                 </p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">

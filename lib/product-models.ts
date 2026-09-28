@@ -1,3 +1,6 @@
+import type { ColorOption } from "@/lib/products";
+import { findColor } from "@/lib/product-media";
+
 const PLACEHOLDER_GLB = "/models/elvaro-shoe.glb";
 
 export function isGlbUrl(src?: string | null) {
@@ -9,13 +12,38 @@ function isPlaceholderGlb(url: string) {
   return url.split(/[?#]/)[0] === PLACEHOLDER_GLB;
 }
 
-export function glbCandidates(product?: { id: string; model?: string | null } | null) {
+export function colorSlug(name?: string | null) {
+  const slug = (name || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || "couleur";
+}
+
+type GlbProduct = {
+  id: string;
+  model?: string | null;
+  colors?: ColorOption[];
+};
+
+export function glbCandidates(product?: GlbProduct | null, colorName?: string | null) {
   if (!product) return [];
-  const listed = product.model?.trim() || "";
-  const byId = `/models/${product.id}.glb`;
+  const color = findColor(
+    { images: [], colors: product.colors || [] },
+    colorName,
+  );
   const urls: string[] = [];
-  if (listed && isGlbUrl(listed) && !isPlaceholderGlb(listed)) urls.push(listed);
-  if (!urls.includes(byId)) urls.push(byId);
+  const push = (raw?: string | null) => {
+    const url = raw?.trim() || "";
+    if (!url || !isGlbUrl(url) || isPlaceholderGlb(url) || urls.includes(url)) return;
+    urls.push(url);
+  };
+  push(color?.model);
+  if (color?.name) push(`/models/${product.id}-${colorSlug(color.name)}.glb`);
+  push(product.model);
+  push(`/models/${product.id}.glb`);
   return urls;
 }
 
@@ -54,15 +82,16 @@ export async function glbFileExists(url: string): Promise<boolean> {
 }
 
 export async function resolveExistingGlb(
-  product?: { id: string; model?: string | null } | null,
+  product?: GlbProduct | null,
+  colorName?: string | null,
 ) {
-  for (const url of glbCandidates(product)) {
+  for (const url of glbCandidates(product, colorName)) {
     if (await glbFileExists(url)) return url;
   }
   return "";
 }
 
-/** Maps boutique colors onto glTF material variants when the file has them. */
+/** Maps boutique colors onto glTF material variants when one file serves every color. */
 export function variantForColor(colorName?: string | null) {
   const n = (colorName || "").toLowerCase();
   if (/noir|navy|chocolat|tabac|bordeaux/.test(n)) return "Midnight";

@@ -11,7 +11,7 @@ export type CatalogProduct = {
   category: Category;
   isNew: boolean;
   featured?: boolean;
-  colors: { name: string; hex: string; image?: string }[];
+  colors: { name: string; hex: string; image?: string; images?: string[]; model?: string }[];
   sizes: number[];
   images: string[];
   model?: string;
@@ -301,10 +301,16 @@ function withColorPhotos(product: CatalogProduct): CatalogProduct {
   return {
     ...product,
     model: product.model?.trim() || '',
-    colors: product.colors.map((color, index) => ({
-      ...color,
-      image: color.image || product.images[index] || product.images[0],
-    })),
+    colors: product.colors.map((color, index) => {
+      const extras = [...new Set((color.images || []).map((src) => src.trim()).filter(Boolean))];
+      const image = color.image || extras[0] || product.images[index] || product.images[0];
+      return {
+        ...color,
+        image,
+        images: extras.filter((src) => src !== image),
+        model: color.model?.trim() || '',
+      };
+    }),
   };
 }
 

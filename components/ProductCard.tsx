@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { colorImage, galleryForColor } from "@/lib/product-media";
 import { Price, PromoBadge } from "@/components/Price";
-import { colorImage } from "@/lib/product-media";
 import { useExistingGlb } from "@/lib/use-product-glb";
 import type { Product } from "@/lib/products";
 import { ColorDots } from "./ColorDots";
@@ -11,7 +11,8 @@ import { ColorDots } from "./ColorDots";
 export function ProductCard({ product }: { product: Product }) {
   const [color, setColor] = useState(product.colors[0]?.name ?? "");
   const photo = colorImage(product, color);
-  const modelSrc = useExistingGlb(product);
+  const modelSrc = useExistingGlb(product, color);
+  const shots = galleryForColor(product, color);
 
   return (
     <article className="product-card group">
@@ -23,7 +24,7 @@ export function ProductCard({ product }: { product: Product }) {
         </div>
         <Link href={`/products/${product.id}`} className="block aspect-square">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={photo} alt={product.name} />
+          <img src={photo} alt={`${product.name} ${color}`.trim()} />
         </Link>
         <Link href={`/products/${product.id}`} className="product-buy">
           Acheter maintenant
@@ -36,6 +37,7 @@ export function ProductCard({ product }: { product: Product }) {
       <div className="mt-2">
         <ColorDots colors={product.colors} selected={color} onSelect={setColor} size="sm" />
       </div>
+      {shots.length > 1 ? <span className="sr-only">{shots.length} photos pour {color}</span> : null}
     </article>
   );
 }

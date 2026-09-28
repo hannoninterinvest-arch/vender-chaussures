@@ -24,6 +24,16 @@ export class ProductColorDto {
   @IsOptional()
   @IsString()
   image?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @ArrayMaxSize(8)
+  images?: string[];
+
+  @IsOptional()
+  @IsString()
+  model?: string;
 }
 
 export class CreateProductDto {

@@ -18,10 +18,21 @@ export type Product = {
   category: string;
   isNew: boolean;
   featured?: boolean;
-  colors: { name: string; hex: string; image?: string }[];
+  colors: ColorOption[];
   sizes: number[];
   images: string[];
-  /** Fichier 3D glTF binaire (.glb), chemin public ou URL. */
+  /** GLB de repli si une couleur n’a pas le sien. */
+  model?: string;
+};
+
+export type ColorOption = {
+  name: string;
+  hex: string;
+  /** Photo principale de cette couleur. */
+  image?: string;
+  /** Autres photos de cette couleur uniquement. */
+  images?: string[];
+  /** Fichier 3D .glb propre à cette couleur. */
   model?: string;
 };
 

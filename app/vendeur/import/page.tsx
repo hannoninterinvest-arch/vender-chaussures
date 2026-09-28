@@ -90,11 +90,14 @@ export default function SellerImportPage() {
             <code>85|90|95</code> (cm) pour un accessoire
           </li>
           <li>
-            <strong>couleurs</strong> : <code>Noir:#171717@https://…/noir.jpg|Blanc:#ffffff@https://…/blanc.jpg</code>
-            — le <code>@</code> lie la photo à la couleur. Sans photo, la 1re image de la colonne <code>images</code> est utilisée.
+            <strong>couleurs</strong> :{" "}
+            <code>Noir:#171717@https://…/noir.jpg+https://…/noir-2.jpg@/models/oxford-noir.glb</code>
+            — chaque couleur a ses photos (<code>+</code>) et peut avoir son propre GLB après un{" "}
+            <code>@</code>. Sans photo, la 1re image de la colonne <code>images</code> est utilisée.
           </li>
           <li>
-            <strong>glb</strong> : chemin ou URL du fichier 3D s’il existe, ex. <code>/models/oxford-noir.glb</code>. Laisse vide s’il n’y a pas de 3D.
+            <strong>glb</strong> : modèle 3D de repli si une couleur n’a pas le sien. Préfère le GLB dans{" "}
+            <code>couleurs</code>.
           </li>
           <li>
             <strong>categorie</strong> : id ou nom déjà créé (ex. <code>ville</code>, <code>accessoires</code>)

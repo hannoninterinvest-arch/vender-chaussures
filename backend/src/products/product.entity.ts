@@ -37,7 +37,7 @@ export class Product {
   featured: boolean;
 
   @Column({ type: 'jsonb' })
-  colors: { name: string; hex: string; image?: string }[];
+  colors: { name: string; hex: string; image?: string; images?: string[]; model?: string }[];
 
   @Column({ type: 'jsonb' })
   sizes: number[];

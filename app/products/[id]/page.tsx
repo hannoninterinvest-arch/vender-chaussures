@@ -28,8 +28,9 @@ export default function ProductPage({
   const cart = useCart();
   const toast = useToast();
   const { formatPrice } = useCurrency();
-  const modelSrc = useExistingGlb(product);
   const [color, setColor] = useState<string | null>(null);
+  const selectedColor = color ?? product?.colors[0]?.name ?? "";
+  const modelSrc = useExistingGlb(product, selectedColor);
   const [size, setSize] = useState<number | null>(null);
   const [qty, setQty] = useState(1);
   const [photo, setPhoto] = useState(0);
@@ -41,10 +42,11 @@ export default function ProductPage({
   }
   if (!product) notFound();
 
-  const selectedColor = color ?? product.colors[0]?.name ?? "";
   const gallery = galleryForColor(product, selectedColor);
   const mainPhoto = gallery[photo] || gallery[0] || product.images[0];
   const showModel = Boolean(modelSrc) && view3d;
+  const colorEntry = product.colors.find((c) => c.name === selectedColor);
+  const ownColorModel = Boolean(colorEntry?.model?.trim());
 
   const oneSize = isOneSize(product.sizes);
   const chosenSize = oneSize ? (product.sizes[0] ?? ONE_SIZE) : size;
@@ -84,7 +86,14 @@ export default function ProductPage({
       <div className="grid gap-10 lg:grid-cols-2">
         <div className="space-y-3">
           {showModel ? (
-            <ProductModel src={modelSrc} poster={mainPhoto} alt={product.name} colorName={selectedColor} />
+            <ProductModel
+              key={modelSrc}
+              src={modelSrc}
+              poster={mainPhoto}
+              alt={`${product.name} ${selectedColor}`.trim()}
+              colorName={selectedColor}
+              useVariants={!ownColorModel}
+            />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
             <img
