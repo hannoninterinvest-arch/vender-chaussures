@@ -12,6 +12,8 @@ import { useToast } from "@/components/Toast";
 import { ProductCard } from "@/components/ProductCard";
 import { ColorDots } from "@/components/ColorDots";
 import { hasPromo, Price, PromoBadge } from "@/components/Price";
+import { ProductModel } from "@/components/ProductModel";
+import { useExistingGlb } from "@/lib/use-product-glb";
 import { whatsappHref } from "@/lib/brand";
 
 export default function ProductPage({
@@ -30,15 +32,22 @@ export default function ProductPage({
   const [qty, setQty] = useState(1);
   const [photo, setPhoto] = useState(0);
   const [sizeHint, setSizeHint] = useState(false);
+  const [view3d, setView3d] = useState(true);
+  const selectedColor = color ?? product?.colors[0]?.name ?? "";
+  const modelSrc = useExistingGlb(product, selectedColor);
 
   if (!ready) {
     return <p className="px-6 py-20 text-center text-sm text-[var(--muted)]">Chargement…</p>;
   }
   if (!product) notFound();
 
-  const selectedColor = color ?? product.colors[0]?.name ?? "";
   const gallery = galleryForColor(product, selectedColor);
   const mainPhoto = gallery[photo] || gallery[0] || product.images[0];
+  const showModel = Boolean(modelSrc) && view3d;
+  const ownColorModel = Boolean(
+    product.colors.find((c) => c.name.toLowerCase() === selectedColor.toLowerCase())?.model?.trim(),
+  );
+  const thumbCount = gallery.length + (modelSrc ? 1 : 0);
 
   const snapshot = {
     productId: product.id,
@@ -74,21 +83,49 @@ export default function ProductPage({
       </p>
       <div className="grid gap-10 lg:grid-cols-2">
         <div className="space-y-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={mainPhoto}
-            alt={product.name}
-            className="aspect-square w-full object-cover"
-          />
-          {gallery.length > 1 ? (
-            <div className={`grid gap-3 ${gallery.length > 4 ? "grid-cols-5" : "grid-cols-4"}`}>
+          {showModel ? (
+            <ProductModel
+              key={modelSrc}
+              src={modelSrc}
+              poster={mainPhoto}
+              alt={`${product.name} ${selectedColor}`.trim()}
+              colorName={selectedColor}
+              useVariants={!ownColorModel}
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={mainPhoto}
+              alt={product.name}
+              className="aspect-square w-full object-cover"
+            />
+          )}
+          {thumbCount > 1 ? (
+            <div
+              className={`grid gap-3 ${
+                thumbCount >= 6 ? "grid-cols-6" : thumbCount === 5 ? "grid-cols-5" : "grid-cols-4"
+              }`}
+            >
+              {modelSrc ? (
+                <button
+                  type="button"
+                  onClick={() => setView3d(true)}
+                  aria-label="Voir le modèle 3D"
+                  className={`product-3d-thumb ${showModel ? "is-on" : ""}`}
+                >
+                  3D
+                </button>
+              ) : null}
               {gallery.map((src, i) => (
                 <button
                   key={`${src}-${i}`}
                   type="button"
-                  onClick={() => setPhoto(i)}
+                  onClick={() => {
+                    setView3d(false);
+                    setPhoto(i);
+                  }}
                   aria-label={`Photo ${i + 1}`}
-                  className={`overflow-hidden ${photo === i ? "ring-1 ring-[var(--gold)]" : "opacity-70"}`}
+                  className={`overflow-hidden ${!showModel && photo === i ? "ring-1 ring-[var(--gold)]" : "opacity-70"}`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={src} alt="" className="aspect-square w-full object-cover" />

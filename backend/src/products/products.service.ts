@@ -193,6 +193,7 @@ export class ProductsService implements OnModuleInit {
       colors: media.colors,
       sizes: dto.sizes,
       images: media.images,
+      model: dto.model?.trim() || '',
     });
     return this.toSeller(await this.products.save(product));
   }
@@ -216,6 +217,7 @@ export class ProductsService implements OnModuleInit {
         Number(product.price),
       );
     }
+    if (dto.model !== undefined) product.model = dto.model.trim();
     if (dto.colors !== undefined || dto.images !== undefined) {
       const media = attachProductMedia(
         dto.colors ?? product.colors,
@@ -276,6 +278,7 @@ export class ProductsService implements OnModuleInit {
       colors: product.colors,
       sizes: product.sizes,
       images: product.images,
+      model: product.model || '',
     };
   }
 

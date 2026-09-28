@@ -31,6 +31,11 @@ export class ProductColorDto {
   @IsString({ each: true })
   @ArrayMaxSize(4)
   images?: string[];
+
+  /** Fichier .glb propre à cette couleur. */
+  @IsOptional()
+  @IsString()
+  model?: string;
 }
 
 export class CreateProductDto {
@@ -98,4 +103,9 @@ export class CreateProductDto {
   @ArrayMinSize(1)
   @ArrayMaxSize(40)
   images: string[];
+
+  /** GLB de repli si une couleur n’a pas le sien. */
+  @IsOptional()
+  @IsString()
+  model?: string;
 }

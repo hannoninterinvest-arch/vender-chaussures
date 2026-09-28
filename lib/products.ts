@@ -17,9 +17,11 @@ export type Product = {
   category: string;
   isNew: boolean;
   featured?: boolean;
-  colors: { name: string; hex: string; image?: string; images?: string[] }[];
+  colors: { name: string; hex: string; image?: string; images?: string[]; model?: string }[];
   sizes: number[];
   images: string[];
+  /** Fichier 3D .glb de repli pour les couleurs qui n’ont pas le leur. */
+  model?: string;
 };
 
 export type ShopCategory = { slug: string; label: string; image: string };

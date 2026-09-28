@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  transpilePackages: ["@google/model-viewer"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "**" },

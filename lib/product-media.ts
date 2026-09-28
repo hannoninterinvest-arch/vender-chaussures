@@ -5,6 +5,7 @@ export type ColorOption = {
   hex: string;
   image?: string;
   images?: string[];
+  model?: string;
 };
 
 type MediaProduct = {
@@ -20,7 +21,7 @@ export function colorPhotos(color: ColorOption): string[] {
   return uniqPhotos([color.image, ...(color.images || [])]).slice(0, PHOTOS_PER_COLOR);
 }
 
-function findColor(product: MediaProduct, colorName?: string | null) {
+export function findColor(product: MediaProduct, colorName?: string | null) {
   if (!colorName) return product.colors[0];
   const key = colorName.toLowerCase();
   return product.colors.find((c) => c.name.toLowerCase() === key) ?? product.colors[0];

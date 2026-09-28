@@ -8,28 +8,40 @@ import { formatTnd } from "@/lib/format";
 import {
   isAdmin,
   sellerRequest,
+  sellerUploadGlb,
   sellerUploadImage,
   type SellerCategory,
   type SellerProduct,
 } from "@/lib/seller";
 import { useToast } from "@/components/Toast";
 
-type ColorSlot = { name: string; hex: string; photos: string[] };
+type ColorSlot = { name: string; hex: string; photos: string[]; model: string };
 
 function blankPhotos() {
   return Array.from({ length: PHOTOS_PER_COLOR }, () => "");
 }
 
-function slotFromColor(color: { name: string; hex: string; image?: string; images?: string[] }): ColorSlot {
+function slotFromColor(color: {
+  name: string;
+  hex: string;
+  image?: string;
+  images?: string[];
+  model?: string;
+}): ColorSlot {
   const own = [...new Set([color.image || "", ...(color.images || [])].map((src) => src.trim()).filter(Boolean))].slice(
     0,
     PHOTOS_PER_COLOR,
   );
-  return { name: color.name, hex: color.hex, photos: [...own, ...blankPhotos()].slice(0, PHOTOS_PER_COLOR) };
+  return {
+    name: color.name,
+    hex: color.hex,
+    photos: [...own, ...blankPhotos()].slice(0, PHOTOS_PER_COLOR),
+    model: color.model || "",
+  };
 }
 
 function emptyColor(name = "", hex = "#D4AF37"): ColorSlot {
-  return { name, hex, photos: blankPhotos() };
+  return { name, hex, photos: blankPhotos(), model: "" };
 }
 
 const emptyForm = {
@@ -49,6 +61,7 @@ const emptyForm = {
     emptyColor("Crème", "#F3EDE2"),
   ] as ColorSlot[],
   sizes: [40, 41, 42, 43, 44] as number[],
+  model: "",
 };
 
 export default function SellerProductsPage() {
@@ -122,6 +135,7 @@ export default function SellerProductsPage() {
         return slots;
       })(),
       sizes: p.sizes,
+      model: p.model || "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -147,6 +161,7 @@ export default function SellerProductsPage() {
             hex: c.hex || "#1A1612",
             image: photos[0] || "",
             images: photos.slice(1),
+            model: c.model.trim(),
           };
         })
         .filter((c) => c.name),
@@ -188,6 +203,7 @@ export default function SellerProductsPage() {
       colors,
       sizes: form.sizes,
       images,
+      model: form.model.trim(),
     };
     try {
       if (editing) {
@@ -251,6 +267,27 @@ export default function SellerProductsPage() {
       toast("Photo enregistrée sur Cloudinary");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Upload Cloudinary impossible");
+    } finally {
+      setUploading(null);
+    }
+  }
+
+  async function onUploadGlb(slot: string, file: File) {
+    setUploading(slot);
+    try {
+      const { url } = await sellerUploadGlb(file);
+      if (slot === "model") {
+        setForm((f) => ({ ...f, model: url }));
+      } else {
+        const index = Number(slot.replace("color-glb-", ""));
+        setForm((f) => ({
+          ...f,
+          colorSlots: f.colorSlots.map((c, idx) => (idx === index ? { ...c, model: url } : c)),
+        }));
+      }
+      toast("Modèle 3D enregistré");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Upload du fichier 3D impossible");
     } finally {
       setUploading(null);
     }
@@ -351,10 +388,10 @@ export default function SellerProductsPage() {
           />
           Afficher sur la page d’accueil
         </label>
-        <p className="text-sm font-bold">Couleurs (jusqu’à 6) — 4 ou 5 photos chacune</p>
+        <p className="text-sm font-bold">Couleurs (jusqu’à 6) — 4 ou 5 photos, et un 3D</p>
         <p className="text-xs text-[#666]">
-          Chaque couleur a sa propre galerie, 5 emplacements maximum. Sur la boutique, changer de
-          couleur n’affiche que les photos de cette teinte.
+          Chaque couleur a sa galerie (5 photos maximum) et, si tu as le fichier, son propre modèle
+          3D. Sur la boutique, changer de couleur change les photos et le 3D.
         </p>
         <div className="space-y-3">
           {form.colorSlots.map((slot, i) => {
@@ -452,6 +489,36 @@ export default function SellerProductsPage() {
                   </div>
                 ))}
               </div>
+              <div className="space-y-1">
+                <p className="text-[11px] font-medium text-[#666]">Modèle 3D de cette couleur (.glb)</p>
+                <input
+                  value={slot.model}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      colorSlots: form.colorSlots.map((c, idx) =>
+                        idx === i ? { ...c, model: e.target.value } : c,
+                      ),
+                    })
+                  }
+                  placeholder="/models/produit-noir.glb"
+                  className="w-full rounded-lg border border-[#E5E5E5] px-3 py-2 text-sm"
+                />
+                <label className="inline-flex cursor-pointer rounded-sm bg-[#C9A227] px-3 py-1.5 text-[11px] font-bold tracking-[0.08em] uppercase text-[#1C1812]">
+                  {uploading === `color-glb-${i}` ? "Envoi…" : slot.model ? "Changer le GLB" : "Uploader le GLB"}
+                  <input
+                    type="file"
+                    accept=".glb,model/gltf-binary,application/octet-stream"
+                    className="hidden"
+                    disabled={uploading !== null}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      e.target.value = "";
+                      if (file) void onUploadGlb(`color-glb-${i}`, file);
+                    }}
+                  />
+                </label>
+              </div>
             </div>
             );
           })}
@@ -470,6 +537,32 @@ export default function SellerProductsPage() {
             + Ajouter une couleur
           </button>
         )}
+        <div className="space-y-1">
+          <p className="text-sm font-bold">3D de repli (optionnel)</p>
+          <p className="text-xs text-[#666]">
+            Utilisé seulement pour une couleur qui n’a pas son propre fichier .glb.
+          </p>
+          <input
+            value={form.model}
+            onChange={(e) => setForm({ ...form, model: e.target.value })}
+            placeholder="/models/produit.glb"
+            className="w-full rounded-lg border border-[#E5E5E5] px-3 py-2 text-sm"
+          />
+          <label className="inline-flex cursor-pointer rounded-sm bg-[#1A1A1A] px-3 py-1.5 text-[11px] font-bold tracking-[0.08em] uppercase text-white">
+            {uploading === "model" ? "Envoi…" : form.model ? "Changer le GLB de repli" : "Uploader un .glb de repli"}
+            <input
+              type="file"
+              accept=".glb,model/gltf-binary,application/octet-stream"
+              className="hidden"
+              disabled={uploading !== null}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (file) void onUploadGlb("model", file);
+              }}
+            />
+          </label>
+        </div>
         <p className="text-sm font-bold">Pointures</p>
         <div className="flex flex-wrap gap-2">
           {allSizes.map((n) => (

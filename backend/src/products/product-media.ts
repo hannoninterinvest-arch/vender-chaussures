@@ -7,6 +7,7 @@ export type ColorMedia = {
   hex: string;
   image?: string;
   images?: string[];
+  model?: string;
 };
 
 function uniq(urls: string[]) {
@@ -28,11 +29,13 @@ export function isSeedMedia(images: string[] = []) {
 export function hydrateColors(colors: ColorMedia[] = [], images: string[] = []): ColorMedia[] {
   return colors.map((color, index) => {
     const photos = colorPhotoList(color, images[index] || images[0] || '');
+    const model = String(color.model || '').trim();
     return {
       name: String(color.name || '').trim() || 'Noir',
       hex: String(color.hex || '#1A1612'),
       image: photos[0] || '',
       images: photos.slice(1),
+      ...(model ? { model } : {}),
     };
   });
 }

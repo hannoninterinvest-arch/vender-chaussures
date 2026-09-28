@@ -37,11 +37,15 @@ export class Product {
   featured: boolean;
 
   @Column({ type: 'jsonb' })
-  colors: { name: string; hex: string; image?: string; images?: string[] }[];
+  colors: { name: string; hex: string; image?: string; images?: string[]; model?: string }[];
 
   @Column({ type: 'jsonb' })
   sizes: number[];
 
   @Column({ type: 'jsonb' })
   images: string[];
+
+  /** Chemin public ou URL HTTPS d’un fichier .glb de repli. */
+  @Column({ default: '' })
+  model: string;
 }
