@@ -16,12 +16,7 @@ import { Category } from './category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import {
-  attachProductMedia,
-  hydrateColors,
-  isSeedMedia,
-  mergeGallery,
-} from './product-media';
+import { attachProductMedia, isSeedMedia } from './product-media';
 import { discountPercent, promoActive, sellingPrice } from './pricing';
 import { Product } from './product.entity';
 
@@ -59,46 +54,19 @@ export class ProductsService implements OnModuleInit {
     }
     for (const item of categorySeed) {
       const exists = await this.categories.findOne({ where: { id: item.id } });
-      if (!exists) {
-        await this.categories.save(this.categories.create(item));
-      } else if (!exists.image || isSeedMedia([exists.image])) {
-        exists.image = item.image;
-        exists.label = item.label;
-        await this.categories.save(exists);
-      }
+      if (!exists) await this.categories.save(this.categories.create(item));
     }
-    for (const item of catalog) {
-      const exists = await this.products.findOne({ where: { id: item.id } });
-      if (!exists) {
-        const media = attachProductMedia(item.colors, item.images);
-        await this.products.save(
-          this.products.create({
-            ...item,
-            ...media,
-            featured: item.featured ?? false,
-            cost: Math.round(item.price * 0.62),
-          }),
-        );
-      }
-    }
-    await this.refreshSeedMedia();
-    await this.backfillColorImages();
+    await this.removeUntouchedDemoProducts();
   }
 
-  /** Bring seeded products up to the current catalog photos, unless the shop
-   *  replaced them with its own uploads. */
-  private async refreshSeedMedia() {
-    for (const item of catalog) {
-      const row = await this.products.findOne({ where: { id: item.id } });
-      if (!row || !isSeedMedia(row.images)) continue;
-      const media = attachProductMedia(item.colors, item.images);
-      const sameImages = JSON.stringify(media.images) === JSON.stringify(row.images);
-      const sameColors = JSON.stringify(media.colors) === JSON.stringify(row.colors);
-      if (sameImages && sameColors) continue;
-      row.colors = media.colors;
-      row.images = media.images;
-      await this.products.save(row);
-    }
+  /** Retire les paires de démonstration encore intactes. Les produits ajoutés
+   *  ou modifiés dans l’espace vendeur ne sont jamais réécrits. */
+  private async removeUntouchedDemoProducts() {
+    const demoIds = catalog.map((item) => item.id);
+    if (!demoIds.length) return;
+    const rows = await this.products.find({ where: { id: In(demoIds) } });
+    const leftovers = rows.filter((row) => isSeedMedia(row.images));
+    if (leftovers.length) await this.products.remove(leftovers);
   }
 
   async findAll() {
@@ -234,21 +202,6 @@ export class ProductsService implements OnModuleInit {
     if (!product) throw new NotFoundException('Produit introuvable');
     await this.products.remove(product);
     return { ok: true };
-  }
-
-  private async backfillColorImages() {
-    const rows = await this.products.find();
-    for (const row of rows) {
-      const colors = hydrateColors(row.colors || [], row.images || []);
-      if (colors.some((color) => !color.image) && !(row.images || []).length) continue;
-      const images = mergeGallery(colors, row.images || []);
-      const sameColors = JSON.stringify(colors) === JSON.stringify(row.colors || []);
-      const sameImages = JSON.stringify(images) === JSON.stringify(row.images || []);
-      if (sameColors && sameImages) continue;
-      row.colors = colors;
-      row.images = images;
-      await this.products.save(row);
-    }
   }
 
   private async uniqueId(base: string) {

@@ -12,7 +12,6 @@ import { fetchCategories, fetchProducts } from "./api";
 import { withColorImages } from "./product-media";
 import {
   categories as fallbackCategories,
-  fallbackProducts,
   type Product,
   type ShopCategory,
 } from "./products";
@@ -26,7 +25,7 @@ type CatalogValue = {
 };
 
 const CatalogContext = createContext<CatalogValue>({
-  products: fallbackProducts,
+  products: [],
   categories: fallbackCategories,
   ready: false,
   error: null,
@@ -43,7 +42,7 @@ function mapCategories(rows: unknown): ShopCategory[] {
 }
 
 export function CatalogProvider({ children }: { children: React.ReactNode }) {
-  const [products, setProducts] = useState<Product[]>(fallbackProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<ShopCategory[]>(fallbackCategories);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,10 +54,11 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     Promise.allSettled([fetchProducts(), fetchCategories()]).then(([p, c]) => {
       if (cancelled) return;
-      if (p.status === "fulfilled" && Array.isArray(p.value) && p.value.length) {
+      if (p.status === "fulfilled" && Array.isArray(p.value)) {
         setProducts(p.value.map((item) => withColorImages(item as Product)));
       } else {
-        setError("API indisponible — catalogue local");
+        setProducts([]);
+        setError("API indisponible");
       }
       if (c.status === "fulfilled") setCategories(mapCategories(c.value));
       setReady(true);
