@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { FlouciService } from '../payments/flouci.service';
+import { roundMoney } from '../shipping/shipping-quote';
 import { KonnectService } from '../payments/konnect.service';
 import { sellingPrice } from '../products/pricing';
 import { ProductsService } from '../products/products.service';
@@ -25,6 +27,7 @@ export class OrdersService {
     private readonly products: ProductsService,
     private readonly konnect: KonnectService,
     private readonly shipping: ShippingService,
+    private readonly flouci: FlouciService,
   ) {}
 
   frontendUrl() {
@@ -70,10 +73,15 @@ export class OrdersService {
     const weightKg = lines.reduce((sum, line) => sum + PAIR_WEIGHT_KG * line.qty, 0);
     const quote = await this.shipping.quote(country, carrier, weightKg);
     const delivery = quote.price;
-    const online = dto.payment === 'online';
-    if (online && !this.konnect.configured()) {
+    const total = roundMoney(subtotal + delivery);
+    if (dto.expectedTotal !== undefined && roundMoney(dto.expectedTotal) !== total) {
+      throw new BadRequestException('Le prix ou les frais de livraison ont changé. Actualise le panier avant de confirmer.');
+    }
+    const online = dto.payment !== 'cod';
+    const gateway = dto.payment === 'flouci' ? this.flouci : this.konnect;
+    if (online && !gateway.configured()) {
       throw new BadRequestException(
-        'Paiement en ligne indisponible. Choisis le paiement à la livraison (Tunisie uniquement).',
+        'Ce moyen de paiement est indisponible. Choisis un autre moyen de paiement.',
       );
     }
     const order = this.orders.create({
@@ -93,9 +101,9 @@ export class OrdersService {
       paymentStatus: online ? 'pending' : 'cod',
       payUrl: '',
       status: online ? 'paiement_en_cours' : 'en_attente',
-      subtotal,
+      subtotal: roundMoney(subtotal),
       delivery,
-      total: subtotal + delivery,
+      total,
       items: lines,
     });
 
@@ -103,7 +111,7 @@ export class OrdersService {
     if (!online) return saved;
 
     try {
-      const payment = await this.konnect.initPayment({
+      const payment = await gateway.initPayment({
         orderId: saved.id,
         amountTnd: Number(saved.total),
         customerName: saved.customerName,
@@ -119,18 +127,21 @@ export class OrdersService {
   }
 
   async retryPayment(id: string) {
-    const order = await this.orders.findOne({ where: { id } });
+    let order = await this.orders.findOne({ where: { id } });
     if (!order) throw new NotFoundException('Commande introuvable');
-    if (order.payment !== 'online') {
+    if (order.payment === 'cod') {
       throw new BadRequestException('Cette commande se règle à la livraison');
     }
+    order = await this.syncPayment(order);
     if (order.paymentStatus === 'paid') {
       throw new BadRequestException('Cette commande est déjà payée');
     }
     if (order.status === 'annulee') {
       throw new BadRequestException('Commande annulée');
     }
-    const payment = await this.konnect.initPayment({
+    if (order.paymentStatus === 'pending' && order.payUrl) return order;
+    const gateway = order.payment === 'flouci' ? this.flouci : this.konnect;
+    const payment = await gateway.initPayment({
       orderId: order.id,
       amountTnd: Number(order.total),
       customerName: order.customerName,
@@ -145,32 +156,47 @@ export class OrdersService {
 
   async confirmKonnect(paymentRef: string) {
     if (!paymentRef) return { ok: false, paid: false, orderId: '' };
-    const payment = await this.konnect.getPayment(paymentRef);
-    let order = await this.orders.findOne({ where: { paymentRef } });
-    if (!order && payment?.orderId) {
-      order = await this.orders.findOne({ where: { id: payment.orderId } });
-    }
+    const order = await this.orders.findOne({ where: { paymentRef, payment: 'online' } });
     if (!order) return { ok: false, paid: false, orderId: '' };
+    if (order.paymentStatus === 'paid') return { ok: true, paid: true, orderId: order.id };
+    const payment = await this.konnect.getPayment(paymentRef);
 
-    if (this.konnect.isPaid(payment)) {
-      order.paymentStatus = 'paid';
-      if (order.status === 'paiement_en_cours') order.status = 'en_attente';
-      await this.orders.save(order);
+    if (this.konnect.isPaid(payment, order.id, Number(order.total))) {
+      await this.orders.update({ id: order.id, paymentRef }, { paymentStatus: 'paid' });
+      await this.orders.update({ id: order.id, paymentRef, status: 'paiement_en_cours' }, { status: 'en_attente' });
       return { ok: true, paid: true, orderId: order.id };
     }
     if (this.konnect.isFailed(payment)) {
-      order.paymentStatus = 'failed';
-      await this.orders.save(order);
+      await this.orders.update({ id: order.id, paymentRef, paymentStatus: 'pending' }, { paymentStatus: 'failed' });
       return { ok: true, paid: false, orderId: order.id };
     }
     return { ok: true, paid: false, orderId: order.id };
   }
 
+  async confirmFlouci(paymentRef: string) {
+    if (!paymentRef) return { ok: false, paid: false, orderId: '' };
+    const order = await this.orders.findOne({ where: { paymentRef, payment: 'flouci' } });
+    if (!order) return { ok: false, paid: false, orderId: '' };
+    if (order.paymentStatus === 'paid') return { ok: true, paid: true, orderId: order.id };
+    const payment = await this.flouci.getPayment(paymentRef);
+    if (this.flouci.isPaid(payment, order.id, Number(order.total))) {
+      await this.orders.update({ id: order.id, paymentRef }, { paymentStatus: 'paid' });
+      await this.orders.update({ id: order.id, paymentRef, status: 'paiement_en_cours' }, { status: 'en_attente' });
+      return { ok: true, paid: true, orderId: order.id };
+    }
+    if (this.flouci.isFailed(payment)) {
+      await this.orders.update({ id: order.id, paymentRef, paymentStatus: 'pending' }, { paymentStatus: 'failed' });
+    }
+    return { ok: true, paid: false, orderId: order.id };
+  }
+
   async syncPayment(order: Order) {
-    if (order.payment !== 'online' || order.paymentStatus === 'paid' || !order.paymentRef) {
+    if (order.payment === 'cod' || order.paymentStatus === 'paid' || !order.paymentRef) {
       return order;
     }
-    const result = await this.confirmKonnect(order.paymentRef);
+    const result = order.payment === 'flouci'
+      ? await this.confirmFlouci(order.paymentRef)
+      : await this.confirmKonnect(order.paymentRef);
     if (!result.ok) return order;
     const fresh = await this.orders.findOne({ where: { id: order.id } });
     return fresh ?? order;
@@ -193,7 +219,7 @@ export class OrdersService {
     if (!order) throw new NotFoundException('Commande introuvable');
     if (
       (status === 'en_livraison' || status === 'livree') &&
-      order.payment === 'online' &&
+      order.payment !== 'cod' &&
       order.paymentStatus !== 'paid'
     ) {
       throw new BadRequestException('Le paiement en ligne n’est pas encore confirmé.');

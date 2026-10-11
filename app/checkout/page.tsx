@@ -24,17 +24,21 @@ export default function CheckoutPage() {
   const toast = useToast();
   const { lines, subtotal, clear } = useCart();
   const { selectedCountry, formatPrice, isLocal } = useLocale();
-  const [payment, setPayment] = useState<PaymentMethod>("cod");
+  const [paymentChoice, setPayment] = useState<PaymentMethod>("cod");
+  const [flouciReady, setFlouciReady] = useState(false);
   const [onlineReady, setOnlineReady] = useState(false);
   const [gouvernorat, setGouvernorat] = useState<Gouvernorat>("Tunis");
   const [carrier, setCarrier] = useState<ShippingCarrier>("LA_POSTE");
   const [busy, setBusy] = useState(false);
-  const [fee, setFee] = useState<number | null>(null);
-  const [quoteError, setQuoteError] = useState("");
+  const [quote, setQuote] = useState<{ key: string; price: number | null; error: string } | null>(null);
+  const payment = !isLocal && paymentChoice === "cod" ? (flouciReady ? "flouci" : "online") : paymentChoice;
   const weightKg = useMemo(
     () => cartWeightKg(lines.reduce((sum, line) => sum + line.qty, 0)),
     [lines],
   );
+  const quoteKey = `${selectedCountry}:${carrier}:${weightKg}`;
+  const fee = quote?.key === quoteKey ? quote.price : null;
+  const quoteError = quote?.key === quoteKey ? quote.error : "";
   const total = subtotal + (fee ?? 0);
 
   useEffect(() => {
@@ -43,7 +47,9 @@ export default function CheckoutPage() {
       .then((cfg) => {
         if (cancelled) return;
         setOnlineReady(Boolean(cfg.online));
-        if (cfg.online) setPayment("online");
+        setFlouciReady(Boolean(cfg.flouci));
+        if (cfg.flouci) setPayment("flouci");
+        else if (cfg.online) setPayment("online");
       })
       .catch(() => {
         if (!cancelled) setOnlineReady(false);
@@ -54,35 +60,33 @@ export default function CheckoutPage() {
   }, []);
 
   useEffect(() => {
-    if (!isLocal && payment === "cod") setPayment("online");
-  }, [isLocal, payment]);
-
-  useEffect(() => {
     if (lines.length === 0) return;
     let cancelled = false;
-    setQuoteError("");
     calculateShipping({ country: selectedCountry, carrier, weightKg })
       .then((quote) => {
-        if (!cancelled) setFee(quote.price);
+        if (!cancelled) setQuote({ key: quoteKey, price: quote.price, error: "" });
       })
       .catch((err: Error) => {
         if (cancelled) return;
-        setFee(null);
-        setQuoteError(err.message);
+        setQuote({ key: quoteKey, price: null, error: err.message });
       });
     return () => {
       cancelled = true;
     };
-  }, [selectedCountry, carrier, weightKg, lines.length]);
+  }, [selectedCountry, carrier, weightKg, lines.length, quoteKey]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (lines.length === 0 || busy) return;
+    if (fee == null || quoteError) {
+      toast("Attends le calcul des frais de livraison avant de confirmer.");
+      return;
+    }
     if (payment === "cod" && !isLocal) {
       toast("Le paiement à la livraison n’est disponible qu’en Tunisie.");
       return;
     }
-    if (payment === "online" && !onlineReady) {
+    if ((payment === "online" && !onlineReady) || (payment === "flouci" && !flouciReady)) {
       toast("Paiement en ligne indisponible pour le moment.");
       return;
     }
@@ -99,6 +103,7 @@ export default function CheckoutPage() {
         address: String(data.get("address")),
         notes: String(data.get("notes") || ""),
         payment,
+        expectedTotal: total,
         items: lines.map((l) => ({
           productId: l.productId,
           size: l.size,
@@ -219,7 +224,7 @@ export default function CheckoutPage() {
           <div className="space-y-2">
             {paymentMethods.map((m) => {
               const codBlocked = m.id === "cod" && !isLocal;
-              const onlineBlocked = m.id === "online" && !onlineReady;
+              const onlineBlocked = (m.id === "online" && !onlineReady) || (m.id === "flouci" && !flouciReady);
               const disabled = codBlocked || onlineBlocked;
               return (
               <label
@@ -246,7 +251,7 @@ export default function CheckoutPage() {
                     {codBlocked
                       ? "Disponible uniquement pour une livraison en Tunisie."
                       : onlineBlocked
-                        ? "Konnect n’est pas encore configuré (clés dans backend/.env)."
+                        ? "Ce moyen de paiement est temporairement indisponible."
                         : m.hint}
                   </span>
                 </span>
@@ -254,9 +259,9 @@ export default function CheckoutPage() {
               );
             })}
           </div>
-          {!isLocal && !onlineReady && (
+          {!isLocal && !onlineReady && !flouciReady && (
             <p className="text-sm text-[var(--promo)]">
-              L’international se règle en ligne. Configure Konnect pour activer cette option.
+              Le paiement en ligne est temporairement indisponible pour cette destination.
             </p>
           )}
         </div>
@@ -293,15 +298,15 @@ export default function CheckoutPage() {
             {quoteError && <p className="text-xs text-[var(--promo)]">{quoteError}</p>}
             <div className="flex justify-between pt-2 text-lg font-bold">
               <span>Total</span>
-              <span className="text-[#C5A059]">{formatPrice(total)}</span>
+              <span className="text-[#C5A059]">{fee == null ? "…" : formatPrice(total)}</span>
             </div>
           </div>
           <button
             type="submit"
-            disabled={busy || fee == null || (payment === "online" && !onlineReady)}
+            disabled={busy || fee == null || ((payment === "online" && !onlineReady) || (payment === "flouci" && !flouciReady))}
             className="gold-btn mt-6 h-12 w-full rounded-sm text-xs uppercase disabled:opacity-60"
           >
-            {busy ? "Envoi…" : payment === "online" ? "Payer en ligne" : "Confirmer la commande"}
+            {busy ? "Envoi…" : payment !== "cod" ? "Payer en ligne" : "Confirmer la commande"}
           </button>
           <p className="mt-3 text-center text-[11px] tracking-[0.14em] uppercase text-[var(--muted)]">
             {brand.slogan}

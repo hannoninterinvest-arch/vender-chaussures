@@ -11,6 +11,8 @@ type KonnectPayment = {
   status?: string;
   orderId?: string;
   amount?: number;
+  token?: string;
+  expirationDate?: string;
   reachedAmount?: number;
   transactions?: { status?: string }[];
 };
@@ -71,6 +73,7 @@ export class KonnectService {
 
     const res = await fetch(`${this.baseUrl()}/payments/init-payment`, {
       method: 'POST',
+      signal: AbortSignal.timeout(15000),
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': this.apiKey(),
@@ -98,6 +101,7 @@ export class KonnectService {
     if (!this.configured() || !paymentRef) return null;
     const res = await fetch(`${this.baseUrl()}/payments/${encodeURIComponent(paymentRef)}`, {
       headers: { 'x-api-key': this.apiKey() },
+      signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) {
       this.log.warn(`Konnect getPayment ${paymentRef} → ${res.status}`);
@@ -107,16 +111,18 @@ export class KonnectService {
     return data.payment ?? null;
   }
 
-  isPaid(payment: KonnectPayment | null) {
-    if (!payment) return false;
-    if (payment.status === 'completed') return true;
-    return (payment.transactions ?? []).some((tx) => tx.status === 'success');
+  isPaid(payment: KonnectPayment | null, orderId: string, amountTnd: number) {
+    const expected = Math.round(Number(amountTnd) * 1000);
+    return payment?.status === 'completed' && payment.orderId === orderId &&
+      payment.token === 'TND' && Number(payment.amount) === expected &&
+      Number(payment.reachedAmount) >= expected;
   }
 
   isFailed(payment: KonnectPayment | null) {
     if (!payment) return false;
     const status = (payment.status || '').toLowerCase();
-    return ['expired', 'canceled', 'cancelled', 'failed'].includes(status);
+    return ['expired', 'canceled', 'cancelled', 'failed'].includes(status) ||
+      (status === 'pending' && Boolean(payment.expirationDate) && Date.parse(payment.expirationDate!) <= Date.now());
   }
 
   private apiKey() {
@@ -138,10 +144,10 @@ export class KonnectService {
 
   private methods() {
     const raw = (this.config.get<string>('KONNECT_METHODS') ?? '').trim();
-    const list = (raw || 'wallet,bank_card,e-DINAR,flouci')
+    const list = (raw || 'wallet,bank_card,e-DINAR')
       .split(',')
       .map((m) => m.trim())
-      .filter(Boolean);
+      .filter((method) => ['wallet', 'bank_card', 'e-DINAR'].includes(method));
     return list.length ? list : ['wallet', 'bank_card', 'e-DINAR'];
   }
 
