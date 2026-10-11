@@ -36,17 +36,18 @@ export function deliveryFee(gouvernorat: Gouvernorat) {
   return 15;
 }
 
-export type PaymentMethod = "cod" | "online";
+export type PaymentMethod = "cod" | "online" | "flouci";
 
 export const paymentMethods: {
   id: PaymentMethod;
   label: string;
   hint: string;
 }[] = [
+  { id: "flouci", label: "Flouci", hint: "Paiement sécurisé par Flouci : wallet ou carte bancaire." },
   {
     id: "online",
     label: "Paiement en ligne",
-    hint: "Carte bancaire, e-DINAR / D17, wallet Konnect ou Flouci — tu es redirigé vers Konnect pour payer tout de suite.",
+    hint: "Carte bancaire, e-DINAR / D17, wallet Konnect — tu es redirigé vers Konnect pour payer tout de suite.",
   },
   {
     id: "cod",

@@ -101,7 +101,7 @@ export function normalizeCountryCode(country: string): string {
     .toLowerCase();
   if (COUNTRY_ALIASES[key]) return COUNTRY_ALIASES[key];
   if (/^[a-z]{3}$/i.test(raw) && raw.toUpperCase() === 'TUN') return 'TN';
-  return raw.toUpperCase().slice(0, 2);
+  return raw.toUpperCase();
 }
 
 export function isTunisia(country: string): boolean {

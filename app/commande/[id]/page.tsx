@@ -12,6 +12,8 @@ import { useToast } from "@/components/Toast";
 type OrderView = {
   id: string;
   total: number;
+  subtotal: number;
+  delivery: number;
   payment: string;
   paymentStatus?: string;
   payUrl?: string;
@@ -100,7 +102,7 @@ export default function OrderPage({
     );
   }
 
-  const online = order.payment === "online";
+  const online = order.payment !== "cod";
   const paid = order.paymentStatus === "paid";
   const pay = paymentLabel(order.payment);
   const payState = paymentStatusLabel(order.paymentStatus || "", order.payment);
@@ -116,7 +118,7 @@ export default function OrderPage({
       </h1>
       <p className="mt-2 text-sm text-[var(--muted)]">
         {online && !paid
-          ? "Termine le paiement Konnect pour valider la commande. On t’appelle ensuite pour l’expédition."
+          ? "Termine le paiement en ligne pour valider la commande. On t’appelle ensuite pour l’expédition."
           : `On t’appelle au ${order.customer.phone} pour confirmer avant expédition.`}
       </p>
 
@@ -144,6 +146,8 @@ export default function OrderPage({
             </li>
           ))}
         </ul>
+        <div className="mt-4 flex justify-between text-sm"><span>Sous-total</span><span>{formatPrice(Number(order.subtotal))}</span></div>
+        <div className="mt-2 flex justify-between text-sm"><span>Livraison</span><span>{formatPrice(Number(order.delivery))}</span></div>
         <div className="mt-4 flex justify-between font-bold">
           <span>Total</span>
           <span className="text-[#C5A059]">{formatPrice(Number(order.total))}</span>
@@ -151,14 +155,14 @@ export default function OrderPage({
       </div>
 
       <div className="mt-8 flex flex-wrap gap-3">
-        {online && !paid && (
+        {online && !paid && order.status !== "annulee" && (
           <button
             type="button"
             disabled={paying}
             onClick={() => void payNow()}
             className="gold-btn inline-flex rounded-sm px-6 py-3 text-xs uppercase disabled:opacity-60"
           >
-            {paying ? "Ouverture…" : "Payer avec Konnect"}
+            {paying ? "Ouverture…" : `Payer avec ${order.payment === "flouci" ? "Flouci" : "Konnect"}`}
           </button>
         )}
         <Link href="/shop" className="gold-btn inline-flex rounded-sm px-6 py-3 text-xs uppercase">

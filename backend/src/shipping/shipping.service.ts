@@ -19,11 +19,9 @@ import {
   type ShippingCarrier,
 } from './shipping-rates.config';
 
-const CACHE_MS = 5 * 60 * 1000;
 
 @Injectable()
 export class ShippingService implements OnModuleInit {
-  private cache: { at: number; rows: ShippingRate[] } | null = null;
 
   constructor(
     @InjectRepository(ShippingRate)
@@ -43,7 +41,6 @@ export class ShippingService implements OnModuleInit {
     );
     if (missing.length === 0) return;
     await this.rates.save(missing.map((row) => this.rates.create(row)));
-    this.bustCache();
   }
 
   async listRates() {
@@ -66,7 +63,6 @@ export class ShippingService implements OnModuleInit {
     });
     try {
       const saved = await this.rates.save(row);
-      this.bustCache();
       return this.toClient(saved);
     } catch {
       throw new BadRequestException(
@@ -90,7 +86,6 @@ export class ShippingService implements OnModuleInit {
     }
     try {
       const saved = await this.rates.save(row);
-      this.bustCache();
       return this.toClient(saved);
     } catch {
       throw new BadRequestException(
@@ -109,14 +104,18 @@ export class ShippingService implements OnModuleInit {
   }
 
   async quote(country: string, carrier: ShippingCarrier, weightKg: number) {
+    if (!Number.isFinite(weightKg) || weightKg <= 0 || weightKg > 80) {
+      throw new BadRequestException('Le poids du colis doit être compris entre 0 et 80 kg.');
+    }
     const code = normalizeCountryCode(country);
+    if (!/^[A-Z]{2}$/.test(code)) throw new BadRequestException('Pays de livraison invalide. Utilise un code ISO à deux lettres.');
     const zone = zoneForCountry(code);
     const local = isTunisia(code);
     const rows = await this.loadRates();
     const rate = rows.find(
       (row) =>
         row.carrier === carrier &&
-        (local ? row.isLocal : !row.isLocal && row.zone === zone),
+        row.zone === zone && row.isLocal === local,
     );
     if (!rate) {
       throw new BadRequestException(
@@ -157,15 +156,8 @@ export class ShippingService implements OnModuleInit {
   }
 
   private async loadRates(): Promise<ShippingRate[]> {
-    const now = Date.now();
-    if (this.cache && now - this.cache.at < CACHE_MS) return this.cache.rows;
-    const rows = await this.rates.find();
-    this.cache = { at: now, rows };
-    return rows;
-  }
-
-  private bustCache() {
-    this.cache = null;
+    // Always read current admin rates across backend instances.
+    return this.rates.find();
   }
 
   private toClient(row: ShippingRate) {

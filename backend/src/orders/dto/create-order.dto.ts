@@ -3,13 +3,14 @@ import {
   ArrayMinSize,
   IsIn,
   IsInt,
+  IsNumber,
   IsOptional,
   IsString,
   Min,
   ValidateNested,
 } from 'class-validator';
 
-const PAYMENTS = ['cod', 'online'] as const;
+const PAYMENTS = ['cod', 'online', 'flouci'] as const;
 
 export class CreateOrderItemDto {
   @IsString()
@@ -60,6 +61,11 @@ export class CreateOrderDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  expectedTotal?: number;
 
   @IsIn(PAYMENTS)
   payment: (typeof PAYMENTS)[number];

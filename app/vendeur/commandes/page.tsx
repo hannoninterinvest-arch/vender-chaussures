@@ -112,7 +112,7 @@ export default function SellerOrdersPage() {
               </div>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
-              {o.payment === "online" && o.paymentStatus !== "paid" && o.status !== "annulee" && (
+              {o.payment !== "cod" && o.paymentStatus !== "paid" && o.status !== "annulee" && (
                 <p className="w-full text-sm text-amber-800">
                   Paiement Konnect non confirmé — pas d’expédition tant que ce n’est pas payé.
                 </p>
@@ -121,7 +121,7 @@ export default function SellerOrdersPage() {
                 o.status !== "livree" &&
                 o.status !== "annulee" &&
                 o.status !== "paiement_en_cours" &&
-                !(o.payment === "online" && o.paymentStatus !== "paid") && (
+                !(o.payment !== "cod" && o.paymentStatus !== "paid") && (
                 <button
                   type="button"
                   className="rounded-lg bg-[#F5F5F5] px-3 py-2 text-sm font-medium"
@@ -132,7 +132,7 @@ export default function SellerOrdersPage() {
               )}
               {o.status !== "livree" &&
                 o.status !== "annulee" &&
-                !(o.payment === "online" && o.paymentStatus !== "paid") && (
+                !(o.payment !== "cod" && o.paymentStatus !== "paid") && (
                 <button
                   type="button"
                   className="gold-btn rounded-sm px-3 py-2 text-xs uppercase"

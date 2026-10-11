@@ -8,7 +8,7 @@ Boutique **ELVARO** (noir, crème, or) — commande **sans compte**.
 - Front : Next.js (catalogue, panier, checkout invité)
 - Back : NestJS + TypeORM + PostgreSQL (Neon)
 - Commandes et produits en base
-- Paiement : **en ligne (Konnect)** ou **à la livraison**
+- Paiement : **en ligne (Flouci ou Konnect)** ou **à la livraison**
 - Photos produit : 4 ou 5 photos par couleur (max 5) via Cloudinary, URL en PostgreSQL
 - Page d’accueil : l’admin choisit les photos de garde (pas d’images statiques)
 - Espace vendeur : produits, vitrine, catégories, livraisons, bénéfices
@@ -180,7 +180,7 @@ Sans `KONNECT_API_KEY` et `KONNECT_WALLET_ID`, le checkout ne propose que **à l
 5. `BACKEND_PUBLIC_URL` = URL publique de l’API (ex. `https://vender-chaussures.onrender.com`)
 6. `FRONTEND_URL` = URL publique de la boutique (redirection après paiement), pas `*`
 
-Le client choisit **en ligne** (carte, e-DINAR/D17, wallet, Flouci via Konnect) ou **à la livraison**.
+Le client choisit **en ligne** (carte, e-DINAR/D17, wallet Konnect) ou **à la livraison**.
 
 Render définit `PORT` tout seul. L’API écoute `0.0.0.0`.
 
@@ -194,3 +194,30 @@ NEXT_PUBLIC_API_URL=https://vender-chaussures.onrender.com/api
 L’URL **doit** finir par `/api`. Sans ça, le login appelle `/auth/login` et Render répond 404. Puis `npm run dev` (front seulement).
 
 Tu peux aussi importer le Blueprint `render.yaml` (New → Blueprint) : il cible déjà `rootDir: backend`.
+
+
+### Flouci direct et vérification de la livraison
+
+Flouci est un moyen de paiement distinct de Konnect, intégré via l’API v2 officielle.
+Configurer **sur le backend uniquement** `FLOUCI_PUBLIC_KEY`, `FLOUCI_SECRET_KEY`,
+`FRONTEND_URL` (URL de la boutique) et `BACKEND_PUBLIC_URL` (URL du backend, sans `/api`).
+Les URLs publiques doivent être HTTPS et le webhook `/api/payments/flouci/webhook`
+doit être accessible. Les clés de test ou de production se choisissent dans le portail Flouci.
+Aucune clé ne doit être placée dans une variable `NEXT_PUBLIC_*`.
+
+Le montant envoyé est le total calculé côté serveur (produits + livraison), converti en millimes.
+Le webhook et la page de retour vérifient le paiement auprès de Flouci ; `paid=1` ne constitue
+jamais une preuve. La confirmation exige `success=true`, `status=SUCCESS`, le bon identifiant
+marchand et le montant exact. Une session en attente est réutilisée lors d’une nouvelle tentative.
+Une commande Flouci non payée ne peut pas être expédiée.
+
+Les frais utilisent les tarifs administrateur courants selon transporteur, pays et poids :
+forfait en Tunisie, base + poids supplémentaire à l’international (0,8 kg estimé par paire).
+Le checkout bloque la validation tant que le devis correspondant au panier courant n’est pas prêt.
+Si le prix ou le tarif change après son affichage, le serveur rejette la commande avant le paiement.
+Les tarifs initiaux restent des estimations : les valider auprès des transporteurs avant la mise en vente.
+
+Validation avant production : avec des clés Flouci de test et une base de test, vérifier une commande
+réussie, échouée, expirée, le retour boutique et le webhook. Contrôler que le montant débité inclut
+la livraison affichée et qu’une deuxième tentative réutilise la session active. Ensuite utiliser les
+clés de production et faire une transaction réelle autorisée de faible montant.
