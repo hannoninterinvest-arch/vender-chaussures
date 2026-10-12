@@ -120,7 +120,13 @@ export type SellerProduct = {
   category: string;
   isNew: boolean;
   featured: boolean;
-  colors: { name: string; hex: string; image?: string; images?: string[]; model?: string }[];
+  colors: {
+    name: string;
+    hex: string;
+    image?: string;
+    images?: string[];
+    model?: string;
+  }[];
   sizes: number[];
   images: string[];
   model?: string;
@@ -136,8 +142,12 @@ async function parseError(res: Response) {
   throw new Error(message);
 }
 
-export async function sellerRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const sameOrigin = path === "/seller/site" || path.startsWith("/seller/site?");
+export async function sellerRequest<T>(
+  path: string,
+  init: RequestInit = {},
+): Promise<T> {
+  const sameOrigin =
+    path === "/seller/site" || path.startsWith("/seller/site?");
   const res = await fetch(sameOrigin ? `/api${path}` : apiUrl(path), {
     ...init,
     cache: "no-store",
@@ -157,7 +167,11 @@ export async function fetchSetupNeeded() {
   return res.json() as Promise<{ needed: boolean }>;
 }
 
-export async function createFirstAdmin(name: string, email: string, password: string) {
+export async function createFirstAdmin(
+  name: string,
+  email: string,
+  password: string,
+) {
   const res = await fetch(apiUrl("/auth/setup"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -203,26 +217,51 @@ export async function fetchStaffMe() {
   return user;
 }
 
-export async function sellerUploadGlb(file: File): Promise<{ url: string }> {
+async function uploadDirect(
+  file: File,
+  kind: "image" | "model",
+): Promise<{ url: string }> {
+  const maxBytes = (kind === "model" ? 20 : 6) * 1024 * 1024;
+  if (!file.size || file.size > maxBytes)
+    throw new Error(
+      kind === "model"
+        ? "Modèle trop lourd (max 20 Mo)"
+        : "Image trop lourde (max 6 Mo)",
+    );
+  const signed = await sellerRequest<{
+    cloudName: string;
+    apiKey: string;
+    resourceType: string;
+    params: { timestamp: number; upload_preset: string; public_id: string };
+    signature: string;
+  }>("/seller/uploads/sign", {
+    method: "POST",
+    body: JSON.stringify({
+      kind,
+      size: file.size,
+      name: file.name,
+      mime: file.type,
+    }),
+  });
   const body = new FormData();
   body.append("file", file);
-  const res = await fetch(apiUrl("/seller/uploads/model"), {
-    method: "POST",
-    headers: authHeaders(),
-    body,
-  });
-  if (!res.ok) await parseError(res);
-  return res.json() as Promise<{ url: string }>;
+  body.append("api_key", signed.apiKey);
+  body.append("signature", signed.signature);
+  for (const [key, value] of Object.entries(signed.params))
+    body.append(key, String(value));
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${encodeURIComponent(signed.cloudName)}/${signed.resourceType}/upload`,
+    { method: "POST", body },
+  );
+  const data = await res.json();
+  if (!res.ok || !data.secure_url)
+    throw new Error(data.error?.message || "Envoi Cloudinary impossible");
+  return { url: data.secure_url };
 }
 
-export async function sellerUploadImage(file: File): Promise<{ url: string }> {
-  const body = new FormData();
-  body.append("file", file);
-  const res = await fetch(apiUrl("/seller/uploads"), {
-    method: "POST",
-    headers: authHeaders(),
-    body,
-  });
-  if (!res.ok) await parseError(res);
-  return res.json() as Promise<{ url: string }>;
+export function sellerUploadGlb(file: File) {
+  return uploadDirect(file, "model");
+}
+export function sellerUploadImage(file: File) {
+  return uploadDirect(file, "image");
 }

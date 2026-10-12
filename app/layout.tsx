@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     "Chaussures haut de gamme fabriquées en Tunisie. Commande sans compte, paiement à la livraison.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" data-theme="light" className={`${display.variable} ${body.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans">

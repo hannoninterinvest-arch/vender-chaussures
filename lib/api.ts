@@ -1,16 +1,10 @@
-function normalizeApiBase(raw: string) {
-  const trimmed = raw.trim().replace(/\/+$/, "");
-  if (trimmed.endsWith("/api")) return trimmed;
-  return `${trimmed}/api`;
-}
-
-const API = normalizeApiBase(
-  process.env.NEXT_PUBLIC_API_URL ?? "https://vender-chaussures.onrender.com/api",
-);
-
 export function apiUrl(path: string) {
   const suffix = path.startsWith("/") ? path : `/${path}`;
-  return `${API}${suffix}`;
+  const origin =
+    typeof window === "undefined"
+      ? process.env.APP_URL || "http://localhost:3000"
+      : "";
+  return `${origin.replace(/\/$/, "")}/api${suffix}`;
 }
 
 export async function fetchProducts() {

@@ -1,0 +1,81 @@
+import { Type } from "class-transformer";
+import {
+  ArrayMinSize,
+  IsIn,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+  ValidateNested,
+} from "class-validator";
+
+const PAYMENTS = ["cod", "online", "flouci"] as const;
+
+export class CreateOrderItemDto {
+  @IsString()
+  productId!: string;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(36)
+  size!: number;
+
+  @IsString()
+  color!: string;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  qty!: number;
+}
+
+const CARRIERS = ["ARAMEX", "LA_POSTE"] as const;
+
+export class CreateOrderDto {
+  @IsString()
+  customerName!: string;
+
+  @IsString()
+  phone!: string;
+
+  @IsOptional()
+  @IsString()
+  gouvernorat?: string;
+
+  /** Code ISO-2 (TN, FR, …) ou nom de pays. Défaut Tunisie. */
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @IsOptional()
+  @IsIn(CARRIERS)
+  carrier?: (typeof CARRIERS)[number];
+
+  @IsString()
+  city!: string;
+
+  @IsString()
+  address!: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  expectedTotal?: number;
+
+  @IsIn(PAYMENTS)
+  payment!: (typeof PAYMENTS)[number];
+
+  @IsOptional()
+  @IsString()
+  paymentPhone?: string;
+
+  @ValidateNested({ each: true })
+  @Type(() => CreateOrderItemDto)
+  @ArrayMinSize(1)
+  items!: CreateOrderItemDto[];
+}
