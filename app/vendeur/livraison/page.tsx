@@ -1,358 +1,240 @@
 "use client";
-
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { isAdmin, sellerRequest } from "@/lib/seller";
+import type { CountryRate } from "@/lib/country-shipping";
 import { useToast } from "@/components/Toast";
-
-type RateRow = {
-  id: string;
-  carrier: "ARAMEX" | "LA_POSTE" | string;
-  zone: string;
-  isLocal: boolean;
-  basePriceTND: number;
-  weightIncludedKg: number;
-  pricePerExtraKgTND: number;
-  updatedAt?: string;
-};
-
-const ZONE_LABELS: Record<string, string> = {
-  TUNISIE: "Tunisie (local)",
-  MAGHREB: "Maghreb",
-  EUROPE: "Europe",
-  MOYEN_ORIENT: "Moyen-Orient",
-  AMERIQUE_NORD: "Amérique du Nord",
-  RESTE_MONDE: "Reste du monde",
-};
-
-const CARRIERS = ["ARAMEX", "LA_POSTE"] as const;
-const ZONES = [
-  "MAGHREB",
-  "EUROPE",
-  "MOYEN_ORIENT",
-  "AMERIQUE_NORD",
-  "RESTE_MONDE",
-] as const;
-
-const empty = {
-  carrier: "LA_POSTE" as (typeof CARRIERS)[number],
-  zone: "EUROPE" as (typeof ZONES)[number],
-  isLocal: false,
-  basePriceTND: 45,
-  weightIncludedKg: 1,
-  pricePerExtraKgTND: 10,
-};
-
-const inputClass =
-  "w-full rounded-sm border border-[#C5A059]/40 bg-white px-2 py-1.5 text-sm outline-none focus:border-[#C5A059]";
-
+const input = "field min-w-[80px] px-2 py-1 text-sm";
 export default function SellerShippingPage() {
-  const toast = useToast();
-  const admin = isAdmin();
-  const [rows, setRows] = useState<RateRow[]>([]);
-  const [drafts, setDrafts] = useState<Record<string, RateRow>>({});
-  const [form, setForm] = useState(empty);
-  const [busy, setBusy] = useState<string | null>(null);
-
-  async function load() {
-    const data = await sellerRequest<RateRow[]>("/admin/shipping-rates");
-    setRows(data);
-    setDrafts(Object.fromEntries(data.map((row) => [row.id, { ...row }])));
-  }
-
+  const admin = isAdmin(),
+    toast = useToast();
+  const [rows, setRows] = useState<CountryRate[]>([]);
+  const [search, setSearch] = useState("");
+  const [carrier, setCarrier] = useState("LA_POSTE");
+  const [page, setPage] = useState(0);
+  const [busy, setBusy] = useState("");
+  const [error, setError] = useState("");
   useEffect(() => {
     if (!admin) return;
     let cancelled = false;
-    sellerRequest<RateRow[]>("/admin/shipping-rates")
+    sellerRequest<CountryRate[]>("/admin/country-rates")
       .then((data) => {
-        if (cancelled) return;
-        setRows(data);
-        setDrafts(Object.fromEntries(data.map((row) => [row.id, { ...row }])));
+        if (!cancelled) setRows(data);
       })
-      .catch((err: Error) => {
-        if (!cancelled) toast(err.message);
+      .catch((err) => {
+        if (!cancelled) setError(err.message);
       });
     return () => {
       cancelled = true;
     };
-  }, [admin, toast]);
-
-  const sorted = useMemo(
+  }, [admin]);
+  const filtered = useMemo(
     () =>
-      [...rows]
-        .filter((row) => row.zone !== "TUNISIE")
-        .sort(
-          (a, b) =>
-            a.zone.localeCompare(b.zone) || a.carrier.localeCompare(b.carrier),
-        ),
-    [rows],
+      rows.filter(
+        (row) =>
+          row.countryCode !== "TN" &&
+          row.carrier === carrier &&
+          `${row.countryName} ${row.countryCode}`
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .includes(
+              search
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toLowerCase(),
+            ),
+      ),
+    [rows, carrier, search],
   );
-
-  if (!admin) {
-    return <p className="text-red-600">Réservé à l’administrateur.</p>;
+  const shown = filtered.slice(page * 15, page * 15 + 15);
+  function patch(id: string, values: Partial<CountryRate>) {
+    setRows((rows) =>
+      rows.map((row) => (row.id === id ? { ...row, ...values } : row)),
+    );
   }
-
-  function patchDraft(id: string, patch: Partial<RateRow>) {
-    setDrafts((prev) => {
-      const current = prev[id];
-      if (!current) return prev;
-      return { ...prev, [id]: { ...current, ...patch } };
-    });
-  }
-
-  async function saveRow(id: string) {
-    const draft = drafts[id];
-    if (!draft) return;
-    setBusy(id);
+  async function save(row: CountryRate) {
+    setBusy(row.id);
     try {
-      const updated = await sellerRequest<RateRow>(
-        `/admin/shipping-rates/${id}`,
+      const updated = await sellerRequest<CountryRate>(
+        `/admin/country-rates/${encodeURIComponent(row.id)}`,
         {
           method: "PUT",
           body: JSON.stringify({
-            basePriceTND: Number(draft.basePriceTND),
-            weightIncludedKg: Number(draft.weightIncludedKg),
-            pricePerExtraKgTND: Number(draft.pricePerExtraKgTND),
-            isLocal: Boolean(draft.isLocal),
+            enabled: row.enabled,
+            basePriceTND: Number(row.basePriceTND),
+            weightIncludedKg: Number(row.weightIncludedKg),
+            pricePerExtraKgTND: Number(row.pricePerExtraKgTND),
+            weightStepKg: Number(row.weightStepKg),
+            maxWeightKg: Number(row.maxWeightKg),
+            estimated: row.estimated,
           }),
         },
       );
-      setRows((list) => list.map((row) => (row.id === id ? updated : row)));
-      setDrafts((prev) => ({ ...prev, [id]: { ...updated } }));
-      toast("Tarif enregistré");
+      patch(row.id, updated);
+      toast("Tarif du pays enregistré");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Enregistrement impossible");
     } finally {
-      setBusy(null);
+      setBusy("");
     }
   }
-
-  async function onCreate(e: FormEvent) {
-    e.preventDefault();
-    setBusy("new");
-    try {
-      await sellerRequest("/admin/shipping-rates", {
-        method: "POST",
-        body: JSON.stringify({
-          ...form,
-          isLocal: false,
-          basePriceTND: Number(form.basePriceTND),
-          weightIncludedKg: Number(form.weightIncludedKg),
-          pricePerExtraKgTND: Number(form.pricePerExtraKgTND),
-        }),
-      });
-      await load();
-      toast("Zone ajoutée");
-    } catch (err) {
-      toast(err instanceof Error ? err.message : "Création impossible");
-    } finally {
-      setBusy(null);
-    }
-  }
-
+  if (!admin) return <p>Réservé à l’administrateur.</p>;
   return (
     <div>
-      <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase">
-        Tarifs de livraison
-      </h1>
-      <p className="mt-2 max-w-3xl text-sm text-[#666]">
-        En Tunisie, la livraison coûte <strong>8 DT par commande</strong> pour
-        les deux transporteurs. Le poids utilisé est de{" "}
-        <strong>1,5 kg par paire, emballage compris</strong>.
+      <h1 className="text-3xl font-bold">Livraison par pays</h1>
+      <p className="mt-3 text-sm text-[#666]">
+        Tunisie : <strong>8 DT par commande</strong>. Poids :{" "}
+        <strong>1,5 kg par paire</strong>. À l’étranger, paiement en ligne
+        uniquement.
       </p>
-      <p className="mt-2 max-w-3xl text-sm text-[#666]">
-        À l’étranger, les frais utilisent les tarifs enregistrés ci-dessous et
-        le poids total de la commande. Contactez Aramex ou La Poste pour obtenir
-        leurs tarifs, puis renseignez la base, les kilogrammes inclus et le prix
-        par kilogramme supplémentaire. Les montants existants peuvent être des
-        estimations : confirmez-les auprès du transporteur. Aucune clé API ni
-        dimension de carton n’est nécessaire. Les modifications sont prises en
-        compte immédiatement.
+      <p className="mt-2 text-sm text-[#666]">
+        Tous les pays et territoires sont préremplis avec des estimations
+        modifiables. Remplacez-les après avoir obtenu les tarifs du
+        transporteur, puis cochez « Tarif réel ». Désactivez les destinations
+        non desservies.
       </p>
-
-      <div className="mt-6 overflow-x-auto rounded-[4px] border border-[#C5A059]/30 bg-white">
+      <p className="mt-2 text-sm text-[#666]">
+        Calcul : base + supplément au-delà des kg inclus. Une tranche de 1 kg
+        arrondit le supplément au kg supérieur ; 0 permet un calcul
+        proportionnel. Pour un prix simple au kg : base 0, kg inclus 0, tranche
+        0.
+      </p>
+      <div className="mt-5 flex flex-wrap gap-3">
+        <input
+          className="field max-w-xs"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(0);
+          }}
+          placeholder="Rechercher un pays…"
+          aria-label="Rechercher un pays"
+        />
+        <select
+          className="field max-w-xs"
+          value={carrier}
+          onChange={(e) => {
+            setCarrier(e.target.value);
+            setPage(0);
+          }}
+          aria-label="Transporteur"
+        >
+          <option value="LA_POSTE">La Poste</option>
+          <option value="ARAMEX">Aramex</option>
+        </select>
+        <span className="self-center text-sm">
+          {filtered.length} destinations
+        </span>
+      </div>
+      {error && <p className="mt-3 text-red-700">{error}</p>}
+      <div className="mt-5 overflow-x-auto rounded border bg-white">
         <table className="min-w-full text-left text-sm">
-          <thead className="bg-[#1A1A1B] text-[#EDE8DE]">
+          <thead className="bg-[#F4EFE5]">
             <tr>
-              <th className="px-3 py-3 font-medium">Transporteur</th>
-              <th className="px-3 py-3 font-medium">Zone</th>
-              <th className="px-3 py-3 font-medium">Local</th>
-              <th className="px-3 py-3 font-medium">Base (TND)</th>
-              <th className="px-3 py-3 font-medium">Kg inclus</th>
-              <th className="px-3 py-3 font-medium">TND / kg extra</th>
-              <th className="px-3 py-3 font-medium" />
+              {[
+                "Pays",
+                "Actif",
+                "Base DT",
+                "Kg inclus",
+                "DT/kg extra",
+                "Tranche kg",
+                "Max kg",
+                "Tarif réel",
+                "",
+              ].map((title, i) => (
+                <th key={i} className="p-3">
+                  {title}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {sorted.map((row) => {
-              const draft = drafts[row.id] ?? row;
-              return (
-                <tr key={row.id} className="border-t border-[#C5A059]/20">
-                  <td className="px-3 py-2 font-medium">
-                    {row.carrier.replace("_", " ")}
-                  </td>
-                  <td className="px-3 py-2">
-                    {ZONE_LABELS[row.zone] ?? row.zone}
-                  </td>
-                  <td className="px-3 py-2">{row.isLocal ? "Oui" : "Non"}</td>
-                  <td className="px-3 py-2">
+            {shown.map((row) => (
+              <tr key={row.id} className="border-t">
+                <td className="p-3 min-w-[180px]">
+                  <strong>{row.countryName}</strong>
+                  <br />
+                  <span className="text-xs text-[#777]">
+                    {row.countryCode} ·{" "}
+                    {row.estimated ? "Estimation" : "Tarif administrateur"}
+                  </span>
+                </td>
+                <td className="p-3">
+                  <input
+                    type="checkbox"
+                    checked={row.enabled}
+                    aria-label={`Activer ${row.countryName}`}
+                    onChange={(e) =>
+                      patch(row.id, { enabled: e.target.checked })
+                    }
+                  />
+                </td>
+                {(
+                  [
+                    "basePriceTND",
+                    "weightIncludedKg",
+                    "pricePerExtraKgTND",
+                    "weightStepKg",
+                    "maxWeightKg",
+                  ] as const
+                ).map((field) => (
+                  <td key={field} className="p-2">
                     <input
                       type="number"
-                      min={0}
+                      min={field === "maxWeightKg" ? 1.5 : 0}
                       step="0.1"
-                      className={inputClass}
-                      value={draft.basePriceTND}
+                      className={input}
+                      aria-label={`${field} ${row.countryName}`}
+                      value={row[field]}
                       onChange={(e) =>
-                        patchDraft(row.id, {
-                          basePriceTND: Number(e.target.value),
-                        })
+                        patch(row.id, { [field]: Number(e.target.value) })
                       }
                     />
                   </td>
-                  <td className="px-3 py-2">
-                    <input
-                      type="number"
-                      min={0}
-                      step="0.1"
-                      disabled={row.isLocal}
-                      className={inputClass}
-                      value={draft.weightIncludedKg}
-                      onChange={(e) =>
-                        patchDraft(row.id, {
-                          weightIncludedKg: Number(e.target.value),
-                        })
-                      }
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <input
-                      type="number"
-                      min={0}
-                      step="0.1"
-                      disabled={row.isLocal}
-                      className={inputClass}
-                      value={draft.pricePerExtraKgTND}
-                      onChange={(e) =>
-                        patchDraft(row.id, {
-                          pricePerExtraKgTND: Number(e.target.value),
-                        })
-                      }
-                    />
-                  </td>
-                  <td className="px-3 py-2 text-right">
-                    <button
-                      type="button"
-                      disabled={busy === row.id}
-                      onClick={() => void saveRow(row.id)}
-                      className="gold-btn rounded-sm px-3 py-1.5 text-[10px] uppercase disabled:opacity-60"
-                    >
-                      {busy === row.id ? "…" : "Sauver"}
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
+                ))}
+                <td className="p-3">
+                  <input
+                    type="checkbox"
+                    checked={!row.estimated}
+                    aria-label={`Tarif réel ${row.countryName}`}
+                    onChange={(e) =>
+                      patch(row.id, { estimated: !e.target.checked })
+                    }
+                  />
+                </td>
+                <td className="p-3">
+                  <button
+                    className="gold-btn px-3 py-2 rounded-sm text-xs"
+                    disabled={busy === row.id}
+                    onClick={() => void save(row)}
+                  >
+                    {busy === row.id ? "…" : "Enregistrer"}
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
-
-      <form
-        onSubmit={onCreate}
-        className="mt-8 rounded-[4px] border border-[#C5A059]/30 bg-white p-5"
-      >
-        <h2 className="font-[family-name:var(--font-display)] tracking-[0.12em] uppercase">
-          Ajouter une zone
-        </h2>
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
-          <label className="text-sm">
-            Transporteur
-            <select
-              className={`${inputClass} mt-1`}
-              value={form.carrier}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  carrier: e.target.value as (typeof CARRIERS)[number],
-                }))
-              }
-            >
-              {CARRIERS.map((c) => (
-                <option key={c} value={c}>
-                  {c.replace("_", " ")}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="text-sm">
-            Zone
-            <select
-              className={`${inputClass} mt-1`}
-              value={form.zone}
-              onChange={(e) => {
-                const zone = e.target.value as (typeof ZONES)[number];
-                setForm((f) => ({ ...f, zone, isLocal: false }));
-              }}
-            >
-              {ZONES.map((z) => (
-                <option key={z} value={z}>
-                  {ZONE_LABELS[z]}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="text-sm">
-            Prix de base (TND)
-            <input
-              type="number"
-              min={0}
-              step="0.1"
-              className={`${inputClass} mt-1`}
-              value={form.basePriceTND}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, basePriceTND: Number(e.target.value) }))
-              }
-            />
-          </label>
-          <label className="text-sm">
-            Kg inclus
-            <input
-              type="number"
-              min={0}
-              step="0.1"
-              className={`${inputClass} mt-1`}
-              value={form.weightIncludedKg}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  weightIncludedKg: Number(e.target.value),
-                }))
-              }
-            />
-          </label>
-          <label className="text-sm">
-            TND / kg extra
-            <input
-              type="number"
-              min={0}
-              step="0.1"
-              className={`${inputClass} mt-1`}
-              value={form.pricePerExtraKgTND}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  pricePerExtraKgTND: Number(e.target.value),
-                }))
-              }
-            />
-          </label>
-        </div>
+      <div className="mt-4 flex items-center gap-4">
         <button
-          type="submit"
-          disabled={busy === "new"}
-          className="gold-btn mt-4 rounded-sm px-5 py-2.5 text-xs uppercase disabled:opacity-60"
+          disabled={page === 0}
+          onClick={() => setPage((p) => p - 1)}
+          className="rounded border px-4 py-2 disabled:opacity-40"
         >
-          {busy === "new" ? "Ajout…" : "Ajouter"}
+          Précédent
         </button>
-      </form>
+        <span>
+          Page {page + 1} / {Math.max(1, Math.ceil(filtered.length / 15))}
+        </span>
+        <button
+          disabled={(page + 1) * 15 >= filtered.length}
+          onClick={() => setPage((p) => p + 1)}
+          className="rounded border px-4 py-2 disabled:opacity-40"
+        >
+          Suivant
+        </button>
+      </div>
     </div>
   );
 }

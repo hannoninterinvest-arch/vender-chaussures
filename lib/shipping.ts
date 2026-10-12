@@ -30,6 +30,7 @@ export type ShippingQuote = {
   zone: string;
   isLocal: boolean;
   weightKg: number;
+  estimated?: boolean;
 };
 
 export async function calculateShipping(

@@ -1,3 +1,5 @@
+import { CommerceStore } from "./commerce-store";
+import { CountryRatesService } from "./shipping/country-rates.service";
 import "reflect-metadata";
 import type { DataSource } from "typeorm";
 import { database } from "./database";
@@ -23,17 +25,23 @@ import { CurrencyService } from "./currency/currency.service";
 
 export function createServices(db: DataSource) {
   const config = new ConfigService();
+  const store = new CommerceStore(db);
+  const countryRates = new CountryRatesService(store);
   const products = new ProductsService(
     db.getRepository(Product),
     db.getRepository(Category),
   );
-  const shipping = new ShippingService(db.getRepository(ShippingRate));
+  const shipping = new ShippingService(
+    db.getRepository(ShippingRate),
+    countryRates,
+  );
   const konnect = new KonnectService(config);
   const flouci = new FlouciService(config, konnect);
   return {
     auth: new AuthService(db.getRepository(User), config),
     products,
     shipping,
+    countryRates,
     konnect,
     flouci,
     orders: new OrdersService(
@@ -43,6 +51,7 @@ export function createServices(db: DataSource) {
       konnect,
       shipping,
       flouci,
+      store,
     ),
     site: new SiteService(db.getRepository(SiteSettings)),
     wholesale: new WholesaleService(

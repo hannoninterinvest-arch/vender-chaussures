@@ -1,6 +1,18 @@
 import { randomUUID } from "node:crypto";
-import { BadRequestException, NotFoundException } from "@/server/http";
-import { Repository } from "typeorm";
+import {
+  BadRequestException,
+  NotFoundException,
+  ConflictException,
+} from "@/server/http";
+import { CommerceStore } from "../commerce-store";
+import {
+  allowedStatuses,
+  effectiveStatus,
+  refundRequired,
+} from "@/lib/order-workflow";
+import type { AuthUser } from "../auth/auth.types";
+import type { UpdateOrderStatusDto } from "./dto/update-order-status.dto";
+import { Repository, type EntityManager } from "typeorm";
 import { FlouciService } from "../payments/flouci.service";
 import { roundMoney } from "../shipping/shipping-quote";
 import { KonnectService } from "../payments/konnect.service";
@@ -21,6 +33,7 @@ export class OrdersService {
     private readonly konnect: KonnectService,
     private readonly shipping: ShippingService,
     private readonly flouci: FlouciService,
+    private readonly store?: CommerceStore,
   ) {}
 
   frontendUrl() {
@@ -116,7 +129,21 @@ export class OrdersService {
       items: lines,
     });
 
-    const saved = await this.orders.save(order);
+    const saved = this.store
+      ? await this.orders.manager.transaction(async (manager) => {
+          const row = await manager.getRepository(Order).save(order);
+          await this.event(
+            manager,
+            row,
+            "creation",
+            "system",
+            "Commande enregistrée",
+            "",
+            row.status,
+          );
+          return row;
+        })
+      : await this.orders.save(order);
     if (!online) return saved;
 
     try {
@@ -128,10 +155,18 @@ export class OrdersService {
       });
       saved.paymentRef = payment.paymentRef;
       saved.payUrl = payment.payUrl;
-      return this.orders.save(saved);
-    } catch (err) {
-      await this.orders.remove(saved);
-      throw err;
+      await this.orders.update(
+        { id: saved.id },
+        { paymentRef: saved.paymentRef, payUrl: saved.payUrl },
+      );
+      return saved;
+    } catch {
+      await this.orders.update(
+        { id: saved.id, paymentStatus: "pending" },
+        { paymentStatus: "failed" },
+      );
+      saved.paymentStatus = "failed";
+      return saved;
     }
   }
 
@@ -145,22 +180,57 @@ export class OrdersService {
     if (order.paymentStatus === "paid") {
       throw new BadRequestException("Cette commande est déjà payée");
     }
-    if (order.status === "annulee") {
+    if (["annulee", "retournee", "livree"].includes(order.status)) {
       throw new BadRequestException("Commande annulée");
     }
-    if (order.paymentStatus === "pending" && order.payUrl) return order;
-    const gateway = order.payment === "flouci" ? this.flouci : this.konnect;
-    const payment = await gateway.initPayment({
-      orderId: order.id,
-      amountTnd: Number(order.total),
-      customerName: order.customerName,
-      phone: order.phone,
+    return this.orders.manager.transaction(async (manager) => {
+      const repo = manager.getRepository(Order);
+      const current = await repo.findOne({
+        where: { id },
+        lock: { mode: "pessimistic_write" },
+        loadEagerRelations: false,
+      });
+      if (!current) throw new NotFoundException("Commande introuvable");
+      if (current.paymentStatus === "paid")
+        throw new BadRequestException("Cette commande est déjà payée");
+      if (["annulee", "retournee", "livree"].includes(current.status))
+        throw new BadRequestException(
+          "Cette commande ne peut plus être payée.",
+        );
+      if (current.paymentStatus === "pending" && current.payUrl)
+        return (await repo.findOne({ where: { id } })) ?? current;
+      const gateway = current.payment === "flouci" ? this.flouci : this.konnect;
+      const payment = await gateway.initPayment({
+        orderId: current.id,
+        amountTnd: Number(current.total),
+        customerName: current.customerName,
+        phone: current.phone,
+      });
+      await repo.update(
+        { id: current.id },
+        {
+          paymentRef: payment.paymentRef,
+          payUrl: payment.payUrl,
+          paymentStatus: "pending",
+          status: "paiement_en_cours",
+        },
+      );
+      const from = current.status;
+      current.paymentRef = payment.paymentRef;
+      current.payUrl = payment.payUrl;
+      current.paymentStatus = "pending";
+      current.status = "paiement_en_cours";
+      await this.event(
+        manager,
+        current,
+        "relance",
+        current.payment,
+        "Nouveau lien de paiement demandé",
+        from,
+        current.status,
+      );
+      return (await repo.findOne({ where: { id } })) ?? current;
     });
-    order.paymentRef = payment.paymentRef;
-    order.payUrl = payment.payUrl;
-    order.paymentStatus = "pending";
-    order.status = "paiement_en_cours";
-    return this.orders.save(order);
   }
 
   async confirmKonnect(paymentRef: string) {
@@ -174,15 +244,8 @@ export class OrdersService {
     const payment = await this.konnect.getPayment(paymentRef);
 
     if (this.konnect.isPaid(payment, order.id, Number(order.total))) {
-      await this.orders.update(
-        { id: order.id, paymentRef },
-        { paymentStatus: "paid" },
-      );
-      await this.orders.update(
-        { id: order.id, paymentRef, status: "paiement_en_cours" },
-        { status: "en_attente" },
-      );
-      return { ok: true, paid: true, orderId: order.id };
+      const paid = await this.markVerifiedPaid(order, paymentRef);
+      return { ok: true, paid, orderId: order.id };
     }
     if (this.konnect.isFailed(payment)) {
       await this.orders.update(
@@ -204,15 +267,8 @@ export class OrdersService {
       return { ok: true, paid: true, orderId: order.id };
     const payment = await this.flouci.getPayment(paymentRef);
     if (this.flouci.isPaid(payment, order.id, Number(order.total))) {
-      await this.orders.update(
-        { id: order.id, paymentRef },
-        { paymentStatus: "paid" },
-      );
-      await this.orders.update(
-        { id: order.id, paymentRef, status: "paiement_en_cours" },
-        { status: "en_attente" },
-      );
-      return { ok: true, paid: true, orderId: order.id };
+      const paid = await this.markVerifiedPaid(order, paymentRef);
+      return { ok: true, paid, orderId: order.id };
     }
     if (this.flouci.isFailed(payment)) {
       await this.orders.update(
@@ -252,28 +308,163 @@ export class OrdersService {
     return this.toClient(order);
   }
 
-  async updateStatus(id: string, status: OrderStatus) {
-    const order = await this.orders.findOne({ where: { id } });
-    if (!order) throw new NotFoundException("Commande introuvable");
-    if (
-      (status === "en_livraison" || status === "livree") &&
-      order.payment !== "cod" &&
-      order.paymentStatus !== "paid"
-    ) {
-      throw new BadRequestException(
-        "Le paiement en ligne n’est pas encore confirmé.",
+  private async event(
+    manager: EntityManager,
+    order: Order,
+    type: string,
+    actor: string,
+    reason: string,
+    from: string,
+    to: string,
+  ) {
+    if (!this.store) return;
+    const at = new Date().toISOString();
+    await this.store.put(
+      `order-event:${order.id}:${at}:${randomUUID()}`,
+      { type, actor, reason, from, to, at, paymentStatus: order.paymentStatus },
+      manager,
+    );
+  }
+
+  private async markVerifiedPaid(order: Order, paymentRef: string) {
+    return this.orders.manager.transaction(async (manager) => {
+      const repo = manager.getRepository(Order);
+      const current = await repo.findOne({
+        where: { id: order.id, paymentRef },
+        lock: { mode: "pessimistic_write" },
+        loadEagerRelations: false,
+      });
+      if (!current) return false;
+      if (current.paymentStatus === "paid") return true;
+      const from = current.status;
+      const status = ["paiement_en_cours", "en_attente"].includes(
+        current.status,
+      )
+        ? "confirmee"
+        : current.status;
+      await repo.update(
+        { id: current.id, paymentRef, paymentStatus: current.paymentStatus },
+        { paymentStatus: "paid", status },
       );
-    }
-    order.status = status;
-    return this.toClient(await this.orders.save(order));
+      current.paymentStatus = "paid";
+      current.status = status;
+      await this.event(
+        manager,
+        current,
+        "paiement",
+        current.payment,
+        "Paiement vérifié auprès du prestataire",
+        from,
+        status,
+      );
+      return true;
+    });
+  }
+
+  async history(id: string) {
+    const exists = await this.orders.exists({ where: { id } });
+    if (!exists) throw new NotFoundException("Commande introuvable");
+    return this.store ? this.store.list(`order-event:${id}:`) : [];
+  }
+
+  async updateStatus(
+    id: string,
+    status: OrderStatus,
+    options: Partial<UpdateOrderStatusDto> = {},
+    actor?: AuthUser,
+  ) {
+    return this.orders.manager.transaction(async (manager) => {
+      const repo = manager.getRepository(Order);
+      const order = await repo.findOne({
+        where: { id },
+        lock: { mode: "pessimistic_write" },
+        loadEagerRelations: false,
+      });
+      if (!order) throw new NotFoundException("Commande introuvable");
+      if (
+        order.payment !== "cod" &&
+        order.paymentStatus !== "paid" &&
+        ["confirmee", "en_livraison", "livree"].includes(status)
+      )
+        throw new BadRequestException(
+          "Le paiement en ligne n’est pas encore confirmé.",
+        );
+      const current = effectiveStatus(order);
+      const cashOnly =
+        current === "livree" &&
+        status === "livree" &&
+        order.payment === "cod" &&
+        order.paymentStatus !== "paid" &&
+        options.cashReceived === true;
+      if (!cashOnly && !allowedStatuses(order).includes(status))
+        throw new BadRequestException(
+          "Ce changement de statut n’est pas autorisé.",
+        );
+      if (
+        order.payment === "cod" &&
+        status === "confirmee" &&
+        options.callConfirmed !== true
+      )
+        throw new BadRequestException(
+          "Confirmez que le client a accepté la commande lors de votre appel.",
+        );
+      if (
+        order.payment === "cod" &&
+        status === "livree" &&
+        options.cashReceived !== true
+      )
+        throw new BadRequestException(
+          "Confirmez la réception réelle du paiement à la livraison.",
+        );
+      if (order.payment !== "cod" && options.cashReceived)
+        throw new BadRequestException(
+          "Un paiement en ligne doit être vérifié par le prestataire.",
+        );
+      if (["annulee", "retournee"].includes(status) && !options.reason?.trim())
+        throw new BadRequestException(
+          "Précisez le motif de l’annulation ou du retour.",
+        );
+      const paymentStatus =
+        order.payment === "cod" && status === "livree"
+          ? "paid"
+          : order.paymentStatus;
+      const result = await repo.update(
+        { id, status: order.status, paymentStatus: order.paymentStatus },
+        { status, paymentStatus },
+      );
+      if (result.affected !== 1)
+        throw new ConflictException(
+          "La commande a changé. Actualisez avant de réessayer.",
+        );
+      order.status = status;
+      order.paymentStatus = paymentStatus;
+      await this.event(
+        manager,
+        order,
+        "statut",
+        actor?.name || actor?.id || "staff",
+        options.reason?.trim() ||
+          (status === "confirmee"
+            ? "Client confirmé par téléphone"
+            : status === "livree"
+              ? "Livraison et encaissement confirmés"
+              : "Statut mis à jour"),
+        current,
+        status,
+      );
+      return this.toClient((await repo.findOne({ where: { id } })) ?? order);
+    });
   }
 
   async stats() {
     const rows = await this.orders.find({ order: { createdAt: "DESC" } });
-    const delivered = rows.filter((o) => o.status === "livree");
+    const delivered = rows.filter(
+      (o) => o.status === "livree" && o.paymentStatus === "paid",
+    );
     const pending = rows.filter(
       (o) =>
         o.status === "en_attente" ||
+        o.status === "confirmee" ||
         o.status === "en_livraison" ||
         o.status === "paiement_en_cours",
     );
@@ -325,6 +516,17 @@ export class OrdersService {
       pending: pending.length,
       delivered: delivered.length,
       cancelled: cancelled.length,
+      returned: rows.filter((o) => o.status === "retournee").length,
+      confirmed: rows.filter((o) => effectiveStatus(o) === "confirmee").length,
+      awaitingCall: rows.filter(
+        (o) => o.payment === "cod" && o.status === "en_attente",
+      ).length,
+      awaitingPayment: rows.filter(
+        (o) =>
+          o.payment !== "cod" &&
+          o.paymentStatus !== "paid" &&
+          o.status !== "annulee",
+      ).length,
       revenue,
       cost,
       profit: revenue - cost,
@@ -341,7 +543,9 @@ export class OrdersService {
     return {
       id: order.id,
       createdAt: order.createdAt,
-      status: order.status || "en_attente",
+      status: effectiveStatus(order) || "en_attente",
+      allowedStatuses: allowedStatuses(order),
+      refundRequired: refundRequired(order),
       subtotal: Number(order.subtotal),
       delivery: Number(order.delivery),
       total: Number(order.total),

@@ -1,3 +1,5 @@
+import { COUNTRY_LIST } from "@/lib/country-list";
+import { CountryRatesService } from "./country-rates.service";
 import { BadRequestException, NotFoundException } from "@/server/http";
 import { Repository } from "typeorm";
 import { CreateShippingRateDto } from "./dto/create-shipping-rate.dto";
@@ -15,7 +17,10 @@ import {
 } from "./shipping-rates.config";
 
 export class ShippingService {
-  constructor(private readonly rates: Repository<ShippingRate>) {}
+  constructor(
+    private readonly rates: Repository<ShippingRate>,
+    private readonly countries?: CountryRatesService,
+  ) {}
 
   async onModuleInit() {
     await this.seedDefaults();
@@ -114,7 +119,7 @@ export class ShippingService {
       );
     }
     const code = normalizeCountryCode(country);
-    if (!/^[A-Z]{2}$/.test(code))
+    if (!COUNTRY_LIST.some((c) => c.code === code))
       throw new BadRequestException(
         "Pays de livraison invalide. Utilise un code ISO à deux lettres.",
       );
@@ -135,6 +140,30 @@ export class ShippingService {
         price: LOCAL_DELIVERY_TND,
         source: "local-flat" as const,
       };
+    if (this.countries) {
+      const rate = await this.countries.get(code, carrier);
+      if (!rate.enabled)
+        throw new BadRequestException(
+          "La livraison est indisponible pour ce pays et ce transporteur.",
+        );
+      if (weightKg > rate.maxWeightKg)
+        throw new BadRequestException(
+          "Cette quantité nécessite un devis de livraison. Contactez-nous.",
+        );
+      const extra = Math.max(0, weightKg - rate.weightIncludedKg);
+      const billedExtra =
+        rate.weightStepKg > 0
+          ? Math.ceil((extra - 1e-9) / rate.weightStepKg) * rate.weightStepKg
+          : extra;
+      return {
+        ...common,
+        price: roundMoney(
+          rate.basePriceTND + billedExtra * rate.pricePerExtraKgTND,
+        ),
+        estimated: rate.estimated,
+        source: "country-table" as const,
+      };
+    }
     const rows = await this.loadRates();
     const rate = rows.find(
       (row) =>

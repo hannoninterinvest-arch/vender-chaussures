@@ -1,3 +1,5 @@
+import { ensureCommerceStore } from "./commerce-store";
+import { Order } from "./orders/order.entity";
 import "reflect-metadata";
 import { dispatch, readDto } from "./router";
 import { services } from "./services";
@@ -72,6 +74,7 @@ describe("Next.js API migration", () => {
   beforeAll(async () => {
     process.env.JWT_SECRET = "integration-test-secret";
     await db.initialize();
+    await ensureCommerceStore(db);
     app = createServices(db);
     jest.mocked(services).mockResolvedValue(app);
     await db.getRepository(User).save([
@@ -234,5 +237,214 @@ describe("Next.js API migration", () => {
     } finally {
       environment.restore();
     }
+  });
+  it("includes every country with editable estimates and denies seller tariff edits", async () => {
+    const response = await request(
+      "admin/country-rates",
+      "GET",
+      undefined,
+      adminToken,
+    );
+    expect(response.status).toBe(200);
+    const rows = await response.json();
+    expect(rows).toHaveLength(498);
+    expect(
+      rows.find((r: { id: string }) => r.id === "LA_POSTE:FR"),
+    ).toMatchObject({ estimated: true, basePriceTND: 29 });
+    const dto = {
+      enabled: true,
+      basePriceTND: 50,
+      weightIncludedKg: 2,
+      pricePerExtraKgTND: 5,
+      weightStepKg: 1,
+      maxWeightKg: 30,
+      estimated: false,
+    };
+    expect(
+      (
+        await request(
+          "admin/country-rates/LA_POSTE:FR",
+          "PUT",
+          dto,
+          sellerToken,
+        )
+      ).status,
+    ).toBe(403);
+    expect(
+      (await request("admin/country-rates/LA_POSTE:FR", "PUT", dto, adminToken))
+        .status,
+    ).toBe(200);
+    const quote = await request("shipping/calculate", "POST", {
+      country: "FR",
+      carrier: "LA_POSTE",
+      weightKg: 4.5,
+    });
+    expect(await quote.json()).toMatchObject({ price: 65, estimated: false });
+    expect(
+      (
+        await request("orders", "POST", {
+          customerName: "Test",
+          phone: "12345678",
+          city: "Paris",
+          address: "Rue",
+          payment: "cod",
+          country: "FR",
+          items: [{ productId: "shoe", size: 40, color: "black", qty: 1 }],
+        })
+      ).status,
+    ).toBe(400);
+  });
+
+  it("requires a phone confirmation, then delivery and cash collection, and records returns", async () => {
+    const created = await request("orders", "POST", {
+      customerName: "COD client",
+      phone: "12345678",
+      city: "Tunis",
+      address: "Rue",
+      payment: "cod",
+      country: "TN",
+      items: [{ productId: "shoe", size: 40, color: "black", qty: 1 }],
+    });
+    const order = await created.json();
+    expect(order.status).toBe("en_attente");
+    const path = `seller/orders/${order.id}`;
+    expect(
+      (await request(path, "PATCH", { status: "en_livraison" }, sellerToken))
+        .status,
+    ).toBe(400);
+    expect(
+      (await request(path, "PATCH", { status: "confirmee" }, sellerToken))
+        .status,
+    ).toBe(400);
+    const confirmed = await request(
+      path,
+      "PATCH",
+      { status: "confirmee", callConfirmed: true },
+      sellerToken,
+    );
+    expect((await confirmed.json()).status).toBe("confirmee");
+    expect(
+      (await request(path, "PATCH", { status: "en_livraison" }, sellerToken))
+        .status,
+    ).toBe(200);
+    expect(
+      (await request(path, "PATCH", { status: "livree" }, sellerToken)).status,
+    ).toBe(400);
+    const delivered = await request(
+      path,
+      "PATCH",
+      { status: "livree", cashReceived: true },
+      sellerToken,
+    );
+    expect(await delivered.json()).toMatchObject({
+      status: "livree",
+      paymentStatus: "paid",
+    });
+    expect(
+      (await request(path, "PATCH", { status: "retournee" }, sellerToken))
+        .status,
+    ).toBe(400);
+    const returned = await request(
+      path,
+      "PATCH",
+      { status: "retournee", reason: "Client a retourné le colis" },
+      sellerToken,
+    );
+    expect(await returned.json()).toMatchObject({
+      status: "retournee",
+      refundRequired: true,
+    });
+    expect(
+      (await request(path, "PATCH", { status: "en_livraison" }, sellerToken))
+        .status,
+    ).toBe(400);
+    const history = await request(
+      `${path}/history`,
+      "GET",
+      undefined,
+      sellerToken,
+    );
+    expect((await history.json()).length).toBe(5);
+    const stats = await request("seller/stats", "GET", undefined, sellerToken);
+    expect(await stats.json()).toMatchObject({
+      returned: 1,
+      delivered: 0,
+      revenue: 0,
+    });
+  });
+
+  it("only confirms an online order after verified payment and preserves a cancellation on late success", async () => {
+    const row = await db.getRepository(Order).save({
+      id: "ONLINE-verified",
+      customerName: "Online",
+      phone: "12345678",
+      city: "Paris",
+      address: "Rue",
+      country: "FR",
+      carrier: "LA_POSTE",
+      shippingZone: "EUROPE",
+      payment: "flouci",
+      paymentRef: "verify-ref",
+      paymentStatus: "pending",
+      payUrl: "https://checkout.flouci.com/test",
+      status: "paiement_en_cours",
+      subtotal: 100,
+      delivery: 29,
+      total: 129,
+      items: [],
+    });
+    const path = `seller/orders/${row.id}`;
+    expect(
+      (await request(path, "PATCH", { status: "confirmee" }, sellerToken))
+        .status,
+    ).toBe(400);
+    const verify = jest.spyOn(app.flouci, "getPayment").mockResolvedValue({
+      status: "SUCCESS",
+      amount: 129000,
+      developer_tracking_id: row.id,
+    });
+    expect(await app.orders.confirmFlouci("verify-ref")).toMatchObject({
+      paid: true,
+    });
+    expect(await app.orders.findOne(row.id)).toMatchObject({
+      status: "confirmee",
+      paymentStatus: "paid",
+    });
+    const historyBefore = await app.orders.history(row.id);
+    await app.orders.confirmFlouci("verify-ref");
+    expect((await app.orders.history(row.id)).length).toBe(
+      historyBefore.length,
+    );
+    const late = await db
+      .getRepository(Order)
+      .save({
+        ...row,
+        id: "ONLINE-late",
+        paymentRef: "late-ref",
+        paymentStatus: "pending",
+        status: "paiement_en_cours",
+      });
+    expect(
+      (
+        await request(
+          `seller/orders/${late.id}`,
+          "PATCH",
+          { status: "annulee", reason: "Client a annulé" },
+          sellerToken,
+        )
+      ).status,
+    ).toBe(200);
+    verify.mockResolvedValue({
+      status: "SUCCESS",
+      amount: 129000,
+      developer_tracking_id: late.id,
+    });
+    await app.orders.confirmFlouci("late-ref");
+    expect(await app.orders.findOne(late.id)).toMatchObject({
+      status: "annulee",
+      paymentStatus: "paid",
+      refundRequired: true,
+    });
+    verify.mockRestore();
   });
 });

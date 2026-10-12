@@ -39,6 +39,7 @@ export default function CheckoutPage() {
     key: string;
     price: number | null;
     error: string;
+    estimated?: boolean;
   } | null>(null);
   const payment =
     !isLocal && paymentChoice === "cod"
@@ -79,7 +80,12 @@ export default function CheckoutPage() {
     calculateShipping({ country: selectedCountry, carrier, weightKg })
       .then((quote) => {
         if (!cancelled)
-          setQuote({ key: quoteKey, price: quote.price, error: "" });
+          setQuote({
+            key: quoteKey,
+            price: quote.price,
+            error: "",
+            estimated: quote.estimated,
+          });
       })
       .catch((err: Error) => {
         if (cancelled) return;
@@ -350,6 +356,11 @@ export default function CheckoutPage() {
               <span>Livraison ({carrier.replace("_", " ")})</span>
               <span>{fee == null ? "…" : formatPrice(fee)}</span>
             </div>
+            {quote?.estimated && !isLocal && (
+              <p className="text-xs text-[var(--muted)]">
+                Tarif de livraison estimatif, modifiable par la boutique.
+              </p>
+            )}
             {quoteError && (
               <p className="text-xs text-[var(--promo)]">{quoteError}</p>
             )}

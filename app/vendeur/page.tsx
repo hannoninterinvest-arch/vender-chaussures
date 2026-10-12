@@ -39,21 +39,61 @@ export default function SellerHomePage() {
   }, []);
 
   if (error) return <p className="text-red-600">{error}</p>;
-  if (!stats) return <p className="text-sm text-[#666]">Chargement du tableau…</p>;
+  if (!stats)
+    return <p className="text-sm text-[#666]">Chargement du tableau…</p>;
 
   const cards = [
-    { label: "Bénéfice (livré)", value: formatTnd(stats.profit), hint: "Ventes − prix d’achat" },
-    { label: "Chiffre d’affaires", value: formatTnd(stats.revenue), hint: "Commandes livrées" },
-    { label: "À livrer", value: String(stats.pending), hint: "En attente + en route" },
-    { label: "Livrées", value: String(stats.delivered), hint: `${stats.orders} commandes au total` },
+    {
+      label: "Bénéfice (livré)",
+      value: formatTnd(stats.profit),
+      hint: "Ventes − prix d’achat",
+    },
+    {
+      label: "Chiffre d’affaires",
+      value: formatTnd(stats.revenue),
+      hint: "Commandes livrées",
+    },
+    {
+      label: "À livrer",
+      value: String(stats.pending),
+      hint: "En attente + en route",
+    },
+    {
+      label: "Livrées",
+      value: String(stats.delivered),
+      hint: `${stats.orders} commandes au total`,
+    },
+    {
+      label: "Confirmées",
+      value: String(stats.confirmed || 0),
+      hint: "Prêtes pour l’expédition",
+    },
+    {
+      label: "À appeler",
+      value: String(stats.awaitingCall || 0),
+      hint: "Paiement à la livraison",
+    },
+    {
+      label: "Paiements en attente",
+      value: String(stats.awaitingPayment || 0),
+      hint: "Commandes en ligne non payées",
+    },
+    {
+      label: "Retournées",
+      value: String(stats.returned || 0),
+      hint: "Exclues des bénéfices",
+    },
   ];
 
   return (
     <div>
-      <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase">Tableau de bord</h1>
+      <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase">
+        Tableau de bord
+      </h1>
       <p className="mt-1 text-sm text-[#666]">
-        Vue d’ensemble des ventes livrées. Marque une commande « livrée » pour qu’elle
-        compte dans les bénéfices. Les photos de la page de garde se choisissent dans{" "}
+        Vue d’ensemble des ventes livrées. Seules les commandes livrées et
+        réellement payées comptent dans les bénéfices. Les photos de la page de
+        garde se choisissent dans{" "}
         <Link href="/vendeur/vitrine" className="font-bold text-[#C5A059]">
           Page d’accueil
         </Link>
@@ -62,7 +102,10 @@ export default function SellerHomePage() {
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((c) => (
-          <div key={c.label} className="rounded-[4px] border border-[#C5A059]/35 bg-white p-5">
+          <div
+            key={c.label}
+            className="rounded-[4px] border border-[#C5A059]/35 bg-white p-5"
+          >
             <p className="text-sm text-[#666]">{c.label}</p>
             <p className="mt-2 text-3xl font-black text-[#C5A059]">{c.value}</p>
             <p className="mt-1 text-xs text-[#888]">{c.hint}</p>
@@ -79,8 +122,12 @@ export default function SellerHomePage() {
                 {wholesale.nouveau > 0
                   ? `${wholesale.nouveau} grossiste${wholesale.nouveau > 1 ? "s" : ""} à rappeler`
                   : "Aucun rappel en attente"}
-                {wholesale.enCours > 0 ? ` · ${wholesale.enCours} en négociation` : ""}
-                {wholesale.conclu > 0 ? ` · ${wholesale.conclu} conclu(es)` : ""}
+                {wholesale.enCours > 0
+                  ? ` · ${wholesale.enCours} en négociation`
+                  : ""}
+                {wholesale.conclu > 0
+                  ? ` · ${wholesale.conclu} conclu(es)`
+                  : ""}
               </p>
             </div>
             <Link
@@ -116,8 +163,8 @@ export default function SellerHomePage() {
             </div>
           ) : (
             <p className="mt-4 text-sm text-[#666]">
-              Aucune vente livrée pour le moment. Dès qu’une commande est marquée livrée,
-              le top produit apparaît ici.
+              Aucune vente livrée pour le moment. Dès qu’une commande est
+              marquée livrée, le top produit apparaît ici.
             </p>
           )}
         </div>
@@ -126,14 +173,19 @@ export default function SellerHomePage() {
           <h2 className="text-lg font-bold">Top ventes</h2>
           <ul className="mt-4 space-y-3">
             {stats.topProducts.map((p, i) => (
-              <li key={p.productId} className="flex items-center justify-between gap-3">
+              <li
+                key={p.productId}
+                className="flex items-center justify-between gap-3"
+              >
                 <span className="flex items-center gap-3">
                   <span className="grid h-7 w-7 place-items-center rounded-full bg-[#F5F5F5] text-xs font-bold">
                     {i + 1}
                   </span>
                   <span className="font-medium">{p.name}</span>
                 </span>
-                <span className="text-sm text-[#666]">{p.qty} u. · {formatTnd(p.revenue)}</span>
+                <span className="text-sm text-[#666]">
+                  {p.qty} u. · {formatTnd(p.revenue)}
+                </span>
               </li>
             ))}
             {stats.topProducts.length === 0 && (
@@ -144,13 +196,22 @@ export default function SellerHomePage() {
       </div>
 
       <div className="mt-8 flex flex-wrap gap-3">
-        <Link href="/vendeur/produits" className="gold-btn rounded-sm px-4 py-3 text-xs uppercase">
+        <Link
+          href="/vendeur/produits"
+          className="gold-btn rounded-sm px-4 py-3 text-xs uppercase"
+        >
           Ajouter un produit
         </Link>
-        <Link href="/vendeur/commandes" className="rounded-sm border border-[#C5A059]/50 bg-white px-4 py-3 text-sm font-bold">
+        <Link
+          href="/vendeur/commandes"
+          className="rounded-sm border border-[#C5A059]/50 bg-white px-4 py-3 text-sm font-bold"
+        >
           Voir les commandes
         </Link>
-        <Link href="/vendeur/grossistes" className="rounded-sm border border-[#C5A059]/50 bg-white px-4 py-3 text-sm font-bold">
+        <Link
+          href="/vendeur/grossistes"
+          className="rounded-sm border border-[#C5A059]/50 bg-white px-4 py-3 text-sm font-bold"
+        >
           Demandes de gros
         </Link>
       </div>

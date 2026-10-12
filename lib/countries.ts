@@ -1,35 +1,10 @@
+import { COUNTRY_LIST } from "./country-list";
 export type CountryOption = {
   code: string;
   name: string;
 };
 
-export const COUNTRIES: CountryOption[] = [
-  { code: "TN", name: "Tunisie" },
-  { code: "FR", name: "France" },
-  { code: "BE", name: "Belgique" },
-  { code: "DE", name: "Allemagne" },
-  { code: "IT", name: "Italie" },
-  { code: "ES", name: "Espagne" },
-  { code: "PT", name: "Portugal" },
-  { code: "NL", name: "Pays-Bas" },
-  { code: "CH", name: "Suisse" },
-  { code: "GB", name: "Royaume-Uni" },
-  { code: "US", name: "États-Unis" },
-  { code: "CA", name: "Canada" },
-  { code: "MA", name: "Maroc" },
-  { code: "DZ", name: "Algérie" },
-  { code: "LY", name: "Libye" },
-  { code: "AE", name: "Émirats arabes unis" },
-  { code: "SA", name: "Arabie saoudite" },
-  { code: "QA", name: "Qatar" },
-  { code: "KW", name: "Koweït" },
-  { code: "BH", name: "Bahreïn" },
-  { code: "OM", name: "Oman" },
-  { code: "EG", name: "Égypte" },
-  { code: "TR", name: "Turquie" },
-  { code: "AU", name: "Australie" },
-  { code: "JP", name: "Japon" },
-];
+export const COUNTRIES: CountryOption[] = [...COUNTRY_LIST];
 
 const COUNTRY_CURRENCY: Record<string, string> = {
   TN: "TND",
@@ -93,10 +68,14 @@ export function countryName(code: string): string {
   return COUNTRIES.find((c) => c.code === code)?.name ?? code;
 }
 
-export function formatConvertedPrice(amountInTnd: number, currency: string, rateFromTnd: number) {
+export function formatConvertedPrice(
+  amountInTnd: number,
+  currency: string,
+  rateFromTnd: number,
+) {
   const amount = Number(amountInTnd) * (Number(rateFromTnd) || 1);
   if (currency === "TND") {
-    return `${Math.round(amount)} DT`;
+    return `${amount.toLocaleString("fr-TN", { maximumFractionDigits: 2 })} DT`;
   }
   try {
     return new Intl.NumberFormat("fr-FR", {

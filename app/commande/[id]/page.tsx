@@ -1,4 +1,5 @@
 "use client";
+import { ORDER_LABELS } from "@/lib/order-workflow";
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
@@ -65,6 +66,28 @@ export default function OrderPage({
     };
   }, [id]);
 
+  const shouldPoll = Boolean(
+    order &&
+    order.payment !== "cod" &&
+    order.paymentStatus === "pending" &&
+    !["annulee", "retournee"].includes(order.status || ""),
+  );
+  useEffect(() => {
+    if (!shouldPoll) return;
+    let cancelled = false;
+    const timer = setInterval(() => {
+      fetchOrder(id)
+        .then((row) => {
+          if (!cancelled) setOrder(row);
+        })
+        .catch(() => {});
+    }, 8000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [id, shouldPoll]);
+
   async function payNow() {
     if (!order || paying) return;
     setPaying(true);
@@ -83,7 +106,11 @@ export default function OrderPage({
   }
 
   if (!ready) {
-    return <p className="px-6 py-20 text-center text-sm text-[var(--muted)]">Chargement…</p>;
+    return (
+      <p className="px-6 py-20 text-center text-sm text-[var(--muted)]">
+        Chargement…
+      </p>
+    );
   }
 
   if (!order) {
@@ -95,7 +122,10 @@ export default function OrderPage({
         <p className="mt-2 text-sm text-[var(--muted)]">
           Vérifie le numéro ou contacte-nous au {brand.phone}.
         </p>
-        <Link href="/shop" className="gold-btn mt-6 inline-flex rounded-sm px-6 py-3 text-xs uppercase">
+        <Link
+          href="/shop"
+          className="gold-btn mt-6 inline-flex rounded-sm px-6 py-3 text-xs uppercase"
+        >
           Retour boutique
         </Link>
       </div>
@@ -111,19 +141,25 @@ export default function OrderPage({
     <div className="mx-auto max-w-2xl px-4 py-12">
       <CheckoutSteps step={3} />
       <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-[#C5A059]">
-        {online && !paid ? "Commande enregistrée" : "Commande confirmée"}
+        {ORDER_LABELS[order.status || "en_attente"] || "Commande enregistrée"}
       </p>
       <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase">
         {order.id}
       </h1>
       <p className="mt-2 text-sm text-[var(--muted)]">
         {online && !paid
-          ? "Termine le paiement en ligne pour valider la commande. On t’appelle ensuite pour l’expédition."
-          : `On t’appelle au ${order.customer.phone} pour confirmer avant expédition.`}
+          ? ["annulee", "retournee"].includes(order.status || "")
+            ? "Contactez-nous pour le suivi de cette commande."
+            : "Votre commande reste en attente jusqu’à la confirmation réelle du paiement."
+          : order.payment === "cod" && order.status === "en_attente"
+            ? `Nous vous appellerons au ${order.customer.phone}. Votre commande sera confirmée après votre accord.`
+            : "Consultez ci-dessus l’état actuel de votre commande."}
       </p>
 
       <div className="store-panel mt-8 p-6">
-        <h2 className="font-[family-name:var(--font-display)] tracking-[0.14em] uppercase">Livraison</h2>
+        <h2 className="font-[family-name:var(--font-display)] tracking-[0.14em] uppercase">
+          Livraison
+        </h2>
         <p className="mt-2 text-sm leading-relaxed text-[var(--fg)]">
           {order.customer.name}
           <br />
@@ -138,34 +174,54 @@ export default function OrderPage({
         </p>
         <ul className="mt-6 space-y-3 border-t border-[#C5A059]/25 pt-4">
           {order.items.map((item) => (
-            <li key={`${item.productId}-${item.size}`} className="flex justify-between text-sm">
+            <li
+              key={`${item.productId}-${item.size}`}
+              className="flex justify-between text-sm"
+            >
               <span>
                 {item.name} · {item.color} · {item.size} × {item.qty}
               </span>
-              <span className="text-[#C5A059]">{formatPrice(Number(item.price) * item.qty)}</span>
+              <span className="text-[#C5A059]">
+                {formatPrice(Number(item.price) * item.qty)}
+              </span>
             </li>
           ))}
         </ul>
-        <div className="mt-4 flex justify-between text-sm"><span>Sous-total</span><span>{formatPrice(Number(order.subtotal))}</span></div>
-        <div className="mt-2 flex justify-between text-sm"><span>Livraison</span><span>{formatPrice(Number(order.delivery))}</span></div>
+        <div className="mt-4 flex justify-between text-sm">
+          <span>Sous-total</span>
+          <span>{formatPrice(Number(order.subtotal))}</span>
+        </div>
+        <div className="mt-2 flex justify-between text-sm">
+          <span>Livraison</span>
+          <span>{formatPrice(Number(order.delivery))}</span>
+        </div>
         <div className="mt-4 flex justify-between font-bold">
           <span>Total</span>
-          <span className="text-[#C5A059]">{formatPrice(Number(order.total))}</span>
+          <span className="text-[#C5A059]">
+            {formatPrice(Number(order.total))}
+          </span>
         </div>
       </div>
 
       <div className="mt-8 flex flex-wrap gap-3">
-        {online && !paid && order.status !== "annulee" && (
-          <button
-            type="button"
-            disabled={paying}
-            onClick={() => void payNow()}
-            className="gold-btn inline-flex rounded-sm px-6 py-3 text-xs uppercase disabled:opacity-60"
-          >
-            {paying ? "Ouverture…" : `Payer avec ${order.payment === "flouci" ? "Flouci" : "Konnect"}`}
-          </button>
-        )}
-        <Link href="/shop" className="gold-btn inline-flex rounded-sm px-6 py-3 text-xs uppercase">
+        {online &&
+          !paid &&
+          !["annulee", "retournee", "livree"].includes(order.status || "") && (
+            <button
+              type="button"
+              disabled={paying}
+              onClick={() => void payNow()}
+              className="gold-btn inline-flex rounded-sm px-6 py-3 text-xs uppercase disabled:opacity-60"
+            >
+              {paying
+                ? "Ouverture…"
+                : `Payer avec ${order.payment === "flouci" ? "Flouci" : "Konnect"}`}
+            </button>
+          )}
+        <Link
+          href="/shop"
+          className="gold-btn inline-flex rounded-sm px-6 py-3 text-xs uppercase"
+        >
           Continuer les achats
         </Link>
         <a

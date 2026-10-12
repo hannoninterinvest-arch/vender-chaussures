@@ -12,8 +12,10 @@ export function CountrySelect({
   className?: string;
   fullLabel?: boolean;
 }) {
-  const { selectedCountry, setSelectedCountry, countries, currency } = useLocale();
+  const { selectedCountry, setSelectedCountry, countries, currency } =
+    useLocale();
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const root = useRef<HTMLDivElement>(null);
   const current = countries.find((c) => c.code === selectedCountry);
 
@@ -49,21 +51,51 @@ export function CountrySelect({
           : `${selectedCountry} · ${currency}`}
       </button>
       {open && (
-        <ul className={`country-select-menu ${fullLabel ? "is-left" : ""}`} role="listbox">
-          {countries.map((c) => (
-            <li key={c.code} role="option" aria-selected={c.code === selectedCountry}>
-              <button
-                type="button"
-                className={c.code === selectedCountry ? "is-active" : ""}
-                onClick={() => {
-                  setSelectedCountry(c.code);
-                  setOpen(false);
-                }}
+        <ul
+          className={`country-select-menu ${fullLabel ? "is-left" : ""}`}
+          role="listbox"
+        >
+          <li className="p-2" role="presentation">
+            <input
+              type="search"
+              className="field"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Rechercher un pays"
+              placeholder="Rechercher un pays…"
+            />
+          </li>
+          {countries
+            .filter((c) =>
+              `${c.name} ${c.code}`
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toLowerCase()
+                .includes(
+                  search
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .toLowerCase(),
+                ),
+            )
+            .map((c) => (
+              <li
+                key={c.code}
+                role="option"
+                aria-selected={c.code === selectedCountry}
               >
-                {c.code} · {c.name}
-              </button>
-            </li>
-          ))}
+                <button
+                  type="button"
+                  className={c.code === selectedCountry ? "is-active" : ""}
+                  onClick={() => {
+                    setSelectedCountry(c.code);
+                    setOpen(false);
+                  }}
+                >
+                  {c.code} · {c.name}
+                </button>
+              </li>
+            ))}
         </ul>
       )}
     </div>

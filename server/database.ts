@@ -1,5 +1,6 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
+import { ensureCommerceStore } from "./commerce-store";
 import { entities } from "./entities";
 
 // Reuse one small connection pool per warm Vercel instance. Use Neon's pooled URL.
@@ -23,6 +24,15 @@ export function database() {
   if (!state.shopDatabase) {
     state.shopDatabase = createDatabase()
       .initialize()
+      .then(async (db) => {
+        try {
+          await ensureCommerceStore(db);
+          return db;
+        } catch (error) {
+          await db.destroy();
+          throw error;
+        }
+      })
       .catch((error) => {
         state.shopDatabase = undefined;
         throw error;

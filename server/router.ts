@@ -1,3 +1,4 @@
+import { UpdateCountryRateDto } from "./shipping/dto/update-country-rate.dto";
 import "reflect-metadata";
 import { NextResponse } from "next/server";
 import { plainToInstance, type ClassConstructor } from "class-transformer";
@@ -76,6 +77,35 @@ export async function readDto<T extends object>(
 
 // Explicit access for every endpoint keeps admin-only actions auditable.
 export const routes: Route[] = [
+  {
+    method: "POST",
+    path: "seller/orders/:id/payment-check",
+    access: "staff",
+    handle: (c) => c.app.orders.findOne(c.id),
+  },
+  {
+    method: "GET",
+    path: "admin/country-rates",
+    access: "admin",
+    handle: (c) => c.app.countryRates.list(),
+  },
+  {
+    method: "PUT",
+    path: "admin/country-rates/:id",
+    access: "admin",
+    handle: async (c) =>
+      c.app.countryRates.update(
+        c.id,
+        await readDto(c.req, UpdateCountryRateDto),
+      ),
+  },
+  {
+    method: "GET",
+    path: "seller/orders/:id/history",
+    access: "staff",
+    handle: (c) => c.app.orders.history(c.id),
+  },
+
   {
     method: "GET",
     path: "health",
@@ -296,11 +326,10 @@ export const routes: Route[] = [
     method: "PATCH",
     path: "seller/orders/:id",
     access: "staff",
-    handle: async (c) =>
-      c.app.orders.updateStatus(
-        c.id,
-        (await readDto(c.req, UpdateOrderStatusDto)).status,
-      ),
+    handle: async (c) => {
+      const dto = await readDto(c.req, UpdateOrderStatusDto);
+      return c.app.orders.updateStatus(c.id, dto.status, dto, c.user);
+    },
   },
   {
     method: "GET",

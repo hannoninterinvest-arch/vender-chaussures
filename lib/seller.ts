@@ -57,6 +57,8 @@ export type SellerOrder = {
   payment: string;
   paymentPhone?: string;
   paymentStatus?: string;
+  allowedStatuses?: import("./order-workflow").OrderStatus[];
+  refundRequired?: boolean;
   payUrl?: string;
   carrier?: string;
   shippingZone?: string;
@@ -85,6 +87,10 @@ export type SellerStats = {
   pending: number;
   delivered: number;
   cancelled: number;
+  returned?: number;
+  confirmed?: number;
+  awaitingCall?: number;
+  awaitingPayment?: number;
   revenue: number;
   cost: number;
   profit: number;

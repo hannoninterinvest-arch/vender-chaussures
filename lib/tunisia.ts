@@ -43,7 +43,11 @@ export const paymentMethods: {
   label: string;
   hint: string;
 }[] = [
-  { id: "flouci", label: "Flouci", hint: "Paiement sécurisé par Flouci : wallet ou carte bancaire." },
+  {
+    id: "flouci",
+    label: "Flouci",
+    hint: "Paiement sécurisé par Flouci : wallet ou carte bancaire.",
+  },
   {
     id: "online",
     label: "Paiement en ligne",
@@ -63,8 +67,10 @@ export function paymentLabel(id: string) {
 }
 
 export function paymentStatusLabel(status: string, payment: string) {
-  if (payment === "cod" || status === "cod") return "À encaisser à la livraison";
-  if (status === "paid") return "Payé en ligne";
+  if (status === "paid")
+    return payment === "cod" ? "Payé à la livraison" : "Payé en ligne";
+  if (payment === "cod" || status === "cod")
+    return "À encaisser à la livraison";
   if (status === "failed") return "Paiement échoué";
   if (status === "pending") return "En attente de paiement";
   return status || "—";

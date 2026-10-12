@@ -1,3 +1,4 @@
+import type { EntityManager } from "typeorm";
 import { OrdersService } from "./orders.service";
 import { KonnectService } from "../payments/konnect.service";
 import { FlouciService } from "../payments/flouci.service";
@@ -18,7 +19,7 @@ describe("OrdersService payments and delivery", () => {
       exists: jest.fn(async () => false),
       remove: jest.fn(),
       findOne: jest.fn(),
-      update: jest.fn(),
+      update: jest.fn(async () => ({ affected: 1 })),
     };
     const items = { create: jest.fn((x) => x) };
     const products = {
@@ -37,8 +38,17 @@ describe("OrdersService payments and delivery", () => {
         price: 8,
       })),
     };
+    const repository = {
+      ...orders,
+      manager: {
+        transaction: async (
+          callback: (manager: EntityManager) => Promise<unknown>,
+        ) =>
+          callback({ getRepository: () => orders } as unknown as EntityManager),
+      },
+    };
     const service = new OrdersService(
-      orders as unknown as ConstructorParameters<typeof OrdersService>[0],
+      repository as unknown as ConstructorParameters<typeof OrdersService>[0],
       items as unknown as ConstructorParameters<typeof OrdersService>[1],
       products as unknown as ConstructorParameters<typeof OrdersService>[2],
       konnect,
@@ -182,12 +192,8 @@ describe("OrdersService payments and delivery", () => {
       orderId: "order",
     });
     expect(orders.update).toHaveBeenCalledWith(
-      { id: "order", paymentRef: "ref" },
-      { paymentStatus: "paid" },
-    );
-    expect(orders.update).toHaveBeenCalledWith(
-      { id: "order", paymentRef: "ref", status: "paiement_en_cours" },
-      { status: "en_attente" },
+      { id: "order", paymentRef: "ref", paymentStatus: "pending" },
+      { paymentStatus: "paid", status: "confirmee" },
     );
   });
 
