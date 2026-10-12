@@ -65,12 +65,7 @@ describe("OrdersService payments and delivery", () => {
       payUrl: "https://checkout.flouci.com/ref",
     });
     const order = await service.create(dto);
-    expect(shipping.quote).toHaveBeenCalledWith(
-      "TN",
-      "LA_POSTE",
-      3,
-      expect.objectContaining({ city: "Tunis" }),
-    );
+    expect(shipping.quote).toHaveBeenCalledWith("TN", "LA_POSTE", 3);
     expect(order.total).toBe(order.subtotal + 8);
     expect(init).toHaveBeenCalledWith(
       expect.objectContaining({ amountTnd: order.total }),
@@ -95,12 +90,10 @@ describe("OrdersService payments and delivery", () => {
       zone: "EUROPE",
       price: 81.25,
     });
-    const init = jest
-      .spyOn(flouci, "initPayment")
-      .mockResolvedValue({
-        paymentRef: "ref",
-        payUrl: "https://checkout.flouci.com/ref",
-      });
+    const init = jest.spyOn(flouci, "initPayment").mockResolvedValue({
+      paymentRef: "ref",
+      payUrl: "https://checkout.flouci.com/ref",
+    });
     const order = await service.create({
       ...dto,
       country: "FR",
@@ -109,12 +102,7 @@ describe("OrdersService payments and delivery", () => {
       postalCode: "75001",
       expectedTotal: 281.25,
     });
-    expect(shipping.quote).toHaveBeenCalledWith(
-      "FR",
-      "ARAMEX",
-      3,
-      expect.objectContaining({ city: "Paris", postalCode: "75001" }),
-    );
+    expect(shipping.quote).toHaveBeenCalledWith("FR", "ARAMEX", 3);
     expect(order.delivery).toBe(81.25);
     expect(order.total).toBe(281.25);
     expect(order.address).toContain("75001");
@@ -123,7 +111,7 @@ describe("OrdersService payments and delivery", () => {
     );
   });
 
-  it("does not create an order or payment if Aramex cannot quote", async () => {
+  it("does not create an order or payment if the shipping rate is unavailable", async () => {
     const { service, orders, shipping, flouci } = setup();
     shipping.quote.mockRejectedValue(new Error("Aramex indisponible"));
     const init = jest.spyOn(flouci, "initPayment");

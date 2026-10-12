@@ -18,7 +18,7 @@ export const SHIPPING_CARRIERS: {
   {
     id: "ARAMEX",
     label: "Aramex",
-    hint: "Tarif calculé selon votre adresse et votre colis.",
+    hint: "Livraison internationale selon le poids et la destination.",
   },
 ];
 

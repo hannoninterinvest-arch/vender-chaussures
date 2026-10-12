@@ -33,10 +33,6 @@ export default function CheckoutPage() {
   const [flouciReady, setFlouciReady] = useState(false);
   const [onlineReady, setOnlineReady] = useState(false);
   const [gouvernorat, setGouvernorat] = useState<Gouvernorat>("Tunis");
-  const [city, setCity] = useState("");
-  const [postalCode, setPostalCode] = useState("");
-  const [stateProvinceCode, setStateProvinceCode] = useState("");
-  const [address, setAddress] = useState("");
   const [carrier, setCarrier] = useState<ShippingCarrier>("LA_POSTE");
   const [busy, setBusy] = useState(false);
   const [quote, setQuote] = useState<{
@@ -54,19 +50,7 @@ export default function CheckoutPage() {
     () => cartWeightKg(lines.reduce((sum, line) => sum + line.qty, 0)),
     [lines],
   );
-  const quoteKey = JSON.stringify([
-    selectedCountry,
-    carrier,
-    weightKg,
-    ...(carrier === "ARAMEX" && !isLocal
-      ? [
-          city.trim(),
-          postalCode.trim(),
-          stateProvinceCode.trim(),
-          address.trim(),
-        ]
-      : []),
-  ]);
+  const quoteKey = `${selectedCountry}:${carrier}:${weightKg}`;
   const fee = quote?.key === quoteKey ? quote.price : null;
   const quoteError = quote?.key === quoteKey ? quote.error : "";
   const total = subtotal + (fee ?? 0);
@@ -92,49 +76,19 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (lines.length === 0) return;
     let cancelled = false;
-    const controller = new AbortController();
-    const timer = setTimeout(
-      () => {
-        calculateShipping(
-          {
-            country: selectedCountry,
-            carrier,
-            weightKg,
-            city: city.trim(),
-            postalCode: postalCode.trim(),
-            stateProvinceCode: stateProvinceCode.trim(),
-            address: address.trim(),
-          },
-          controller.signal,
-        )
-          .then((quote) => {
-            if (!cancelled)
-              setQuote({ key: quoteKey, price: quote.price, error: "" });
-          })
-          .catch((err: Error) => {
-            if (cancelled) return;
-            setQuote({ key: quoteKey, price: null, error: err.message });
-          });
-      },
-      carrier === "ARAMEX" && !isLocal ? 500 : 0,
-    );
+    calculateShipping({ country: selectedCountry, carrier, weightKg })
+      .then((quote) => {
+        if (!cancelled)
+          setQuote({ key: quoteKey, price: quote.price, error: "" });
+      })
+      .catch((err: Error) => {
+        if (cancelled) return;
+        setQuote({ key: quoteKey, price: null, error: err.message });
+      });
     return () => {
       cancelled = true;
-      clearTimeout(timer);
-      controller.abort();
     };
-  }, [
-    selectedCountry,
-    carrier,
-    weightKg,
-    city,
-    postalCode,
-    stateProvinceCode,
-    address,
-    isLocal,
-    lines.length,
-    quoteKey,
-  ]);
+  }, [selectedCountry, carrier, weightKg, lines.length, quoteKey]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -163,9 +117,7 @@ export default function CheckoutPage() {
         country: selectedCountry,
         carrier,
         gouvernorat: isLocal ? gouvernorat : "",
-        city: city.trim(),
-        postalCode: isLocal ? undefined : postalCode.trim(),
-        stateProvinceCode: isLocal ? undefined : stateProvinceCode.trim(),
+        city: String(data.get("city")),
         address: String(data.get("address")),
         notes: String(data.get("notes") || ""),
         payment,
@@ -265,35 +217,13 @@ export default function CheckoutPage() {
             label="Ville"
             required
             autoComplete="address-level2"
-            value={city}
-            onChange={setCity}
           />
-          {!isLocal && (
-            <>
-              <Field
-                name="postalCode"
-                label="Code postal (si votre pays en utilise)"
-                autoComplete="postal-code"
-                value={postalCode}
-                onChange={setPostalCode}
-              />
-              <Field
-                name="stateProvinceCode"
-                label="État / région (si nécessaire, ex. CA)"
-                autoComplete="address-level1"
-                value={stateProvinceCode}
-                onChange={setStateProvinceCode}
-              />
-            </>
-          )}
           <Field
             name="address"
             label="Adresse"
             required
             placeholder="Rue, immeuble, étage…"
             autoComplete="street-address"
-            value={address}
-            onChange={setAddress}
           />
           <Field name="notes" label="Note pour le livreur (optionnel)" />
 
@@ -462,8 +392,6 @@ function Field({
   type = "text",
   placeholder,
   autoComplete,
-  value,
-  onChange,
 }: {
   name: string;
   label: string;
@@ -471,8 +399,6 @@ function Field({
   type?: string;
   placeholder?: string;
   autoComplete?: string;
-  value?: string;
-  onChange?: (value: string) => void;
 }) {
   return (
     <label className="block">
@@ -485,8 +411,6 @@ function Field({
         required={required}
         placeholder={placeholder}
         autoComplete={autoComplete}
-        value={value}
-        onChange={onChange ? (e) => onChange(e.target.value) : undefined}
         className="field mt-1.5"
       />
     </label>

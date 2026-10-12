@@ -11,7 +11,6 @@ import { Order } from "./orders/order.entity";
 import { OrderItem } from "./orders/order-item.entity";
 import { OrdersService } from "./orders/orders.service";
 import { ShippingRate } from "./shipping/shipping-rate.entity";
-import { AramexService } from "./shipping/aramex.service";
 import { ShippingService } from "./shipping/shipping.service";
 import { SiteSettings } from "./site/site-settings.entity";
 import { SiteService } from "./site/site.service";
@@ -28,10 +27,7 @@ export function createServices(db: DataSource) {
     db.getRepository(Product),
     db.getRepository(Category),
   );
-  const shipping = new ShippingService(
-    db.getRepository(ShippingRate),
-    new AramexService(config),
-  );
+  const shipping = new ShippingService(db.getRepository(ShippingRate));
   const konnect = new KonnectService(config);
   const flouci = new FlouciService(config, konnect);
   return {

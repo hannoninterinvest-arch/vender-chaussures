@@ -1,5 +1,3 @@
-import { AramexService } from "./aramex.service";
-import { ConfigService } from "../config";
 import { ShippingService } from "./shipping.service";
 
 describe("ShippingService", () => {
@@ -40,29 +38,46 @@ describe("ShippingService", () => {
     rows[0].basePriceTND = 50;
     expect((await service.quote("FR", "LA_POSTE", 3)).price).toBe(70);
   });
-  it("uses the live Aramex quote rather than obsolete estimated rates", async () => {
-    const rates = { find: jest.fn() };
-    const aramex = new AramexService(new ConfigService());
-    const api = jest
-      .spyOn(aramex, "quote")
-      .mockResolvedValue({
-        price: 90,
-        actualWeightKg: 3,
-        volumetricWeightKg: 4.8,
-        chargeableWeightKg: 4.8,
-        rule: { maxPairs: 2, lengthCm: 40, widthCm: 30, heightCm: 20 },
-        source: "aramex-api",
+  it("uses the configured Aramex tariff and a fixed weight without an external API", async () => {
+    const rows = [
+      {
+        carrier: "ARAMEX",
+        zone: "EUROPE",
+        isLocal: false,
+        basePriceTND: 90,
+        weightIncludedKg: 0.5,
+        pricePerExtraKgTND: 20,
+      },
+    ];
+    const rates = { find: jest.fn(async () => rows) };
+    const fetch = jest.spyOn(global, "fetch");
+    try {
+      const service = new ShippingService(
+        rates as unknown as ConstructorParameters<typeof ShippingService>[0],
+      );
+      const quote = await service.quote("FR", "ARAMEX", 3);
+      expect(quote).toMatchObject({
+        price: 140,
+        weightKg: 3,
+        pairWeightKg: 1.5,
+        source: "admin-table",
       });
+      expect(fetch).not.toHaveBeenCalled();
+      rows[0].pricePerExtraKgTND = 25;
+      expect((await service.quote("FR", "ARAMEX", 3)).price).toBe(152.5);
+    } finally {
+      fetch.mockRestore();
+    }
+  });
+
+  it("requires an admin tariff when no Aramex rate exists for the destination zone", async () => {
+    const rates = { find: jest.fn(async () => []) };
     const service = new ShippingService(
       rates as unknown as ConstructorParameters<typeof ShippingService>[0],
-      aramex,
     );
-    const destination = { city: "Paris", postalCode: "75001" };
-    const quote = await service.quote("FR", "ARAMEX", 3, destination);
-    expect(api).toHaveBeenCalledWith("FR", 2, destination);
-    expect(quote.price).toBe(90);
-    expect(quote).toMatchObject({ chargeableWeightKg: 4.8 });
-    expect(rates.find).not.toHaveBeenCalled();
+    await expect(service.quote("FR", "ARAMEX", 1.5)).rejects.toThrow(
+      "Aucun tarif",
+    );
   });
 
   it.each([NaN, Infinity, 0, -1, 80.8])(

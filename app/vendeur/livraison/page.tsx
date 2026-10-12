@@ -24,7 +24,7 @@ const ZONE_LABELS: Record<string, string> = {
   RESTE_MONDE: "Reste du monde",
 };
 
-const CARRIERS = ["LA_POSTE"] as const;
+const CARRIERS = ["ARAMEX", "LA_POSTE"] as const;
 const ZONES = [
   "MAGHREB",
   "EUROPE",
@@ -79,7 +79,7 @@ export default function SellerShippingPage() {
   const sorted = useMemo(
     () =>
       [...rows]
-        .filter((row) => row.carrier === "LA_POSTE" && row.zone !== "TUNISIE")
+        .filter((row) => row.zone !== "TUNISIE")
         .sort(
           (a, b) =>
             a.zone.localeCompare(b.zone) || a.carrier.localeCompare(b.carrier),
@@ -160,11 +160,13 @@ export default function SellerShippingPage() {
         <strong>1,5 kg par paire, emballage compris</strong>.
       </p>
       <p className="mt-2 max-w-3xl text-sm text-[#666]">
-        À l’étranger, Aramex utilise le poids réel ou volumétrique du carton
-        final et fournit son tarif en direct. Renseignez les identifiants et
-        cartons Aramex dans la configuration Vercel. Le tableau ci-dessous
-        concerne uniquement les tarifs internationaux La Poste, à valider auprès
-        du transporteur. Les modifications sont prises en compte immédiatement.
+        À l’étranger, les frais utilisent les tarifs enregistrés ci-dessous et
+        le poids total de la commande. Contactez Aramex ou La Poste pour obtenir
+        leurs tarifs, puis renseignez la base, les kilogrammes inclus et le prix
+        par kilogramme supplémentaire. Les montants existants peuvent être des
+        estimations : confirmez-les auprès du transporteur. Aucune clé API ni
+        dimension de carton n’est nécessaire. Les modifications sont prises en
+        compte immédiatement.
       </p>
 
       <div className="mt-6 overflow-x-auto rounded-[4px] border border-[#C5A059]/30 bg-white">

@@ -69,12 +69,7 @@ export class OrdersService {
       (sum, line) => sum + PAIR_WEIGHT_KG * line.qty,
       0,
     );
-    const quote = await this.shipping.quote(country, carrier, weightKg, {
-      city: dto.city,
-      postalCode: dto.postalCode,
-      stateProvinceCode: dto.stateProvinceCode,
-      address: dto.address,
-    });
+    const quote = await this.shipping.quote(country, carrier, weightKg);
     const delivery = quote.price;
     const total = roundMoney(subtotal + delivery);
     if (

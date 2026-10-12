@@ -58,19 +58,15 @@ Cette commande configure `kicks_images_signed` et `kicks_models_signed` (ou les 
 - Les accès administrateur/vendeur sont vérifiés sur le serveur, et les comptes désactivés sont refusés.
 - Les nouvelles commandes utilisent des identifiants aléatoires UUID. Les anciennes commandes conservent leurs identifiants.
 
-### Aramex international
+### Livraison internationale avec tarifs administrés
 
-Le serveur interroge l'API **CalculateRate** avec l'origine tunisienne et la destination (pays, ville, code postal/région si applicable). Les identifiants Aramex restent sur le serveur. L'intégration demande un tarif en **TND** et refuse tout montant dans une autre devise. Aucune estimation de la table locale n'est substituée à une réponse Aramex manquante.
+Le poids est toujours **1,5 kg × le nombre de paires**, sans calcul volumétrique ni appel à une API Aramex. Le total utilise le poids de toutes les paires du panier et le tarif enregistré pour le transporteur et la zone de destination.
 
-Le poids volumétrique est `longueur × largeur × hauteur / 5000`, dimensions en cm. Le poids facturable est le maximum entre ce poids et `1,5 × quantité de paires`. La précision du poids est conservée : l'API Aramex applique ses tranches contractuelles. Le carton final est **un seul colis** ; ses dimensions dépendent de sa capacité, pas d'une multiplication arbitraire des dimensions d'une boîte.
+La grille internationale reste `prix de base + max(0, poids total − kg inclus) × prix par kg supplémentaire`. Pour appliquer un tarif simple au kilogramme, renseigner une base de 0, un poids inclus de 0 et le prix du kilogramme dans le dernier champ.
 
-Configurer dans Vercel les variables `ARAMEX_*` du fichier `.env.example`, notamment les identifiants du compte expéditeur, l'adresse de départ réelle et `ARAMEX_PACKAGING_RULES`. Cette dernière est un tableau JSON des cartons **mesurés** : `maxPairs`, `lengthCm`, `widthCm`, `heightCm`. L'application sélectionne le carton de plus petite capacité pouvant contenir la commande. L'équipe de préparation doit utiliser le carton ainsi défini. Les dimensions de l'exemple sont illustratives et ne sont pas activées par défaut. Les colis dépassant la plus grande capacité configurée ou 30 kg facturables demandent un devis spécifique.
+Contactez directement Aramex/La Poste puis renseignez leurs tarifs dans **Vendeur → Livraison**, avec un compte administrateur. Les tarifs déjà enregistrés sont conservés et modifiables ; certains peuvent être des estimations et doivent être confirmés. Aucune nouvelle estimation internationale Aramex n'est créée automatiquement. Si aucune grille n'existe pour la zone, le paiement de cette livraison est bloqué jusqu'à l'ajout d'un tarif. Les réglages sont lus à chaque calcul et le serveur recalcule les frais avant paiement.
 
-Le client renseigne sa ville et, si nécessaire, son code postal et sa région. Le devis est recalculé à chaque changement d'adresse/panier et de nouveau avant paiement. Le total payé inclut la livraison. Les compléments postaux sont conservés dans l'adresse de la commande sans modification du schéma PostgreSQL.
-
-Sans identifiants et cartons valides, ou si Aramex ne fournit pas de devis valide, la livraison Aramex internationale est indisponible. La livraison nationale reste à 8 DT. Les tarifs internationaux **La Poste** conservent leur grille administrable et doivent être validés auprès du transporteur. Le tableau de l'espace administrateur est réservé à cette grille.
-
-Références techniques : [FAQ Aramex Tunisie](https://www.aramex.com/tn/en/faqs?page=2), [contrat actuel Rate Calculator (WSDL)](https://ws.aramex.net/ShippingAPI.V2/RateCalculator/Service_1_0.svc?singleWsdl), [guide Rate Calculator](https://www.aramex.com/content/uploads/109/232/42007/aramex-rates-calculator-manual.pdf).
+Aucun identifiant API Aramex ni dimension de carton n'est requis dans Vercel. Les anciennes variables `ARAMEX_*` peuvent être supprimées. La livraison en Tunisie reste fixée à **8 DT par commande** pour les deux transporteurs.
 
 Ne supprimer l'ancien service Render qu'après vérification du déploiement Vercel avec les variables réelles. Les sessions de paiement créées avant la migration peuvent encore notifier l'ancienne URL : conserver temporairement l'ancien service le temps que ces sessions expirent.
 

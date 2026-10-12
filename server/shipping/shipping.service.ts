@@ -14,14 +14,8 @@ import {
   type ShippingCarrier,
 } from "./shipping-rates.config";
 
-import { AramexService, type ShippingDestination } from "./aramex.service";
-import { ConfigService } from "../config";
-
 export class ShippingService {
-  constructor(
-    private readonly rates: Repository<ShippingRate>,
-    private readonly aramex = new AramexService(new ConfigService()),
-  ) {}
+  constructor(private readonly rates: Repository<ShippingRate>) {}
 
   async onModuleInit() {
     await this.seedDefaults();
@@ -50,10 +44,6 @@ export class ShippingService {
   }
 
   async createRate(dto: CreateShippingRateDto) {
-    if (dto.carrier === "ARAMEX" && dto.zone !== "TUNISIE")
-      throw new BadRequestException(
-        "Aramex international utilise les devis de son API.",
-      );
     const isLocal = dto.zone === "TUNISIE";
     const row = this.rates.create({
       carrier: dto.carrier,
@@ -84,10 +74,6 @@ export class ShippingService {
     if (!row) throw new NotFoundException("Tarif introuvable");
     if (dto.carrier !== undefined) row.carrier = dto.carrier;
     if (dto.zone !== undefined) row.zone = dto.zone;
-    if (row.carrier === "ARAMEX" && row.zone !== "TUNISIE")
-      throw new BadRequestException(
-        "Aramex international utilise les devis de son API.",
-      );
     if (dto.basePriceTND !== undefined)
       row.basePriceTND = roundMoney(dto.basePriceTND);
     if (dto.weightIncludedKg !== undefined) {
@@ -121,12 +107,7 @@ export class ShippingService {
     return quote.price;
   }
 
-  async quote(
-    country: string,
-    carrier: ShippingCarrier,
-    weightKg: number,
-    destination: ShippingDestination = {},
-  ) {
+  async quote(country: string, carrier: ShippingCarrier, weightKg: number) {
     if (!Number.isFinite(weightKg) || weightKg <= 0 || weightKg > 80) {
       throw new BadRequestException(
         "Le poids du colis doit être compris entre 0 et 80 kg.",
@@ -154,22 +135,6 @@ export class ShippingService {
         price: LOCAL_DELIVERY_TND,
         source: "local-flat" as const,
       };
-    if (carrier === "ARAMEX") {
-      const pairs = weightKg / PAIR_WEIGHT_KG;
-      if (!Number.isSafeInteger(pairs))
-        throw new BadRequestException(
-          "Poids incohérent avec le nombre de paires.",
-        );
-      const result = await this.aramex.quote(code, pairs, destination);
-      return {
-        ...common,
-        price: result.price,
-        actualWeightKg: result.actualWeightKg,
-        volumetricWeightKg: result.volumetricWeightKg,
-        chargeableWeightKg: result.chargeableWeightKg,
-        source: result.source,
-      };
-    }
     const rows = await this.loadRates();
     const rate = rows.find(
       (row) =>
@@ -184,6 +149,7 @@ export class ShippingService {
     const price = quoteShippingPrice(rate, kg);
     return {
       price,
+      source: "admin-table" as const,
       currency: "TND" as const,
       country: code,
       carrier,
@@ -211,7 +177,6 @@ export class ShippingService {
       ],
       estimates: true,
       localDeliveryTND: LOCAL_DELIVERY_TND,
-      aramexReady: this.aramex.configured(),
     };
   }
 
