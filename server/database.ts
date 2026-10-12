@@ -10,7 +10,14 @@ const state = globalThis as typeof globalThis & {
 export function createDatabase() {
   if (!process.env.DATABASE_URL)
     throw new Error("DATABASE_URL est obligatoire");
-  const url = new URL(process.env.DATABASE_URL);
+  let url: URL;
+  try {
+    url = new URL(process.env.DATABASE_URL.trim());
+    if (!["postgres:", "postgresql:"].includes(url.protocol) || !url.hostname)
+      throw new Error();
+  } catch {
+    throw new Error("DATABASE_URL invalide");
+  }
   url.searchParams.delete("channel_binding");
   return new DataSource({
     type: "postgres",

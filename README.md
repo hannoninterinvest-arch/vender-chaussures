@@ -84,6 +84,9 @@ Les statuts et paiements sont séparés. Le serveur contrôle chaque transition 
 
 L'espace staff dispose de filtres/recherche, d'un bouton de vérification du paiement et d'un historique horodaté avec auteur et motif. Le client voit le vrai statut et sa page vérifie périodiquement un paiement en attente. La redirection `?paid=1` seule ne confirme jamais la commande.
 
+### Diagnostic des erreurs 500
+
+Une erreur serveur renvoie une `errorId` et une référence dans le message affiché. Rechercher cette référence dans les logs Vercel : l'entrée `API request failed` indique la route, un code de diagnostic et une action conseillée. Exemples : `28P01` (identifiants PostgreSQL refusés), `42P01` (table absente), `JWT_SECRET_MISSING` ou `DATABASE_URL_MISSING`. Les erreurs brutes, requêtes SQL et secrets ne sont pas affichés. Une erreur inconnue reste `UNEXPECTED_SERVER_ERROR` et nécessite une reproduction en développement. Après modification des variables Vercel, redéployer. Ne jamais partager la valeur de `DATABASE_URL` ; si elle a été divulguée, renouveler le mot de passe Neon et remplacer la variable.
 ### Stockage additionnel
 
 La connexion serveur crée uniquement la nouvelle table isolée `commerce_records` si elle manque, pour les tarifs modifiés par pays et l'historique des commandes. Les tables existantes ne sont ni synchronisées ni réécrites. Aucun compte ou tarif administrateur n'est remplacé au démarrage ; les estimations non modifiées restent dans le code. Aucun identifiant Aramex ou dimension de carton n'est requis.

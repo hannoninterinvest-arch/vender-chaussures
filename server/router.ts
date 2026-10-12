@@ -1,6 +1,7 @@
 import { UpdateCountryRateDto } from "./shipping/dto/update-country-rate.dto";
 import "reflect-metadata";
 import { NextResponse } from "next/server";
+import { reportServerError } from "./error-diagnostics";
 import { plainToInstance, type ClassConstructor } from "class-transformer";
 import { validate } from "class-validator";
 import { services } from "./services";
@@ -435,6 +436,7 @@ export const routes: Route[] = [
 ];
 
 export async function dispatch(req: Request, segments: string[]) {
+  let diagnosticRoute = "unknown";
   try {
     const path = segments.join("/");
     let id = "";
@@ -451,6 +453,7 @@ export async function dispatch(req: Request, segments: string[]) {
       });
     });
     if (!route) throw new NotFoundException(`Route introuvable : ${path}`);
+    diagnosticRoute = route.path;
     // Reject unauthenticated requests before opening a database connection.
     const token = req.headers
       .get("authorization")
@@ -476,17 +479,17 @@ export async function dispatch(req: Request, segments: string[]) {
     });
   } catch (error) {
     const status = error instanceof HttpError ? error.status : 500;
-    if (status === 500)
-      console.error(
-        "API request failed",
-        error instanceof Error ? error.name : "UnknownError",
-      );
+    const errorId =
+      status === 500
+        ? reportServerError(error, req.method, diagnosticRoute)
+        : undefined;
     return NextResponse.json(
       {
         message:
           error instanceof HttpError
             ? error.message
-            : "Service temporairement indisponible",
+            : `Service temporairement indisponible. Référence : ${errorId}`,
+        ...(errorId ? { errorId } : {}),
       },
       { status, headers: { "Cache-Control": "no-store" } },
     );

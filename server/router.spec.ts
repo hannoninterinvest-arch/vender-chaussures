@@ -34,6 +34,31 @@ function request(path: string, method = "GET", body?: unknown, token?: string) {
 }
 
 describe("Next.js API migration", () => {
+  it("returns a reference for server failures and keeps their cause in safe logs", async () => {
+    const log = jest.spyOn(console, "error").mockImplementation(() => {});
+    jest
+      .mocked(services)
+      .mockRejectedValueOnce({
+        driverError: { code: "28P01", message: "secret-password" },
+      });
+    try {
+      const response = await request("auth/login", "POST", {
+        email: "admin@example.com",
+        password: "secret-password",
+      });
+      expect(response.status).toBe(500);
+      const body = await response.json();
+      expect(body.message).toContain(body.errorId);
+      expect(log).toHaveBeenCalledWith(
+        "API request failed",
+        expect.objectContaining({ errorId: body.errorId, code: "28P01" }),
+      );
+      expect(JSON.stringify(body)).not.toContain("secret-password");
+      expect(JSON.stringify(log.mock.calls)).not.toContain("secret-password");
+    } finally {
+      log.mockRestore();
+    }
+  });
   const memory = newDb({ autoCreateForeignKeyIndices: true });
   memory.public.registerFunction({
     name: "current_database",
@@ -415,15 +440,13 @@ describe("Next.js API migration", () => {
     expect((await app.orders.history(row.id)).length).toBe(
       historyBefore.length,
     );
-    const late = await db
-      .getRepository(Order)
-      .save({
-        ...row,
-        id: "ONLINE-late",
-        paymentRef: "late-ref",
-        paymentStatus: "pending",
-        status: "paiement_en_cours",
-      });
+    const late = await db.getRepository(Order).save({
+      ...row,
+      id: "ONLINE-late",
+      paymentRef: "late-ref",
+      paymentStatus: "pending",
+      status: "paiement_en_cours",
+    });
     expect(
       (
         await request(
