@@ -34,7 +34,7 @@ describe("OrdersService payments and delivery", () => {
       quote: jest.fn(async () => ({
         country: "TN",
         zone: "TUNISIE",
-        price: 7.5,
+        price: 8,
       })),
     };
     const service = new OrdersService(
@@ -60,15 +60,18 @@ describe("OrdersService payments and delivery", () => {
 
   it("charges server product prices plus delivery and derives weight from quantity", async () => {
     const { service, flouci, shipping } = setup();
-    const init = jest
-      .spyOn(flouci, "initPayment")
-      .mockResolvedValue({
-        paymentRef: "ref",
-        payUrl: "https://checkout.flouci.com/ref",
-      });
+    const init = jest.spyOn(flouci, "initPayment").mockResolvedValue({
+      paymentRef: "ref",
+      payUrl: "https://checkout.flouci.com/ref",
+    });
     const order = await service.create(dto);
-    expect(shipping.quote).toHaveBeenCalledWith("TN", "LA_POSTE", 1.6);
-    expect(order.total).toBe(order.subtotal + 7.5);
+    expect(shipping.quote).toHaveBeenCalledWith(
+      "TN",
+      "LA_POSTE",
+      3,
+      expect.objectContaining({ city: "Tunis" }),
+    );
+    expect(order.total).toBe(order.subtotal + 8);
     expect(init).toHaveBeenCalledWith(
       expect.objectContaining({ amountTnd: order.total }),
     );
@@ -81,6 +84,52 @@ describe("OrdersService payments and delivery", () => {
     await expect(
       service.create({ ...dto, expectedTotal: 200 }),
     ).rejects.toThrow("ont changé");
+    expect(orders.save).not.toHaveBeenCalled();
+    expect(init).not.toHaveBeenCalled();
+  });
+
+  it("includes the Aramex quote in the payment and keeps the destination postal details", async () => {
+    const { service, flouci, shipping } = setup();
+    shipping.quote.mockResolvedValue({
+      country: "FR",
+      zone: "EUROPE",
+      price: 81.25,
+    });
+    const init = jest
+      .spyOn(flouci, "initPayment")
+      .mockResolvedValue({
+        paymentRef: "ref",
+        payUrl: "https://checkout.flouci.com/ref",
+      });
+    const order = await service.create({
+      ...dto,
+      country: "FR",
+      carrier: "ARAMEX",
+      city: "Paris",
+      postalCode: "75001",
+      expectedTotal: 281.25,
+    });
+    expect(shipping.quote).toHaveBeenCalledWith(
+      "FR",
+      "ARAMEX",
+      3,
+      expect.objectContaining({ city: "Paris", postalCode: "75001" }),
+    );
+    expect(order.delivery).toBe(81.25);
+    expect(order.total).toBe(281.25);
+    expect(order.address).toContain("75001");
+    expect(init).toHaveBeenCalledWith(
+      expect.objectContaining({ amountTnd: 281.25 }),
+    );
+  });
+
+  it("does not create an order or payment if Aramex cannot quote", async () => {
+    const { service, orders, shipping, flouci } = setup();
+    shipping.quote.mockRejectedValue(new Error("Aramex indisponible"));
+    const init = jest.spyOn(flouci, "initPayment");
+    await expect(
+      service.create({ ...dto, country: "FR", carrier: "ARAMEX" }),
+    ).rejects.toThrow("Aramex");
     expect(orders.save).not.toHaveBeenCalled();
     expect(init).not.toHaveBeenCalled();
   });
@@ -103,13 +152,11 @@ describe("OrdersService payments and delivery", () => {
       paymentRef: "ref",
       payUrl: "https://checkout.flouci.com/ref",
     });
-    jest
-      .spyOn(flouci, "getPayment")
-      .mockResolvedValue({
-        status: "PENDING",
-        amount: 107500,
-        developer_tracking_id: "order",
-      });
+    jest.spyOn(flouci, "getPayment").mockResolvedValue({
+      status: "PENDING",
+      amount: 107500,
+      developer_tracking_id: "order",
+    });
     const init = jest.spyOn(flouci, "initPayment");
     const order = await service.retryPayment("order");
     expect(order.paymentRef).toBe("ref");
@@ -136,13 +183,11 @@ describe("OrdersService payments and delivery", () => {
       status: "paiement_en_cours",
       total: 107.5,
     });
-    jest
-      .spyOn(flouci, "getPayment")
-      .mockResolvedValue({
-        status: "SUCCESS",
-        amount: 107500,
-        developer_tracking_id: "order",
-      });
+    jest.spyOn(flouci, "getPayment").mockResolvedValue({
+      status: "SUCCESS",
+      amount: 107500,
+      developer_tracking_id: "order",
+    });
     expect(await service.confirmFlouci("ref")).toEqual({
       ok: true,
       paid: true,

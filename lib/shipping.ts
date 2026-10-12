@@ -1,12 +1,25 @@
 import { apiUrl } from "./api";
 
-export const PAIR_WEIGHT_KG = 0.8;
+import { PAIR_WEIGHT_KG } from "./shipping-config";
+export { PAIR_WEIGHT_KG } from "./shipping-config";
 
 export type ShippingCarrier = "ARAMEX" | "LA_POSTE";
 
-export const SHIPPING_CARRIERS: { id: ShippingCarrier; label: string; hint: string }[] = [
-  { id: "LA_POSTE", label: "La Poste", hint: "Souvent le plus économique à l’international." },
-  { id: "ARAMEX", label: "Aramex", hint: "Délais plus courts, tarif un peu plus élevé." },
+export const SHIPPING_CARRIERS: {
+  id: ShippingCarrier;
+  label: string;
+  hint: string;
+}[] = [
+  {
+    id: "LA_POSTE",
+    label: "La Poste",
+    hint: "Souvent le plus économique à l’international.",
+  },
+  {
+    id: "ARAMEX",
+    label: "Aramex",
+    hint: "Tarif calculé selon votre adresse et votre colis.",
+  },
 ];
 
 export type ShippingQuote = {
@@ -19,16 +32,23 @@ export type ShippingQuote = {
   weightKg: number;
 };
 
-export async function calculateShipping(body: {
-  country: string;
-  carrier: ShippingCarrier;
-  weightKg: number;
-}): Promise<ShippingQuote> {
+export async function calculateShipping(
+  body: {
+    country: string;
+    carrier: ShippingCarrier;
+    weightKg: number;
+    city?: string;
+    postalCode?: string;
+    stateProvinceCode?: string;
+    address?: string;
+  },
+  signal?: AbortSignal,
+): Promise<ShippingQuote> {
   const res = await fetch(apiUrl("/shipping/calculate"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(8000),
+    signal: signal ?? AbortSignal.timeout(25000),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));

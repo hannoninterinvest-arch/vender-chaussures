@@ -235,7 +235,7 @@ export const routes: Route[] = [
     access: "public",
     handle: async (c) => {
       const dto = await readDto(c.req, CalculateShippingDto);
-      return c.app.shipping.quote(dto.country, dto.carrier, dto.weightKg);
+      return c.app.shipping.quote(dto.country, dto.carrier, dto.weightKg, dto);
     },
   },
   {

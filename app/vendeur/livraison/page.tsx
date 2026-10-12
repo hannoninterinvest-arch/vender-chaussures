@@ -24,9 +24,8 @@ const ZONE_LABELS: Record<string, string> = {
   RESTE_MONDE: "Reste du monde",
 };
 
-const CARRIERS = ["ARAMEX", "LA_POSTE"] as const;
+const CARRIERS = ["LA_POSTE"] as const;
 const ZONES = [
-  "TUNISIE",
   "MAGHREB",
   "EUROPE",
   "MOYEN_ORIENT",
@@ -79,9 +78,12 @@ export default function SellerShippingPage() {
 
   const sorted = useMemo(
     () =>
-      [...rows].sort(
-        (a, b) => a.zone.localeCompare(b.zone) || a.carrier.localeCompare(b.carrier),
-      ),
+      [...rows]
+        .filter((row) => row.carrier === "LA_POSTE" && row.zone !== "TUNISIE")
+        .sort(
+          (a, b) =>
+            a.zone.localeCompare(b.zone) || a.carrier.localeCompare(b.carrier),
+        ),
     [rows],
   );
 
@@ -102,15 +104,18 @@ export default function SellerShippingPage() {
     if (!draft) return;
     setBusy(id);
     try {
-      const updated = await sellerRequest<RateRow>(`/admin/shipping-rates/${id}`, {
-        method: "PUT",
-        body: JSON.stringify({
-          basePriceTND: Number(draft.basePriceTND),
-          weightIncludedKg: Number(draft.weightIncludedKg),
-          pricePerExtraKgTND: Number(draft.pricePerExtraKgTND),
-          isLocal: Boolean(draft.isLocal),
-        }),
-      });
+      const updated = await sellerRequest<RateRow>(
+        `/admin/shipping-rates/${id}`,
+        {
+          method: "PUT",
+          body: JSON.stringify({
+            basePriceTND: Number(draft.basePriceTND),
+            weightIncludedKg: Number(draft.weightIncludedKg),
+            pricePerExtraKgTND: Number(draft.pricePerExtraKgTND),
+            isLocal: Boolean(draft.isLocal),
+          }),
+        },
+      );
       setRows((list) => list.map((row) => (row.id === id ? updated : row)));
       setDrafts((prev) => ({ ...prev, [id]: { ...updated } }));
       toast("Tarif enregistré");
@@ -129,7 +134,7 @@ export default function SellerShippingPage() {
         method: "POST",
         body: JSON.stringify({
           ...form,
-          isLocal: form.zone === "TUNISIE" || form.isLocal,
+          isLocal: false,
           basePriceTND: Number(form.basePriceTND),
           weightIncludedKg: Number(form.weightIncludedKg),
           pricePerExtraKgTND: Number(form.pricePerExtraKgTND),
@@ -150,9 +155,16 @@ export default function SellerShippingPage() {
         Tarifs de livraison
       </h1>
       <p className="mt-2 max-w-3xl text-sm text-[#666]">
-        Les montants affichés sont des <strong>estimations</strong> (Aramex / La Poste). Mets-les
-        à jour ici dès que tu as les vrais devis — aucun redéploiement n’est nécessaire. Les
-        calculs côté boutique lisent cette table (cache 5 min).
+        En Tunisie, la livraison coûte <strong>8 DT par commande</strong> pour
+        les deux transporteurs. Le poids utilisé est de{" "}
+        <strong>1,5 kg par paire, emballage compris</strong>.
+      </p>
+      <p className="mt-2 max-w-3xl text-sm text-[#666]">
+        À l’étranger, Aramex utilise le poids réel ou volumétrique du carton
+        final et fournit son tarif en direct. Renseignez les identifiants et
+        cartons Aramex dans la configuration Vercel. Le tableau ci-dessous
+        concerne uniquement les tarifs internationaux La Poste, à valider auprès
+        du transporteur. Les modifications sont prises en compte immédiatement.
       </p>
 
       <div className="mt-6 overflow-x-auto rounded-[4px] border border-[#C5A059]/30 bg-white">
@@ -173,8 +185,12 @@ export default function SellerShippingPage() {
               const draft = drafts[row.id] ?? row;
               return (
                 <tr key={row.id} className="border-t border-[#C5A059]/20">
-                  <td className="px-3 py-2 font-medium">{row.carrier.replace("_", " ")}</td>
-                  <td className="px-3 py-2">{ZONE_LABELS[row.zone] ?? row.zone}</td>
+                  <td className="px-3 py-2 font-medium">
+                    {row.carrier.replace("_", " ")}
+                  </td>
+                  <td className="px-3 py-2">
+                    {ZONE_LABELS[row.zone] ?? row.zone}
+                  </td>
                   <td className="px-3 py-2">{row.isLocal ? "Oui" : "Non"}</td>
                   <td className="px-3 py-2">
                     <input
@@ -183,7 +199,11 @@ export default function SellerShippingPage() {
                       step="0.1"
                       className={inputClass}
                       value={draft.basePriceTND}
-                      onChange={(e) => patchDraft(row.id, { basePriceTND: Number(e.target.value) })}
+                      onChange={(e) =>
+                        patchDraft(row.id, {
+                          basePriceTND: Number(e.target.value),
+                        })
+                      }
                     />
                   </td>
                   <td className="px-3 py-2">
@@ -195,7 +215,9 @@ export default function SellerShippingPage() {
                       className={inputClass}
                       value={draft.weightIncludedKg}
                       onChange={(e) =>
-                        patchDraft(row.id, { weightIncludedKg: Number(e.target.value) })
+                        patchDraft(row.id, {
+                          weightIncludedKg: Number(e.target.value),
+                        })
                       }
                     />
                   </td>
@@ -208,7 +230,9 @@ export default function SellerShippingPage() {
                       className={inputClass}
                       value={draft.pricePerExtraKgTND}
                       onChange={(e) =>
-                        patchDraft(row.id, { pricePerExtraKgTND: Number(e.target.value) })
+                        patchDraft(row.id, {
+                          pricePerExtraKgTND: Number(e.target.value),
+                        })
                       }
                     />
                   </td>
@@ -243,7 +267,10 @@ export default function SellerShippingPage() {
               className={`${inputClass} mt-1`}
               value={form.carrier}
               onChange={(e) =>
-                setForm((f) => ({ ...f, carrier: e.target.value as (typeof CARRIERS)[number] }))
+                setForm((f) => ({
+                  ...f,
+                  carrier: e.target.value as (typeof CARRIERS)[number],
+                }))
               }
             >
               {CARRIERS.map((c) => (
@@ -260,7 +287,7 @@ export default function SellerShippingPage() {
               value={form.zone}
               onChange={(e) => {
                 const zone = e.target.value as (typeof ZONES)[number];
-                setForm((f) => ({ ...f, zone, isLocal: zone === "TUNISIE" }));
+                setForm((f) => ({ ...f, zone, isLocal: false }));
               }}
             >
               {ZONES.map((z) => (
@@ -278,7 +305,9 @@ export default function SellerShippingPage() {
               step="0.1"
               className={`${inputClass} mt-1`}
               value={form.basePriceTND}
-              onChange={(e) => setForm((f) => ({ ...f, basePriceTND: Number(e.target.value) }))}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, basePriceTND: Number(e.target.value) }))
+              }
             />
           </label>
           <label className="text-sm">
@@ -289,7 +318,12 @@ export default function SellerShippingPage() {
               step="0.1"
               className={`${inputClass} mt-1`}
               value={form.weightIncludedKg}
-              onChange={(e) => setForm((f) => ({ ...f, weightIncludedKg: Number(e.target.value) }))}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  weightIncludedKg: Number(e.target.value),
+                }))
+              }
             />
           </label>
           <label className="text-sm">
@@ -301,7 +335,10 @@ export default function SellerShippingPage() {
               className={`${inputClass} mt-1`}
               value={form.pricePerExtraKgTND}
               onChange={(e) =>
-                setForm((f) => ({ ...f, pricePerExtraKgTND: Number(e.target.value) }))
+                setForm((f) => ({
+                  ...f,
+                  pricePerExtraKgTND: Number(e.target.value),
+                }))
               }
             />
           </label>

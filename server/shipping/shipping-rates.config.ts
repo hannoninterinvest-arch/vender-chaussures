@@ -18,7 +18,7 @@ export const SHIPPING_ZONES = [
 export type ShippingZone = (typeof SHIPPING_ZONES)[number];
 
 /** Poids moyen estimé d’une paire (boîte comprise). À ajuster si le catalogue a un vrai poids. */
-export const PAIR_WEIGHT_KG = 0.8;
+export { PAIR_WEIGHT_KG, LOCAL_DELIVERY_TND } from "@/lib/shipping-config";
 
 export type InternationalRate = {
   basePriceTND: number;
@@ -28,37 +28,10 @@ export type InternationalRate = {
 
 export const DEFAULT_SHIPPING_RATES = {
   LOCAL: {
-    ARAMEX: { flatPriceTND: 10 }, // estimation moyenne 8-12 DT
-    LA_POSTE: { flatPriceTND: 7.5 }, // estimation moyenne 6-9 DT
+    ARAMEX: { flatPriceTND: 8 },
+    LA_POSTE: { flatPriceTND: 8 },
   },
   INTERNATIONAL: {
-    ARAMEX: {
-      MAGHREB: {
-        basePriceTND: 40,
-        weightIncludedKg: 0.5,
-        pricePerExtraKgTND: 12,
-      },
-      EUROPE: {
-        basePriceTND: 90,
-        weightIncludedKg: 0.5,
-        pricePerExtraKgTND: 20,
-      },
-      MOYEN_ORIENT: {
-        basePriceTND: 65,
-        weightIncludedKg: 0.5,
-        pricePerExtraKgTND: 18,
-      },
-      AMERIQUE_NORD: {
-        basePriceTND: 100,
-        weightIncludedKg: 0.5,
-        pricePerExtraKgTND: 28,
-      },
-      RESTE_MONDE: {
-        basePriceTND: 120,
-        weightIncludedKg: 0.5,
-        pricePerExtraKgTND: 32,
-      },
-    },
     LA_POSTE: {
       MAGHREB: { basePriceTND: 30, weightIncludedKg: 1, pricePerExtraKgTND: 6 },
       EUROPE: { basePriceTND: 45, weightIncludedKg: 1, pricePerExtraKgTND: 10 },
@@ -226,7 +199,7 @@ export function defaultShippingRateSeeds(): ShippingRateSeed[] {
     },
   ];
 
-  for (const carrier of SHIPPING_CARRIERS) {
+  for (const carrier of ["LA_POSTE"] as const) {
     const table = DEFAULT_SHIPPING_RATES.INTERNATIONAL[carrier];
     for (const zone of Object.keys(table) as Array<keyof typeof table>) {
       const rate = table[zone];

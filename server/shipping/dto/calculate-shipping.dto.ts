@@ -1,5 +1,14 @@
 import { Type } from "class-transformer";
-import { IsIn, IsNumber, IsString, Max, Min, MinLength } from "class-validator";
+import {
+  IsIn,
+  IsNumber,
+  IsString,
+  IsOptional,
+  MaxLength,
+  Max,
+  Min,
+  MinLength,
+} from "class-validator";
 import {
   SHIPPING_CARRIERS,
   type ShippingCarrier,
@@ -18,4 +27,24 @@ export class CalculateShippingDto {
   @Min(0)
   @Max(80)
   weightKg!: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  postalCode?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  stateProvinceCode?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  address?: string;
 }

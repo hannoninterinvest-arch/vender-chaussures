@@ -49,13 +49,28 @@ Cette commande configure `kicks_images_signed` et `kicks_models_signed` (ou les 
 
 ### Paiements et livraison
 
-- Les prix des produits, promotions, poids et frais de livraison sont calculés depuis PostgreSQL côté serveur.
-- Un total de panier devenu obsolète est refusé avant création du paiement.
+- En Tunisie, **8 DT par commande**, quel que soit le transporteur choisi. Ce forfait s'applique immédiatement, même si la table conserve d'anciens montants 7,5/10 DT.
+- Poids réel estimé : **1,5 kg par paire, emballage compris**, règle partagée par le panier et le serveur.
+- Les prix des produits, promotions, quantités et livraison sont recalculés côté serveur. Un total devenu obsolète est refusé avant création du paiement.
 - Flouci reçoit le total, livraison incluse, en millimes. Un retour `?paid=1` ne valide aucun paiement : l'API authentifiée du prestataire vérifie statut, montant et commande.
 - Les webhooks sont `/api/payments/flouci/webhook` et `/api/payments/konnect/webhook` sur `APP_URL`.
 - Une commande impayée ne peut pas être marquée en livraison/livrée. Le paiement à la livraison est limité à la Tunisie.
 - Les accès administrateur/vendeur sont vérifiés sur le serveur, et les comptes désactivés sont refusés.
 - Les nouvelles commandes utilisent des identifiants aléatoires UUID. Les anciennes commandes conservent leurs identifiants.
+
+### Aramex international
+
+Le serveur interroge l'API **CalculateRate** avec l'origine tunisienne et la destination (pays, ville, code postal/région si applicable). Les identifiants Aramex restent sur le serveur. L'intégration demande un tarif en **TND** et refuse tout montant dans une autre devise. Aucune estimation de la table locale n'est substituée à une réponse Aramex manquante.
+
+Le poids volumétrique est `longueur × largeur × hauteur / 5000`, dimensions en cm. Le poids facturable est le maximum entre ce poids et `1,5 × quantité de paires`. La précision du poids est conservée : l'API Aramex applique ses tranches contractuelles. Le carton final est **un seul colis** ; ses dimensions dépendent de sa capacité, pas d'une multiplication arbitraire des dimensions d'une boîte.
+
+Configurer dans Vercel les variables `ARAMEX_*` du fichier `.env.example`, notamment les identifiants du compte expéditeur, l'adresse de départ réelle et `ARAMEX_PACKAGING_RULES`. Cette dernière est un tableau JSON des cartons **mesurés** : `maxPairs`, `lengthCm`, `widthCm`, `heightCm`. L'application sélectionne le carton de plus petite capacité pouvant contenir la commande. L'équipe de préparation doit utiliser le carton ainsi défini. Les dimensions de l'exemple sont illustratives et ne sont pas activées par défaut. Les colis dépassant la plus grande capacité configurée ou 30 kg facturables demandent un devis spécifique.
+
+Le client renseigne sa ville et, si nécessaire, son code postal et sa région. Le devis est recalculé à chaque changement d'adresse/panier et de nouveau avant paiement. Le total payé inclut la livraison. Les compléments postaux sont conservés dans l'adresse de la commande sans modification du schéma PostgreSQL.
+
+Sans identifiants et cartons valides, ou si Aramex ne fournit pas de devis valide, la livraison Aramex internationale est indisponible. La livraison nationale reste à 8 DT. Les tarifs internationaux **La Poste** conservent leur grille administrable et doivent être validés auprès du transporteur. Le tableau de l'espace administrateur est réservé à cette grille.
+
+Références techniques : [FAQ Aramex Tunisie](https://www.aramex.com/tn/en/faqs?page=2), [contrat actuel Rate Calculator (WSDL)](https://ws.aramex.net/ShippingAPI.V2/RateCalculator/Service_1_0.svc?singleWsdl), [guide Rate Calculator](https://www.aramex.com/content/uploads/109/232/42007/aramex-rates-calculator-manual.pdf).
 
 Ne supprimer l'ancien service Render qu'après vérification du déploiement Vercel avec les variables réelles. Les sessions de paiement créées avant la migration peuvent encore notifier l'ancienne URL : conserver temporairement l'ancien service le temps que ces sessions expirent.
 

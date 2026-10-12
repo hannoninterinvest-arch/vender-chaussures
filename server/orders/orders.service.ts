@@ -69,7 +69,12 @@ export class OrdersService {
       (sum, line) => sum + PAIR_WEIGHT_KG * line.qty,
       0,
     );
-    const quote = await this.shipping.quote(country, carrier, weightKg);
+    const quote = await this.shipping.quote(country, carrier, weightKg, {
+      city: dto.city,
+      postalCode: dto.postalCode,
+      stateProvinceCode: dto.stateProvinceCode,
+      address: dto.address,
+    });
     const delivery = quote.price;
     const total = roundMoney(subtotal + delivery);
     if (
@@ -96,7 +101,13 @@ export class OrdersService {
       carrier,
       shippingZone: quote.zone,
       city: dto.city,
-      address: dto.address,
+      address: [
+        dto.address,
+        dto.postalCode?.trim(),
+        dto.stateProvinceCode?.trim(),
+      ]
+        .filter(Boolean)
+        .join(", "),
       notes: dto.notes ?? "",
       payment: dto.payment,
       paymentPhone: "",

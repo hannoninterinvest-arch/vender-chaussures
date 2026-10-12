@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsString,
   Min,
+  MaxLength,
   ValidateNested,
 } from "class-validator";
 
@@ -53,7 +54,18 @@ export class CreateOrderDto {
   carrier?: (typeof CARRIERS)[number];
 
   @IsString()
+  @MaxLength(50)
   city!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  postalCode?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  stateProvinceCode?: string;
 
   @IsString()
   address!: string;

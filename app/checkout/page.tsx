@@ -12,7 +12,12 @@ import {
   type PaymentMethod,
 } from "@/lib/tunisia";
 import { createOrder, fetchPaymentsConfig } from "@/lib/api";
-import { calculateShipping, cartWeightKg, SHIPPING_CARRIERS, type ShippingCarrier } from "@/lib/shipping";
+import {
+  calculateShipping,
+  cartWeightKg,
+  SHIPPING_CARRIERS,
+  type ShippingCarrier,
+} from "@/lib/shipping";
 import { useToast } from "@/components/Toast";
 import { brand } from "@/lib/brand";
 import { CheckoutSteps } from "@/components/Experience";
@@ -28,15 +33,40 @@ export default function CheckoutPage() {
   const [flouciReady, setFlouciReady] = useState(false);
   const [onlineReady, setOnlineReady] = useState(false);
   const [gouvernorat, setGouvernorat] = useState<Gouvernorat>("Tunis");
+  const [city, setCity] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [stateProvinceCode, setStateProvinceCode] = useState("");
+  const [address, setAddress] = useState("");
   const [carrier, setCarrier] = useState<ShippingCarrier>("LA_POSTE");
   const [busy, setBusy] = useState(false);
-  const [quote, setQuote] = useState<{ key: string; price: number | null; error: string } | null>(null);
-  const payment = !isLocal && paymentChoice === "cod" ? (flouciReady ? "flouci" : "online") : paymentChoice;
+  const [quote, setQuote] = useState<{
+    key: string;
+    price: number | null;
+    error: string;
+  } | null>(null);
+  const payment =
+    !isLocal && paymentChoice === "cod"
+      ? flouciReady
+        ? "flouci"
+        : "online"
+      : paymentChoice;
   const weightKg = useMemo(
     () => cartWeightKg(lines.reduce((sum, line) => sum + line.qty, 0)),
     [lines],
   );
-  const quoteKey = `${selectedCountry}:${carrier}:${weightKg}`;
+  const quoteKey = JSON.stringify([
+    selectedCountry,
+    carrier,
+    weightKg,
+    ...(carrier === "ARAMEX" && !isLocal
+      ? [
+          city.trim(),
+          postalCode.trim(),
+          stateProvinceCode.trim(),
+          address.trim(),
+        ]
+      : []),
+  ]);
   const fee = quote?.key === quoteKey ? quote.price : null;
   const quoteError = quote?.key === quoteKey ? quote.error : "";
   const total = subtotal + (fee ?? 0);
@@ -62,18 +92,49 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (lines.length === 0) return;
     let cancelled = false;
-    calculateShipping({ country: selectedCountry, carrier, weightKg })
-      .then((quote) => {
-        if (!cancelled) setQuote({ key: quoteKey, price: quote.price, error: "" });
-      })
-      .catch((err: Error) => {
-        if (cancelled) return;
-        setQuote({ key: quoteKey, price: null, error: err.message });
-      });
+    const controller = new AbortController();
+    const timer = setTimeout(
+      () => {
+        calculateShipping(
+          {
+            country: selectedCountry,
+            carrier,
+            weightKg,
+            city: city.trim(),
+            postalCode: postalCode.trim(),
+            stateProvinceCode: stateProvinceCode.trim(),
+            address: address.trim(),
+          },
+          controller.signal,
+        )
+          .then((quote) => {
+            if (!cancelled)
+              setQuote({ key: quoteKey, price: quote.price, error: "" });
+          })
+          .catch((err: Error) => {
+            if (cancelled) return;
+            setQuote({ key: quoteKey, price: null, error: err.message });
+          });
+      },
+      carrier === "ARAMEX" && !isLocal ? 500 : 0,
+    );
     return () => {
       cancelled = true;
+      clearTimeout(timer);
+      controller.abort();
     };
-  }, [selectedCountry, carrier, weightKg, lines.length, quoteKey]);
+  }, [
+    selectedCountry,
+    carrier,
+    weightKg,
+    city,
+    postalCode,
+    stateProvinceCode,
+    address,
+    isLocal,
+    lines.length,
+    quoteKey,
+  ]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -86,7 +147,10 @@ export default function CheckoutPage() {
       toast("Le paiement à la livraison n’est disponible qu’en Tunisie.");
       return;
     }
-    if ((payment === "online" && !onlineReady) || (payment === "flouci" && !flouciReady)) {
+    if (
+      (payment === "online" && !onlineReady) ||
+      (payment === "flouci" && !flouciReady)
+    ) {
       toast("Paiement en ligne indisponible pour le moment.");
       return;
     }
@@ -99,7 +163,9 @@ export default function CheckoutPage() {
         country: selectedCountry,
         carrier,
         gouvernorat: isLocal ? gouvernorat : "",
-        city: String(data.get("city")),
+        city: city.trim(),
+        postalCode: isLocal ? undefined : postalCode.trim(),
+        stateProvinceCode: isLocal ? undefined : stateProvinceCode.trim(),
         address: String(data.get("address")),
         notes: String(data.get("notes") || ""),
         payment,
@@ -130,7 +196,10 @@ export default function CheckoutPage() {
         <p className="mt-6 font-[family-name:var(--font-display)] text-3xl tracking-[0.12em] uppercase">
           Votre panier est vide.
         </p>
-        <Link href="/shop" className="gold-btn mt-6 inline-flex rounded-sm px-6 py-3 text-xs uppercase">
+        <Link
+          href="/shop"
+          className="gold-btn mt-6 inline-flex rounded-sm px-6 py-3 text-xs uppercase"
+        >
           Continuer les achats
         </Link>
       </div>
@@ -140,7 +209,9 @@ export default function CheckoutPage() {
   return (
     <div className="mx-auto max-w-[1100px] px-4 py-10 md:px-6">
       <CheckoutSteps step={2} />
-      <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-[#C5A059]">Paiement</p>
+      <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-[#C5A059]">
+        Paiement
+      </p>
       <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.12em] uppercase">
         Checkout invité
       </h1>
@@ -148,7 +219,10 @@ export default function CheckoutPage() {
         Pas de mot de passe. On te contacte au {brand.phone} pour confirmer.
       </p>
 
-      <form onSubmit={onSubmit} className="mt-8 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
+      <form
+        onSubmit={onSubmit}
+        className="mt-8 grid gap-8 lg:grid-cols-[1.4fr_1fr]"
+      >
         <div className="store-panel space-y-6 p-6">
           <h2 className="font-[family-name:var(--font-display)] text-lg tracking-[0.14em] uppercase">
             Livraison
@@ -186,8 +260,41 @@ export default function CheckoutPage() {
               </select>
             </div>
           )}
-          <Field name="city" label="Ville" required autoComplete="address-level2" />
-          <Field name="address" label="Adresse" required placeholder="Rue, immeuble, étage…" autoComplete="street-address" />
+          <Field
+            name="city"
+            label="Ville"
+            required
+            autoComplete="address-level2"
+            value={city}
+            onChange={setCity}
+          />
+          {!isLocal && (
+            <>
+              <Field
+                name="postalCode"
+                label="Code postal (si votre pays en utilise)"
+                autoComplete="postal-code"
+                value={postalCode}
+                onChange={setPostalCode}
+              />
+              <Field
+                name="stateProvinceCode"
+                label="État / région (si nécessaire, ex. CA)"
+                autoComplete="address-level1"
+                value={stateProvinceCode}
+                onChange={setStateProvinceCode}
+              />
+            </>
+          )}
+          <Field
+            name="address"
+            label="Adresse"
+            required
+            placeholder="Rue, immeuble, étage…"
+            autoComplete="street-address"
+            value={address}
+            onChange={setAddress}
+          />
           <Field name="notes" label="Note pour le livreur (optionnel)" />
 
           <div>
@@ -199,7 +306,9 @@ export default function CheckoutPage() {
                 <label
                   key={m.id}
                   className={`flex cursor-pointer items-start gap-3 rounded-sm border p-4 ${
-                    carrier === m.id ? "border-[#C5A059] bg-[#C5A059]/10" : "border-[#C5A059]/25"
+                    carrier === m.id
+                      ? "border-[#C5A059] bg-[#C5A059]/10"
+                      : "border-[#C5A059]/25"
                   }`}
                 >
                   <input
@@ -211,7 +320,9 @@ export default function CheckoutPage() {
                   />
                   <span>
                     <span className="block font-semibold">{m.label}</span>
-                    <span className="text-sm text-[var(--muted)]">{m.hint}</span>
+                    <span className="text-sm text-[var(--muted)]">
+                      {m.hint}
+                    </span>
                   </span>
                 </label>
               ))}
@@ -224,44 +335,49 @@ export default function CheckoutPage() {
           <div className="space-y-2">
             {paymentMethods.map((m) => {
               const codBlocked = m.id === "cod" && !isLocal;
-              const onlineBlocked = (m.id === "online" && !onlineReady) || (m.id === "flouci" && !flouciReady);
+              const onlineBlocked =
+                (m.id === "online" && !onlineReady) ||
+                (m.id === "flouci" && !flouciReady);
               const disabled = codBlocked || onlineBlocked;
               return (
-              <label
-                key={m.id}
-                className={`flex items-start gap-3 rounded-sm border p-4 ${
-                  disabled ? "cursor-not-allowed opacity-55" : "cursor-pointer"
-                } ${
-                  payment === m.id
-                    ? "border-[#C5A059] bg-[#C5A059]/10"
-                    : "border-[#C5A059]/25"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="payment"
-                  checked={payment === m.id}
-                  disabled={disabled}
-                  onChange={() => setPayment(m.id)}
-                  className="mt-1 accent-[#C5A059]"
-                />
-                <span>
-                  <span className="block font-semibold">{m.label}</span>
-                  <span className="text-sm text-[var(--muted)]">
-                    {codBlocked
-                      ? "Disponible uniquement pour une livraison en Tunisie."
-                      : onlineBlocked
-                        ? "Ce moyen de paiement est temporairement indisponible."
-                        : m.hint}
+                <label
+                  key={m.id}
+                  className={`flex items-start gap-3 rounded-sm border p-4 ${
+                    disabled
+                      ? "cursor-not-allowed opacity-55"
+                      : "cursor-pointer"
+                  } ${
+                    payment === m.id
+                      ? "border-[#C5A059] bg-[#C5A059]/10"
+                      : "border-[#C5A059]/25"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    checked={payment === m.id}
+                    disabled={disabled}
+                    onChange={() => setPayment(m.id)}
+                    className="mt-1 accent-[#C5A059]"
+                  />
+                  <span>
+                    <span className="block font-semibold">{m.label}</span>
+                    <span className="text-sm text-[var(--muted)]">
+                      {codBlocked
+                        ? "Disponible uniquement pour une livraison en Tunisie."
+                        : onlineBlocked
+                          ? "Ce moyen de paiement est temporairement indisponible."
+                          : m.hint}
+                    </span>
                   </span>
-                </span>
-              </label>
+                </label>
               );
             })}
           </div>
           {!isLocal && !onlineReady && !flouciReady && (
             <p className="text-sm text-[var(--promo)]">
-              Le paiement en ligne est temporairement indisponible pour cette destination.
+              Le paiement en ligne est temporairement indisponible pour cette
+              destination.
             </p>
           )}
         </div>
@@ -272,16 +388,25 @@ export default function CheckoutPage() {
           </h2>
           <ul className="mt-4 space-y-3">
             {lines.map((l) => (
-              <li key={`${l.productId}-${l.size}-${l.color}`} className="flex gap-3 text-sm">
+              <li
+                key={`${l.productId}-${l.size}-${l.color}`}
+                className="flex gap-3 text-sm"
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={l.image} alt="" className="h-14 w-14 rounded-sm object-cover" />
+                <img
+                  src={l.image}
+                  alt=""
+                  className="h-14 w-14 rounded-sm object-cover"
+                />
                 <div className="flex-1">
                   <p className="font-medium">{l.name}</p>
                   <p className="text-[var(--muted)]">
                     {l.color} · {l.size} · x{l.qty}
                   </p>
                 </div>
-                <span className="text-[#C5A059]">{formatPrice(Number(l.price) * l.qty)}</span>
+                <span className="text-[#C5A059]">
+                  {formatPrice(Number(l.price) * l.qty)}
+                </span>
               </li>
             ))}
           </ul>
@@ -295,18 +420,31 @@ export default function CheckoutPage() {
               <span>Livraison ({carrier.replace("_", " ")})</span>
               <span>{fee == null ? "…" : formatPrice(fee)}</span>
             </div>
-            {quoteError && <p className="text-xs text-[var(--promo)]">{quoteError}</p>}
+            {quoteError && (
+              <p className="text-xs text-[var(--promo)]">{quoteError}</p>
+            )}
             <div className="flex justify-between pt-2 text-lg font-bold">
               <span>Total</span>
-              <span className="text-[#C5A059]">{fee == null ? "…" : formatPrice(total)}</span>
+              <span className="text-[#C5A059]">
+                {fee == null ? "…" : formatPrice(total)}
+              </span>
             </div>
           </div>
           <button
             type="submit"
-            disabled={busy || fee == null || ((payment === "online" && !onlineReady) || (payment === "flouci" && !flouciReady))}
+            disabled={
+              busy ||
+              fee == null ||
+              (payment === "online" && !onlineReady) ||
+              (payment === "flouci" && !flouciReady)
+            }
             className="gold-btn mt-6 h-12 w-full rounded-sm text-xs uppercase disabled:opacity-60"
           >
-            {busy ? "Envoi…" : payment !== "cod" ? "Payer en ligne" : "Confirmer la commande"}
+            {busy
+              ? "Envoi…"
+              : payment !== "cod"
+                ? "Payer en ligne"
+                : "Confirmer la commande"}
           </button>
           <p className="mt-3 text-center text-[11px] tracking-[0.14em] uppercase text-[var(--muted)]">
             {brand.slogan}
@@ -324,6 +462,8 @@ function Field({
   type = "text",
   placeholder,
   autoComplete,
+  value,
+  onChange,
 }: {
   name: string;
   label: string;
@@ -331,16 +471,22 @@ function Field({
   type?: string;
   placeholder?: string;
   autoComplete?: string;
+  value?: string;
+  onChange?: (value: string) => void;
 }) {
   return (
     <label className="block">
-      <span className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#C5A059]">{label}</span>
+      <span className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#C5A059]">
+        {label}
+      </span>
       <input
         name={name}
         type={type}
         required={required}
         placeholder={placeholder}
         autoComplete={autoComplete}
+        value={value}
+        onChange={onChange ? (e) => onChange(e.target.value) : undefined}
         className="field mt-1.5"
       />
     </label>

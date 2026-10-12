@@ -94,32 +94,28 @@ describe("Next.js API migration", () => {
     ]);
     adminToken = sign({ sub: "admin" }, process.env.JWT_SECRET);
     sellerToken = sign({ sub: "seller" }, process.env.JWT_SECRET);
-    await db
-      .getRepository(Product)
-      .save({
-        id: "shoe",
-        name: "Shoe",
-        brand: "ELVARO",
-        price: 100,
-        cost: 50,
-        description: "",
-        gender: "unisexe",
-        category: "shoes",
-        colors: [{ name: "black", hex: "#000000" }],
-        sizes: [40],
-        images: ["shoe.jpg"],
-        model: "",
-      });
-    await db
-      .getRepository(ShippingRate)
-      .save({
-        carrier: "LA_POSTE",
-        zone: "TUNISIE",
-        isLocal: true,
-        basePriceTND: 7.5,
-        weightIncludedKg: 0,
-        pricePerExtraKgTND: 0,
-      });
+    await db.getRepository(Product).save({
+      id: "shoe",
+      name: "Shoe",
+      brand: "ELVARO",
+      price: 100,
+      cost: 50,
+      description: "",
+      gender: "unisexe",
+      category: "shoes",
+      colors: [{ name: "black", hex: "#000000" }],
+      sizes: [40],
+      images: ["shoe.jpg"],
+      model: "",
+    });
+    await db.getRepository(ShippingRate).save({
+      carrier: "LA_POSTE",
+      zone: "TUNISIE",
+      isLocal: true,
+      basePriceTND: 7.5,
+      weightIncludedKg: 0,
+      pricePerExtraKgTND: 0,
+    });
   });
   afterAll(async () => {
     if (db.isInitialized) await db.destroy();
@@ -173,14 +169,14 @@ describe("Next.js API migration", () => {
       city: "Tunis",
       address: "Street",
       payment: "cod",
-      expectedTotal: 207.5,
+      expectedTotal: 208,
       items: [{ productId: "shoe", size: 40, color: "black", qty: 2 }],
     };
     const response = await request("orders", "POST", dto);
     expect(response.status).toBe(200);
     const order = await response.json();
     expect(order.id).toMatch(/^KCK-[0-9a-f-]{36}$/);
-    expect(order.total).toBe(207.5);
+    expect(order.total).toBe(208);
     expect(order.items[0].qty).toBe(2);
     expect((await request(`orders/${order.id}`)).status).toBe(200);
     expect(
