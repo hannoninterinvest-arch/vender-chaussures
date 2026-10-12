@@ -1,5 +1,6 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
+import pg from "pg";
 import { ensureCommerceStore } from "./commerce-store";
 import { entities } from "./entities";
 
@@ -21,6 +22,8 @@ export function createDatabase() {
   url.searchParams.delete("channel_binding");
   return new DataSource({
     type: "postgres",
+    // Explicit import also makes Vercel's dependency tracer include the driver.
+    driver: pg,
     url: url.toString(),
     entities,
     synchronize: false,

@@ -4,6 +4,12 @@ describe("safe server diagnostics", () => {
   afterEach(() => jest.restoreAllMocks());
 
   it.each([
+    [
+      new Error(
+        'Postgres package has not been found installed. Please run "npm install pg".',
+      ),
+      "POSTGRES_DRIVER_MISSING",
+    ],
     [new Error("DATABASE_URL est obligatoire"), "DATABASE_URL_MISSING"],
     [new Error("DATABASE_URL invalide"), "DATABASE_URL_INVALID"],
     [

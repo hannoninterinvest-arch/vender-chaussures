@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 
 const hints: Record<string, string> = {
+  POSTGRES_DRIVER_MISSING:
+    "Le pilote PostgreSQL ne peut pas être chargé : conserver typeorm et pg dans serverExternalPackages et redéployer.",
   DATABASE_URL_MISSING:
     "Définir DATABASE_URL dans Vercel pour cet environnement, puis redéployer.",
   DATABASE_URL_INVALID:
@@ -42,6 +44,8 @@ function classify(error: unknown, depth = 0): string | undefined {
     errors?: unknown[];
   };
   const configErrors: Record<string, string> = {
+    'Postgres package has not been found installed. Please run "npm install pg".':
+      "POSTGRES_DRIVER_MISSING",
     "DATABASE_URL est obligatoire": "DATABASE_URL_MISSING",
     "DATABASE_URL invalide": "DATABASE_URL_INVALID",
     "JWT_SECRET est obligatoire en production": "JWT_SECRET_MISSING",
