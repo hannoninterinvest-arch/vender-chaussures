@@ -1,3 +1,4 @@
+import { OrderAccessService } from "./order-access.service";
 import type { EntityManager } from "typeorm";
 import { OrdersService } from "./orders.service";
 import { KonnectService } from "../payments/konnect.service";
@@ -8,6 +9,7 @@ import { ConfigService } from "@/server/config";
 describe("OrdersService payments and delivery", () => {
   function setup() {
     const config = new ConfigService({
+      JWT_SECRET: "test-security-secret-at-least-32-bytes",
       FLOUCI_PUBLIC_KEY: "public",
       FLOUCI_SECRET_KEY: "secret",
     });
@@ -54,6 +56,8 @@ describe("OrdersService payments and delivery", () => {
       konnect,
       shipping as unknown as ConstructorParameters<typeof OrdersService>[4],
       flouci,
+      undefined,
+      new OrderAccessService(config),
     );
     return { service, orders, shipping, flouci };
   }

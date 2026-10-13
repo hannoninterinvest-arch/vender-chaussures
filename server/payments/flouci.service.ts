@@ -23,7 +23,7 @@ export class FlouciService {
     );
   }
 
-  async initPayment(input: { orderId: string; amountTnd: number }) {
+  async initPayment(input: { orderId: string; accessToken?: string; amountTnd: number }) {
     if (!this.configured())
       throw new BadRequestException("Paiement Flouci indisponible.");
     const amount = Math.round(Number(input.amountTnd) * 1000);
@@ -37,8 +37,8 @@ export class FlouciService {
         developer_tracking_id: input.orderId,
         accept_card: true,
         session_timeout_secs: 1800,
-        success_link: `${frontend}/commande/${input.orderId}?paid=1`,
-        fail_link: `${frontend}/commande/${input.orderId}?paid=0`,
+        success_link: `${frontend}/commande/${input.orderId}?paid=1#token=${encodeURIComponent(input.accessToken ?? "")}`,
+        fail_link: `${frontend}/commande/${input.orderId}?paid=0#token=${encodeURIComponent(input.accessToken ?? "")}`,
         webhook: `${this.konnect.backendUrl()}/api/payments/flouci/webhook`,
         webhook_version: 1,
       }),

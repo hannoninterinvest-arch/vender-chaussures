@@ -44,19 +44,6 @@ async function lookupIp(ip: string) {
     /* suite */
   }
 
-  try {
-    const target = ip ? `http://ip-api.com/json/${encodeURIComponent(ip)}` : "http://ip-api.com/json/";
-    const res = await fetch(`${target}?fields=status,countryCode`, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(2500),
-    });
-    if (res.ok) {
-      const data = (await res.json()) as { status?: string; countryCode?: string };
-      if (data.status === "success" && data.countryCode) return data.countryCode.toUpperCase();
-    }
-  } catch {
-    /* fallback TN */
-  }
   return "";
 }
 

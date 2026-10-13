@@ -3,21 +3,23 @@ import {
   ConflictException,
   ForbiddenException,
   UnauthorizedException,
-} from "@/server/http";
-import { ConfigService } from "@/server/config";
-import { compare, hash } from "bcryptjs";
-import { randomUUID } from "crypto";
-import { sign, verify } from "jsonwebtoken";
-import { Repository } from "typeorm";
-import type { AuthUser } from "./auth.types";
-import { CreateStaffDto } from "./dto/create-staff.dto";
-import { LoginDto } from "./dto/login.dto";
-import { SetupAdminDto } from "./dto/setup-admin.dto";
-import { UpdateStaffDto } from "./dto/update-staff.dto";
-import type { StaffRole } from "./user.entity";
-import { User } from "./user.entity";
+} from '@/server/http';
+import { ConfigService } from '@/server/config';
+import { compare, hash } from 'bcryptjs';
+import { createHash, randomUUID } from 'crypto';
+import { sign, verify } from 'jsonwebtoken';
+import { Repository } from 'typeorm';
+import type { AuthUser } from './auth.types';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { CreateStaffDto } from './dto/create-staff.dto';
+import { LoginDto } from './dto/login.dto';
+import { SetupAdminDto } from './dto/setup-admin.dto';
+import { UpdateStaffDto } from './dto/update-staff.dto';
+import type { StaffRole } from './user.entity';
+import { User } from './user.entity';
 
-const TOKEN_HOURS = 12;
+const TOKEN_HOURS = 2;
+const RETIRED_PASSWORDS = new Set(['KicksAdmin123', 'Vendeur123']);
 
 export class AuthService {
   constructor(
@@ -27,86 +29,59 @@ export class AuthService {
 
   async onModuleInit() {
     const count = await this.users.count();
-    if (count > 0) return;
+    if (count > 0) {
+      if (this.config.get<string>('ADMIN_RESET_PASSWORD') === 'true') {
+        const email = this.config.get<string>('ADMIN_EMAIL')?.trim().toLowerCase();
+        const password = this.config.get<string>('ADMIN_PASSWORD');
+        if (!email || !password) throw new Error('Réinitialisation admin : ADMIN_EMAIL et ADMIN_PASSWORD requis.');
+        this.validatePassword(password);
+        const admin = await this.users.findOne({ where: { email, role: 'admin', active: true } });
+        if (!admin) throw new Error('Administrateur actif introuvable pour la réinitialisation.');
+        admin.passwordHash = await hash(password, 12);
+        await this.users.save(admin);
+        console.warn('Mot de passe admin réinitialisé. Retire ADMIN_RESET_PASSWORD et ADMIN_PASSWORD après ce démarrage.');
+      }
+      return;
+    }
 
-    const isProd = this.config.get("NODE_ENV") === "production";
-    const adminEmail =
-      this.config.get<string>("ADMIN_EMAIL")?.trim() || "admin@kicks.tn";
+    this.jwtSecret();
+    const adminEmail = this.config.get<string>('ADMIN_EMAIL')?.trim() || '';
     const adminPassword =
-      this.config.get<string>("ADMIN_PASSWORD")?.trim() ||
-      (isProd ? "" : "KicksAdmin123");
-    const adminName =
-      this.config.get<string>("ADMIN_NAME")?.trim() || "Administrateur";
+      this.config.get<string>('ADMIN_PASSWORD') || '';
+    const adminName = this.config.get<string>('ADMIN_NAME')?.trim() || 'Administrateur';
 
-    if (!adminPassword) {
+    if (!adminEmail || !adminPassword) {
       console.warn(
-        "Aucun compte staff : définis ADMIN_EMAIL et ADMIN_PASSWORD avant le premier démarrage.",
+        'Aucun compte staff : définis ADMIN_EMAIL et ADMIN_PASSWORD avant le premier démarrage.',
       );
       return;
     }
 
-    await this.createUser(adminEmail, adminName, adminPassword, "admin");
+    await this.createUser(adminEmail, adminName, adminPassword, 'admin');
 
-    const vendeurEmail =
-      this.config.get<string>("VENDEUR_EMAIL")?.trim() || "vendeur@kicks.tn";
+    const vendeurEmail = this.config.get<string>('VENDEUR_EMAIL')?.trim() || '';
     const vendeurPassword =
-      this.config.get<string>("VENDEUR_PASSWORD")?.trim() ||
-      (isProd ? "" : "Vendeur123");
-    const vendeurName =
-      this.config.get<string>("VENDEUR_NAME")?.trim() || "Vendeur";
-    if (vendeurPassword) {
-      await this.createUser(
-        vendeurEmail,
-        vendeurName,
-        vendeurPassword,
-        "vendeur",
-      );
+      this.config.get<string>('VENDEUR_PASSWORD') || '';
+    const vendeurName = this.config.get<string>('VENDEUR_NAME')?.trim() || 'Vendeur';
+    if (vendeurEmail && vendeurPassword) {
+      await this.createUser(vendeurEmail, vendeurName, vendeurPassword, 'vendeur');
     }
 
-    console.log(
-      `Comptes staff créés : ${adminEmail}` +
-        (vendeurPassword ? `, ${vendeurEmail}` : ""),
-    );
+    console.log(`Comptes staff créés : ${adminEmail}` + (vendeurPassword ? `, ${vendeurEmail}` : ''));
   }
 
   async setupNeeded() {
-    return {
-      needed:
-        this.config.get("NODE_ENV") !== "production" &&
-        (await this.users.count()) === 0,
-    };
+    return { needed: false };
   }
 
-  async setupFirstAdmin(dto: SetupAdminDto) {
-    if (this.config.get("NODE_ENV") === "production") {
-      throw new ForbiddenException(
-        "Crée le premier administrateur avec la commande db:init.",
-      );
-    }
-    if ((await this.users.count()) > 0) {
-      throw new ForbiddenException(
-        "Un administrateur existe déjà. Connecte-toi.",
-      );
-    }
-    const user = await this.createUser(
-      dto.email,
-      dto.name,
-      dto.password,
-      "admin",
-    );
-    const saved = await this.users.findOne({ where: { id: user.id } });
-    if (!saved)
-      throw new BadRequestException("Impossible de créer l’administrateur");
-    return { token: this.signToken(saved), user };
+  async setupFirstAdmin(_dto: SetupAdminDto) {
+    throw new ForbiddenException('La création publique de comptes administrateur est désactivée.');
   }
 
   jwtSecret() {
-    const secret = this.config.get<string>("JWT_SECRET")?.trim();
-    if (secret) return secret;
-    if (this.config.get("NODE_ENV") === "production") {
-      throw new Error("JWT_SECRET est obligatoire en production");
-    }
-    return "dev-jwt-secret-change-me";
+    const secret = this.config.get<string>('JWT_SECRET')?.trim();
+    if (secret && Buffer.byteLength(secret) >= 32) return secret;
+    throw new Error('JWT_SECRET doit contenir au moins 32 octets.');
   }
 
   toPublic(user: User): AuthUser {
@@ -120,48 +95,54 @@ export class AuthService {
 
   signToken(user: User) {
     return sign(
-      { sub: user.id, email: user.email, role: user.role },
+      { sub: user.id, email: user.email, role: user.role, credentials: this.credentialVersion(user) },
       this.jwtSecret(),
-      { expiresIn: `${TOKEN_HOURS}h` },
+      { expiresIn: `${TOKEN_HOURS}h`, algorithm: 'HS256', issuer: 'elvaro-api', audience: 'elvaro-staff' },
     );
   }
 
   async login(dto: LoginDto) {
     const email = dto.email.trim().toLowerCase();
     const user = await this.users.findOne({ where: { email } });
-    if (!user || !user.active) {
-      throw new UnauthorizedException("E-mail ou mot de passe incorrect");
+    if (!user || !user.active || RETIRED_PASSWORDS.has(dto.password)) {
+      throw new UnauthorizedException('E-mail ou mot de passe incorrect');
     }
     const ok = await compare(dto.password, user.passwordHash);
     if (!ok) {
-      throw new UnauthorizedException("E-mail ou mot de passe incorrect");
+      throw new UnauthorizedException('E-mail ou mot de passe incorrect');
     }
     return { token: this.signToken(user), user: this.toPublic(user) };
   }
 
   async userFromToken(token: string) {
     try {
-      const payload = verify(token, this.jwtSecret()) as { sub: string };
+      const payload = verify(token, this.jwtSecret(), { algorithms: ['HS256'], issuer: 'elvaro-api', audience: 'elvaro-staff' }) as { sub: string; credentials?: string };
       const user = await this.users.findOne({ where: { id: payload.sub } });
-      if (!user || !user.active) {
-        throw new UnauthorizedException("Session expirée");
+      if (!user || !user.active || payload.credentials !== this.credentialVersion(user)) {
+        throw new UnauthorizedException('Session expirée');
       }
       return user;
     } catch {
-      throw new UnauthorizedException("Session expirée");
+      throw new UnauthorizedException('Session expirée');
     }
   }
 
+  async changePassword(id: string, dto: ChangePasswordDto) {
+    const user = await this.users.findOne({ where: { id } });
+    if (!user || !user.active || !(await compare(dto.currentPassword, user.passwordHash))) {
+      throw new UnauthorizedException('Mot de passe actuel incorrect');
+    }
+    this.validatePassword(dto.newPassword);
+    if (dto.currentPassword === dto.newPassword) throw new BadRequestException('Choisis un nouveau mot de passe.');
+    user.passwordHash = await hash(dto.newPassword, 12);
+    await this.users.save(user);
+    return { token: this.signToken(user), user: this.toPublic(user) };
+  }
+
   listStaff() {
-    return this.users
-      .find({ order: { createdAt: "ASC" } })
-      .then((rows) =>
-        rows.map((u) => ({
-          ...this.toPublic(u),
-          active: u.active,
-          createdAt: u.createdAt,
-        })),
-      );
+    return this.users.find({ order: { createdAt: 'ASC' } }).then((rows) =>
+      rows.map((u) => ({ ...this.toPublic(u), active: u.active, createdAt: u.createdAt })),
+    );
   }
 
   async createStaff(dto: CreateStaffDto) {
@@ -170,66 +151,67 @@ export class AuthService {
 
   async updateStaff(id: string, dto: UpdateStaffDto, actor: AuthUser) {
     const user = await this.users.findOne({ where: { id } });
-    if (!user) throw new BadRequestException("Compte introuvable");
+    if (!user) throw new BadRequestException('Compte introuvable');
 
-    if (dto.role && dto.role !== "admin" && user.role === "admin") {
+    if (dto.role && dto.role !== 'admin' && user.role === 'admin') {
       await this.ensureAnotherAdmin(id);
     }
-    if (dto.active === false && user.role === "admin") {
+    if (dto.active === false && user.role === 'admin') {
       await this.ensureAnotherAdmin(id);
     }
     if (actor.id === id && dto.active === false) {
-      throw new BadRequestException(
-        "Tu ne peux pas désactiver ton propre compte",
-      );
+      throw new BadRequestException('Tu ne peux pas désactiver ton propre compte');
     }
 
     if (dto.name) user.name = dto.name.trim();
     if (dto.role) user.role = dto.role;
     if (dto.active !== undefined) user.active = dto.active;
-    if (dto.password) user.passwordHash = await hash(dto.password, 10);
+    if (dto.password) {
+      this.validatePassword(dto.password);
+      user.passwordHash = await hash(dto.password, 12);
+    }
     return this.toPublic(await this.users.save(user));
   }
 
   async removeStaff(id: string, actor: AuthUser) {
     if (actor.id === id) {
-      throw new BadRequestException(
-        "Tu ne peux pas supprimer ton propre compte",
-      );
+      throw new BadRequestException('Tu ne peux pas supprimer ton propre compte');
     }
     const user = await this.users.findOne({ where: { id } });
-    if (!user) throw new BadRequestException("Compte introuvable");
-    if (user.role === "admin") await this.ensureAnotherAdmin(id);
+    if (!user) throw new BadRequestException('Compte introuvable');
+    if (user.role === 'admin') await this.ensureAnotherAdmin(id);
     await this.users.remove(user);
     return { ok: true };
   }
 
   private async ensureAnotherAdmin(exceptId: string) {
-    const admins = await this.users.find({
-      where: { role: "admin", active: true },
-    });
+    const admins = await this.users.find({ where: { role: 'admin', active: true } });
     const remaining = admins.filter((admin) => admin.id !== exceptId);
     if (remaining.length < 1) {
-      throw new BadRequestException(
-        "Il doit rester au moins un administrateur actif",
-      );
+      throw new BadRequestException('Il doit rester au moins un administrateur actif');
     }
   }
 
-  private async createUser(
-    email: string,
-    name: string,
-    password: string,
-    role: StaffRole,
-  ) {
+  private credentialVersion(user: User) {
+    return createHash('sha256').update(user.passwordHash).digest('hex');
+  }
+
+  private validatePassword(password: string) {
+    if (RETIRED_PASSWORDS.has(password) || password.length < 12 || Buffer.byteLength(password, 'utf8') > 72) {
+      throw new BadRequestException('Le mot de passe doit contenir au moins 12 caractères et au maximum 72 octets.');
+    }
+  }
+
+  private async createUser(email: string, name: string, password: string, role: StaffRole) {
+    this.validatePassword(password);
     const normalized = email.trim().toLowerCase();
     const exists = await this.users.findOne({ where: { email: normalized } });
-    if (exists) throw new ConflictException("Cet e-mail est déjà utilisé");
+    if (exists) throw new ConflictException('Cet e-mail est déjà utilisé');
     const user = this.users.create({
       id: randomUUID(),
       email: normalized,
       name: name.trim(),
-      passwordHash: await hash(password, 10),
+      passwordHash: await hash(password, 12),
       role,
       active: true,
     });

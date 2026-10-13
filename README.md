@@ -2,6 +2,8 @@
 
 La boutique, l'espace vendeur/administrateur et toutes les API sont dans **une seule application Next.js**, déployable sur Vercel. Aucun service NestJS ni Render n'est nécessaire. PostgreSQL conserve les produits, commandes, tarifs de livraison, demandes de gros, réglages et comptes. Les fichiers sont stockés chez Cloudinary.
 
+Les protections et les instructions de récupération du compte admin sont décrites dans [SECURITY.md](SECURITY.md). Le mot de passe se change dans **Mon compte** (`/vendeur/compte`).
+
 ## Développement
 
 ```bash
@@ -23,7 +25,7 @@ Les API sont accessibles sous `/api` sur le même domaine que la boutique. Ne pl
 
 ### Base existante
 
-Utiliser **la même DATABASE_URL** que le backend précédent : les noms de tables/colonnes, relations et hachages bcrypt sont conservés. Il n'y a aucune synchronisation automatique du schéma à chaque requête, ni création de compte ou suppression de produits au démarrage. Les données existantes restent dans PostgreSQL. Garder le même `JWT_SECRET` pour conserver les sessions existantes.
+Utiliser **la même DATABASE_URL** que le backend précédent : les noms de tables/colonnes, relations et hachages bcrypt sont conservés. Il n'y a aucune synchronisation automatique du schéma à chaque requête, ni création de compte ou suppression de produits au démarrage. Les données existantes restent dans PostgreSQL. Garder le même `JWT_SECRET` aléatoire (au moins 32 octets). Cette mise à jour invalide les anciens jetons staff ; une nouvelle connexion est nécessaire.
 
 ### Base neuve / initialisation explicite
 

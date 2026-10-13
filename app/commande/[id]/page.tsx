@@ -120,7 +120,7 @@ export default function OrderPage({
           Commande introuvable
         </p>
         <p className="mt-2 text-sm text-[var(--muted)]">
-          Vérifie le numéro ou contacte-nous au {brand.phone}.
+          Ouvre le lien de suivi complet reçu après ta commande, ou contacte-nous au {brand.phone}.
         </p>
         <Link
           href="/shop"

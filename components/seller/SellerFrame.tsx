@@ -6,15 +6,13 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import Logo from "@/components/Logo";
 import {
   clearSellerSession,
-  createFirstAdmin,
-  fetchSetupNeeded,
   fetchStaffMe,
-  getSellerToken,
   sellerLogin,
   type StaffUser,
 } from "@/lib/seller";
 
 const NAV = [
+  { href: "/vendeur/compte", label: "Mon compte", adminOnly: false },
   { href: "/vendeur", label: "Tableau", adminOnly: false },
   { href: "/vendeur/produits", label: "Produits", adminOnly: false },
   { href: "/vendeur/vitrine", label: "Page d’accueil", adminOnly: false },
@@ -34,8 +32,6 @@ export function SellerFrame({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [user, setUser] = useState<StaffUser | null>(null);
-  const [setup, setSetup] = useState(false);
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -44,22 +40,11 @@ export function SellerFrame({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     async function boot() {
-      if (getSellerToken()) {
-        try {
-          const me = await fetchStaffMe();
-          if (!cancelled) setUser(me);
-        } catch {
-          clearSellerSession();
-        } finally {
-          if (!cancelled) setReady(true);
-        }
-        return;
-      }
       try {
-        const status = await fetchSetupNeeded();
-        if (!cancelled) setSetup(Boolean(status.needed));
+        const me = await fetchStaffMe();
+        if (!cancelled) setUser(me);
       } catch {
-        if (!cancelled) setSetup(false);
+        if (!cancelled) setUser(null);
       } finally {
         if (!cancelled) setReady(true);
       }
@@ -74,21 +59,6 @@ export function SellerFrame({ children }: { children: React.ReactNode }) {
     () => NAV.filter((item) => !item.adminOnly || user?.role === "admin"),
     [user],
   );
-
-  async function onSetup(e: FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    setError("");
-    try {
-      const me = await createFirstAdmin(name.trim(), email.trim(), password);
-      setUser(me);
-      setSetup(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Création impossible");
-    } finally {
-      setBusy(false);
-    }
-  }
 
   async function onLogin(e: FormEvent) {
     e.preventDefault();
@@ -112,31 +82,17 @@ export function SellerFrame({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#EDE8DE] px-4">
         <form
-          onSubmit={setup ? onSetup : onLogin}
+          onSubmit={onLogin}
           className="w-full max-w-md rounded-[4px] border border-[#C5A059]/50 bg-white p-8"
         >
           <Logo size="md" />
           <h1 className="mt-5 font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase text-[#1A1A1B]">
-            {setup ? "Créer le premier admin" : "Espace équipe"}
+            Espace équipe
           </h1>
           <p className="mt-2 text-sm text-[#666]">
-            {setup
-              ? "Aucun compte pour l’instant. Crée l’administrateur. Ensuite tu pourras ajouter des vendeurs dans Équipe."
-              : "Connecte-toi avec ton e-mail et mot de passe. Les clients commandent toujours sans compte."}
+            Connecte-toi avec ton e-mail et mot de passe. Les clients commandent toujours sans compte.
           </p>
-          {setup && (
-            <label className="mt-6 block text-sm font-medium text-[#1A1A1B]">
-              Ton nom
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className={inputClass}
-                required
-                minLength={2}
-              />
-            </label>
-          )}
-          <label className={`${setup ? "mt-4" : "mt-6"} block text-sm font-medium text-[#1A1A1B]`}>
+          <label className="mt-6 block text-sm font-medium text-[#1A1A1B]">
             E-mail
             <input
               type="email"
@@ -148,20 +104,20 @@ export function SellerFrame({ children }: { children: React.ReactNode }) {
             />
           </label>
           <label className="mt-4 block text-sm font-medium text-[#1A1A1B]">
-            Mot de passe {setup ? "(8 caractères min.)" : ""}
+            Mot de passe
             <input
               type="password"
-              autoComplete={setup ? "new-password" : "current-password"}
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className={inputClass}
               required
-              minLength={setup ? 8 : 1}
+              minLength={1}
             />
           </label>
           {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
           <button type="submit" disabled={busy} className="gold-btn mt-5 w-full rounded-sm py-3 text-xs uppercase disabled:opacity-60">
-            {busy ? "Vérification…" : setup ? "Créer l’admin" : "Connexion"}
+            {busy ? "Vérification…" : "Connexion"}
           </button>
           <Link href="/" className="mt-4 block text-center text-sm text-[#666] underline">
             Retour à la boutique
@@ -191,10 +147,14 @@ export function SellerFrame({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               className="rounded-sm bg-[#C5A059] px-3 py-1.5 text-xs font-bold tracking-[0.08em] uppercase text-[#1A1A1B]"
-              onClick={() => {
-                clearSellerSession();
-                setUser(null);
-                router.replace("/vendeur");
+              onClick={async () => {
+                try {
+                  await clearSellerSession();
+                  setUser(null);
+                  router.replace("/vendeur");
+                } catch {
+                  setError("Déconnexion impossible. Réessaie.");
+                }
               }}
             >
               Quitter
@@ -218,7 +178,7 @@ export function SellerFrame({ children }: { children: React.ReactNode }) {
           })}
         </nav>
       </div>
-      <div className="mx-auto max-w-[1280px] px-4 py-8 md:px-6">{children}</div>
+      <div className="mx-auto max-w-[1280px] px-4 py-8 md:px-6">{error && <p role="alert" className="mb-4 text-red-600">{error}</p>}{children}</div>
     </div>
   );
 }

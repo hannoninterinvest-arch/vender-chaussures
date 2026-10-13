@@ -168,7 +168,7 @@ export default function SellerOrdersPage() {
           <li key={o.id} className="rounded border bg-white p-5">
             <div className="flex flex-wrap justify-between gap-3">
               <div>
-                <strong>{o.id}</strong>
+                <strong>{o.id}</strong>{o.accessUrl && <a href={o.accessUrl} className="ml-2 text-xs underline">Suivi client sécurisé</a>}
                 <p className="text-sm">
                   {o.customer.name} ·{" "}
                   <a href={`tel:${o.customer.phone}`}>{o.customer.phone}</a>

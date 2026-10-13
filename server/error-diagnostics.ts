@@ -49,6 +49,7 @@ function classify(error: unknown, depth = 0): string | undefined {
     "DATABASE_URL est obligatoire": "DATABASE_URL_MISSING",
     "DATABASE_URL invalide": "DATABASE_URL_INVALID",
     "JWT_SECRET est obligatoire en production": "JWT_SECRET_MISSING",
+    "JWT_SECRET doit contenir au moins 32 octets.": "JWT_SECRET_MISSING",
   };
   if (typeof value.message === "string" && configErrors[value.message])
     return configErrors[value.message];

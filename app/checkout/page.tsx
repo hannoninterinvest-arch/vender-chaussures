@@ -11,6 +11,7 @@ import {
   type Gouvernorat,
   type PaymentMethod,
 } from "@/lib/tunisia";
+import { orderPath } from "@/lib/order-access";
 import { createOrder, fetchPaymentsConfig } from "@/lib/api";
 import {
   calculateShipping,
@@ -140,7 +141,7 @@ export default function CheckoutPage() {
         window.location.href = order.payUrl;
         return;
       }
-      router.push(`/commande/${order.id}`);
+      router.push(orderPath(order.id, order.accessToken));
     } catch (err) {
       toast(err instanceof Error ? err.message : "Commande impossible");
       setBusy(false);

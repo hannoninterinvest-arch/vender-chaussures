@@ -25,6 +25,7 @@ function request(path: string, method = "GET", body?: unknown, token?: string) {
       method,
       headers: {
         "Content-Type": "application/json",
+        Origin: "https://shop.example",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
@@ -97,10 +98,11 @@ describe("Next.js API migration", () => {
   let sellerToken: string;
   let app: ReturnType<typeof createServices>;
   beforeAll(async () => {
-    process.env.JWT_SECRET = "integration-test-secret";
+    process.env.JWT_SECRET = "integration-test-secret-at-least-32-bytes";
     await db.initialize();
     await ensureCommerceStore(db);
     app = createServices(db);
+    jest.spyOn(app.rateLimits, "check").mockResolvedValue();
     jest.mocked(services).mockResolvedValue(app);
     await db.getRepository(User).save([
       {
@@ -120,8 +122,8 @@ describe("Next.js API migration", () => {
         active: true,
       },
     ]);
-    adminToken = sign({ sub: "admin" }, process.env.JWT_SECRET);
-    sellerToken = sign({ sub: "seller" }, process.env.JWT_SECRET);
+    adminToken = app.auth.signToken((await db.getRepository(User).findOneByOrFail({ id: "admin" })));
+    sellerToken = app.auth.signToken((await db.getRepository(User).findOneByOrFail({ id: "seller" })));
     await db.getRepository(Product).save({
       id: "shoe",
       name: "Shoe",
@@ -206,7 +208,9 @@ describe("Next.js API migration", () => {
     expect(order.id).toMatch(/^KCK-[0-9a-f-]{36}$/);
     expect(order.total).toBe(208);
     expect(order.items[0].qty).toBe(2);
-    expect((await request(`orders/${order.id}`)).status).toBe(200);
+    expect((await request(`orders/${order.id}`)).status).toBe(401);
+    const authorized = await dispatch(new Request(`https://shop.example/api/orders/${order.id}`, { headers: { 'x-order-token': order.accessToken } }), ['orders', order.id]);
+    expect(authorized.status).toBe(200);
     expect(
       (await request("orders", "POST", { ...dto, expectedTotal: 200 })).status,
     ).toBe(400);

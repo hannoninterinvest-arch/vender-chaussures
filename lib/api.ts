@@ -1,3 +1,5 @@
+import { orderAccessToken, rememberOrderAccess } from "./order-access";
+
 export function apiUrl(path: string) {
   const suffix = path.startsWith("/") ? path : `/${path}`;
   const origin =
@@ -36,13 +38,15 @@ export async function createOrder(body: unknown) {
       : err.message || "Commande refusée";
     throw new Error(message);
   }
-  return res.json();
+  const order = await res.json();
+  rememberOrderAccess(order.id, order.accessToken);
+  return order;
 }
 
 export async function retryOrderPayment(id: string) {
-  const res = await fetch(apiUrl(`/orders/${id}/pay`), {
+  const res = await fetch(apiUrl(`/orders/${encodeURIComponent(id)}/pay`), {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-Order-Token": orderAccessToken(id) },
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -72,7 +76,7 @@ export async function fetchPaymentsConfig() {
 }
 
 export async function fetchOrder(id: string) {
-  const res = await fetch(apiUrl(`/orders/${id}`), { cache: "no-store" });
+  const res = await fetch(apiUrl(`/orders/${encodeURIComponent(id)}`), { cache: "no-store", headers: { "X-Order-Token": orderAccessToken(id) } });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error("Impossible de charger la commande");
   return res.json();

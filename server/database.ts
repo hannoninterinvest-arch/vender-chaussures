@@ -1,3 +1,4 @@
+import { ensureRateLimits } from "./security/rate-limit";
 import "reflect-metadata";
 import { DataSource } from "typeorm";
 import pg from "pg";
@@ -19,12 +20,15 @@ export function createDatabase() {
   } catch {
     throw new Error("DATABASE_URL invalide");
   }
-  url.searchParams.delete("channel_binding");
+  for (const key of ["channel_binding", "sslmode", "sslcert", "sslkey", "sslrootcert"]) url.searchParams.delete(key);
+  const local = ["localhost", "127.0.0.1", "::1", "[::1]"].includes(url.hostname);
+  const ca = process.env.DATABASE_CA_CERT?.replace(/\\n/g, "\n");
   return new DataSource({
     type: "postgres",
     // Explicit import also makes Vercel's dependency tracer include the driver.
     driver: pg,
     url: url.toString(),
+    ssl: process.env.NODE_ENV === "production" || !local ? { rejectUnauthorized: true, ...(ca ? { ca } : {}) } : false,
     entities,
     synchronize: false,
     extra: { max: 2, idleTimeoutMillis: 10000, connectionTimeoutMillis: 10000 },
@@ -37,6 +41,7 @@ export function database() {
       .then(async (db) => {
         try {
           await ensureCommerceStore(db);
+          await ensureRateLimits(db);
           return db;
         } catch (error) {
           await db.destroy();

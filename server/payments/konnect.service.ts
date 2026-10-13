@@ -27,7 +27,7 @@ export class KonnectService {
   }
 
   async initPayment(input: {
-    orderId: string;
+    orderId: string; accessToken?: string;
     amountTnd: number;
     customerName: string;
     phone: string;
@@ -65,8 +65,8 @@ export class KonnectService {
       orderId: input.orderId,
       webhook,
       silentWebhook: true,
-      successUrl: `${frontend}/commande/${input.orderId}?paid=1`,
-      failUrl: `${frontend}/commande/${input.orderId}?paid=0`,
+      successUrl: `${frontend}/commande/${input.orderId}?paid=1#token=${encodeURIComponent(input.accessToken ?? "")}`,
+      failUrl: `${frontend}/commande/${input.orderId}?paid=0#token=${encodeURIComponent(input.accessToken ?? "")}`,
       theme: "dark",
     };
 
