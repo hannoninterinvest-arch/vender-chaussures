@@ -7,8 +7,7 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@google/model-viewer"],
   images: {
     remotePatterns: [
-      { protocol: "https", hostname: "**" },
-      { protocol: "http", hostname: "**" },
+      { protocol: "https", hostname: "res.cloudinary.com" },
     ],
   },
 };

@@ -1,3 +1,9 @@
+import { boundedRequest } from "./security/body";
+import { RateLimitError } from "./security/rate-limit";
+import { OrderAccessService } from "./orders/order-access.service";
+import { ConfigService } from "./config";
+import { cookieToken, verifyOrigin, setStaffCookie } from "./security/session";
+import { ChangePasswordDto } from "./auth/dto/change-password.dto";
 import { UpdateCountryRateDto } from "./shipping/dto/update-country-rate.dto";
 import "reflect-metadata";
 import { NextResponse } from "next/server";
@@ -132,6 +138,8 @@ export const routes: Route[] = [
     access: "public",
     handle: async (c) => c.app.auth.login(await readDto(c.req, LoginDto)),
   },
+  { method: "POST", path: "auth/password", access: "staff", handle: async c => c.app.auth.changePassword(c.user!.id, await readDto(c.req, ChangePasswordDto)) },
+  { method: "POST", path: "auth/logout", access: "public", handle: () => ({ ok: true }) },
   { method: "GET", path: "auth/me", access: "staff", handle: (c) => c.user },
   {
     method: "GET",
@@ -189,10 +197,10 @@ export const routes: Route[] = [
     method: "POST",
     path: "orders",
     access: "public",
-    handle: async (c) =>
-      c.app.orders.toClient(
-        await c.app.orders.create(await readDto(c.req, CreateOrderDto)),
-      ),
+    handle: async (c) => {
+      const order = await c.app.orders.create(await readDto(c.req, CreateOrderDto));
+      return { ...c.app.orders.toClient(order), accessToken: c.app.orderAccess.token(order.id) };
+    },
   },
   {
     method: "GET",
@@ -454,13 +462,29 @@ export async function dispatch(req: Request, segments: string[]) {
     });
     if (!route) throw new NotFoundException(`Route introuvable : ${path}`);
     diagnosticRoute = route.path;
+    if (path === "auth/setup") {
+      if (req.method === "POST") throw new ForbiddenException('La création publique de comptes administrateur est désactivée.');
+      return NextResponse.json({ needed: false }, { headers: { "Cache-Control": "no-store" } });
+    }
     // Reject unauthenticated requests before opening a database connection.
-    const token = req.headers
-      .get("authorization")
-      ?.match(/^Bearer\s+(.+)$/i)?.[1];
+    const bearer = req.headers.get("authorization")?.match(/^Bearer\s+(.+)$/i)?.[1];
+    const cookie = cookieToken(req);
+    const token = bearer || cookie;
+    // Cookie authentication and login always require same-origin mutations.
+    if ((!bearer && (cookie || route.access !== "public")) || ["auth/login", "auth/logout"].includes(path)) verifyOrigin(req);
+    req = await boundedRequest(req);
+    if (route.path === "orders/:id" || route.path === "orders/:id/pay") {
+      new OrderAccessService(new ConfigService()).assertAccess(id, req.headers.get("x-order-token") || undefined);
+    }
+    if (path === "auth/logout") {
+      const response = NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
+      setStaffCookie(response, "");
+      return response;
+    }
     if (route.access !== "public" && !token)
       throw new UnauthorizedException("Connecte-toi");
     const app = await services();
+    await app.rateLimits.check(req, path);
     let user: AuthUser | undefined;
     if (route.access !== "public") {
       user = app.auth.toPublic(await app.auth.userFromToken(token!));
@@ -474,6 +498,11 @@ export async function dispatch(req: Request, segments: string[]) {
       user,
       query: new URL(req.url).searchParams,
     });
+    if ((path === "auth/login" || path === "auth/password") && result && typeof result === "object" && "token" in result && "user" in result) {
+      const response = NextResponse.json({ user: result.user }, { headers: { "Cache-Control": "no-store" } });
+      setStaffCookie(response, String(result.token));
+      return response;
+    }
     return NextResponse.json(result, {
       headers: { "Cache-Control": "no-store" },
     });
@@ -491,7 +520,7 @@ export async function dispatch(req: Request, segments: string[]) {
             : `Service temporairement indisponible. Référence : ${errorId}`,
         ...(errorId ? { errorId } : {}),
       },
-      { status, headers: { "Cache-Control": "no-store" } },
+      { status, headers: { "Cache-Control": "no-store", ...(error instanceof RateLimitError ? { "Retry-After": String(error.retryAfter) } : {}) } },
     );
   }
 }

@@ -14,10 +14,6 @@ export type StaffUser = {
   createdAt?: string;
 };
 
-export function getSellerToken() {
-  if (typeof window === "undefined") return "";
-  return sessionStorage.getItem(TOKEN) || "";
-}
 
 export function getSellerUser(): StaffUser | null {
   if (typeof window === "undefined") return null;
@@ -33,19 +29,18 @@ export function isAdmin() {
   return getSellerUser()?.role === "admin";
 }
 
-function setSession(token: string, user: StaffUser) {
-  sessionStorage.setItem(TOKEN, token);
+function setSession(user: StaffUser) {
+  sessionStorage.removeItem(TOKEN);
   sessionStorage.setItem(USER, JSON.stringify(user));
 }
 
-export function clearSellerSession() {
+export async function clearSellerSession() {
+  const res = await fetch(apiUrl("/auth/logout"), { method: "POST" });
+  if (!res.ok) throw new Error("Déconnexion impossible");
   sessionStorage.removeItem(TOKEN);
   sessionStorage.removeItem(USER);
 }
 
-function authHeaders(): HeadersInit {
-  return { Authorization: `Bearer ${getSellerToken()}` };
-}
 
 export type SellerOrder = {
   id: string;
@@ -54,6 +49,7 @@ export type SellerOrder = {
   subtotal: number;
   delivery: number;
   total: number;
+  accessUrl?: string;
   payment: string;
   paymentPhone?: string;
   paymentStatus?: string;
@@ -152,41 +148,16 @@ export async function sellerRequest<T>(
   path: string,
   init: RequestInit = {},
 ): Promise<T> {
-  const sameOrigin =
-    path === "/seller/site" || path.startsWith("/seller/site?");
-  const res = await fetch(sameOrigin ? `/api${path}` : apiUrl(path), {
+  const res = await fetch(apiUrl(path), {
     ...init,
     cache: "no-store",
     headers: {
       "Content-Type": "application/json",
-      ...authHeaders(),
     },
   });
   if (!res.ok) await parseError(res);
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
-}
-
-export async function fetchSetupNeeded() {
-  const res = await fetch(apiUrl("/auth/setup"), { cache: "no-store" });
-  if (!res.ok) return { needed: false };
-  return res.json() as Promise<{ needed: boolean }>;
-}
-
-export async function createFirstAdmin(
-  name: string,
-  email: string,
-  password: string,
-) {
-  const res = await fetch(apiUrl("/auth/setup"), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, email, password }),
-  });
-  if (!res.ok) await parseError(res);
-  const data = (await res.json()) as { token: string; user: StaffUser };
-  setSession(data.token, data.user);
-  return data.user;
 }
 
 export async function importProductsCsv(products: unknown[]) {
@@ -207,19 +178,18 @@ export async function sellerLogin(email: string, password: string) {
     body: JSON.stringify({ email, password }),
   });
   if (!res.ok) await parseError(res);
-  const data = (await res.json()) as { token: string; user: StaffUser };
-  setSession(data.token, data.user);
+  const data = (await res.json()) as { user: StaffUser };
+  setSession(data.user);
   return data.user;
 }
 
 export async function fetchStaffMe() {
   const res = await fetch(apiUrl("/auth/me"), {
     cache: "no-store",
-    headers: authHeaders(),
   });
   if (!res.ok) await parseError(res);
   const user = (await res.json()) as StaffUser;
-  sessionStorage.setItem(USER, JSON.stringify(user));
+  setSession(user);
   return user;
 }
 

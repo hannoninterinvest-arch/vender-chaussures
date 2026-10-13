@@ -28,6 +28,8 @@ async function init() {
         "Schéma boutique partiel : compléter les tables manquantes avant l’initialisation. Aucune table modifiée.",
       );
     }
+    const { ensureRateLimits } = await import("../server/security/rate-limit");
+    await ensureRateLimits(db);
     const app = createServices(db);
     await app.auth.onModuleInit();
     await app.shipping.onModuleInit();

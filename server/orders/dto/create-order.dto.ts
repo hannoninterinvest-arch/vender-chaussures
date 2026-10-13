@@ -1,20 +1,26 @@
-import { Type } from "class-transformer";
+import { Type } from 'class-transformer';
 import {
   ArrayMinSize,
+  ArrayMaxSize,
+  IsArray,
+  Max,
+  MaxLength,
+  MinLength,
+  Matches,
   IsIn,
   IsInt,
   IsNumber,
   IsOptional,
   IsString,
   Min,
-  MaxLength,
   ValidateNested,
-} from "class-validator";
+} from 'class-validator';
 
-const PAYMENTS = ["cod", "online", "flouci"] as const;
+const PAYMENTS = ['cod', 'online', 'flouci'] as const;
 
 export class CreateOrderItemDto {
   @IsString()
+  @MaxLength(120)
   productId!: string;
 
   @Type(() => Number)
@@ -23,30 +29,37 @@ export class CreateOrderItemDto {
   size!: number;
 
   @IsString()
+  @MaxLength(80)
   color!: string;
 
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(100)
   qty!: number;
 }
 
-const CARRIERS = ["ARAMEX", "LA_POSTE"] as const;
+const CARRIERS = ['ARAMEX', 'LA_POSTE'] as const;
 
 export class CreateOrderDto {
   @IsString()
+  @MinLength(2)
+  @MaxLength(120)
   customerName!: string;
 
   @IsString()
+  @Matches(/^[0-9+\s().-]{8,25}$/, { message: 'Numéro de téléphone invalide' })
   phone!: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(80)
   gouvernorat?: string;
 
   /** Code ISO-2 (TN, FR, …) ou nom de pays. Défaut Tunisie. */
   @IsOptional()
   @IsString()
+  @MaxLength(80)
   country?: string;
 
   @IsOptional()
@@ -54,7 +67,8 @@ export class CreateOrderDto {
   carrier?: (typeof CARRIERS)[number];
 
   @IsString()
-  @MaxLength(50)
+  @MinLength(2)
+  @MaxLength(120)
   city!: string;
 
   @IsOptional()
@@ -68,10 +82,13 @@ export class CreateOrderDto {
   stateProvinceCode?: string;
 
   @IsString()
+  @MinLength(2)
+  @MaxLength(500)
   address!: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(1200)
   notes?: string;
 
   @IsOptional()
@@ -84,10 +101,13 @@ export class CreateOrderDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(30)
   paymentPhone?: string;
 
   @ValidateNested({ each: true })
   @Type(() => CreateOrderItemDto)
+  @IsArray()
   @ArrayMinSize(1)
+  @ArrayMaxSize(40)
   items!: CreateOrderItemDto[];
 }

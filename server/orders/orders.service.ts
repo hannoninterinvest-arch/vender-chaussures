@@ -1,3 +1,5 @@
+import { OrderAccessService } from "./order-access.service";
+import { ConfigService } from "../config";
 import { randomUUID } from "node:crypto";
 import {
   BadRequestException,
@@ -34,6 +36,7 @@ export class OrdersService {
     private readonly shipping: ShippingService,
     private readonly flouci: FlouciService,
     private readonly store?: CommerceStore,
+    private readonly access = new OrderAccessService(new ConfigService()),
   ) {}
 
   frontendUrl() {
@@ -149,6 +152,7 @@ export class OrdersService {
     try {
       const payment = await gateway.initPayment({
         orderId: saved.id,
+        accessToken: this.access.token(saved.id),
         amountTnd: Number(saved.total),
         customerName: saved.customerName,
         phone: saved.phone,
@@ -202,6 +206,7 @@ export class OrdersService {
       const gateway = current.payment === "flouci" ? this.flouci : this.konnect;
       const payment = await gateway.initPayment({
         orderId: current.id,
+        accessToken: this.access.token(current.id),
         amountTnd: Number(current.total),
         customerName: current.customerName,
         phone: current.phone,
@@ -298,7 +303,7 @@ export class OrdersService {
 
   async findAll() {
     const rows = await this.orders.find({ order: { createdAt: "DESC" } });
-    return rows.map((order) => this.toClient(order));
+    return rows.map((order) => ({ ...this.toClient(order), accessUrl: `${this.frontendUrl()}${this.access.path(order.id)}` }));
   }
 
   async findOne(id: string) {

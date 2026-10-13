@@ -1,3 +1,5 @@
+import { RateLimits } from "./security/rate-limit";
+import { OrderAccessService } from "./orders/order-access.service";
 import { CommerceStore } from "./commerce-store";
 import { CountryRatesService } from "./shipping/country-rates.service";
 import "reflect-metadata";
@@ -38,6 +40,8 @@ export function createServices(db: DataSource) {
   const konnect = new KonnectService(config);
   const flouci = new FlouciService(config, konnect);
   return {
+    rateLimits: new RateLimits(db),
+    orderAccess: new OrderAccessService(config),
     auth: new AuthService(db.getRepository(User), config),
     products,
     shipping,
@@ -52,6 +56,7 @@ export function createServices(db: DataSource) {
       shipping,
       flouci,
       store,
+      new OrderAccessService(config),
     ),
     site: new SiteService(db.getRepository(SiteSettings)),
     wholesale: new WholesaleService(

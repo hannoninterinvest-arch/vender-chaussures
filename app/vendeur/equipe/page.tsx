@@ -118,7 +118,7 @@ export default function SellerTeamPage() {
           <input
             required
             type="password"
-            minLength={8}
+            minLength={12} maxLength={72}
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             className="mt-1 w-full rounded-lg border border-[#E5E5E5] px-3 py-2 outline-none focus:border-[#C5A059]"
