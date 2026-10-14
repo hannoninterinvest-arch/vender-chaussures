@@ -6,9 +6,11 @@ loadEnvConfig(process.cwd());
 async function check() {
   const { createDatabase } = await import("../server/database");
   const { schemaGaps } = await import("../server/schema-check");
+  const { adaptLegacyUsersSchema } = await import("../server/schema-compat");
   const apply = process.argv.includes("--apply");
   const db = await createDatabase().initialize();
   try {
+    await adaptLegacyUsersSchema(db);
     const gaps = await schemaGaps(db);
     if (!gaps.length) {
       console.log("Schéma conforme : toutes les colonnes attendues existent.");

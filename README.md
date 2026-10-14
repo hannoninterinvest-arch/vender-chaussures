@@ -29,7 +29,7 @@ Utiliser **la même DATABASE_URL** que le backend précédent : les noms de tabl
 
 ### Erreur `42703` (colonne manquante) ou `42P01` (table manquante)
 
-Le log Vercel indique maintenant `missing: "column …"` ou `missing: "relation …"`. Pour comparer la base aux entités sans rien modifier : `npm run db:check` (avec `DATABASE_URL` de la base concernée). Le script liste les colonnes absentes avec le `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` correspondant ; `npm run db:check -- --apply` ajoute uniquement les colonnes manquantes (jamais de suppression ni de modification de données). Une colonne présente sous un autre nom (par exemple `password_hash`) est signalée comme « inconnue du code » : la renommer à la main.
+Le log Vercel indique maintenant `missing: "column …"` ou `missing: "relation …"`. Pour comparer la base aux entités sans rien modifier : `npm run db:check` (avec `DATABASE_URL` de la base concernée). Le script liste les colonnes absentes avec le `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` correspondant ; `npm run db:check -- --apply` ajoute uniquement les colonnes manquantes (jamais de suppression ni de modification de données). Une colonne présente sous un autre nom est signalée comme « inconnue du code ». Cas particulier géré par l'application : si `users` contient `password` mais pas `passwordHash`, le hash bcrypt est lu et écrit dans `password`, sans modifier la base.
 
 ### Base neuve / initialisation explicite
 
