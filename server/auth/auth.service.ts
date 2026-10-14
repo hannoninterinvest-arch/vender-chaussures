@@ -21,6 +21,7 @@ import { User } from './user.entity';
 const TOKEN_HOURS = 2;
 const RETIRED_PASSWORDS = new Set(['KicksAdmin123', 'Vendeur123']);
 // Compared when the account does not exist so response time does not reveal valid e-mails.
+const BCRYPT_HASH = /^\$2[aby]\$\d{2}\$.{53}$/;
 const DECOY_HASH = '$2b$12$8ycWNJTH8ojkeuj6mc7R7.y2yhkQlhirZ5nWsvGOL10upirWc8TbG';
 
 export class AuthService {
@@ -109,6 +110,18 @@ export class AuthService {
     const user = await this.users.findOne({ where: { email } });
     const ok = await compare(dto.password, user?.passwordHash ?? DECOY_HASH);
     if (!user || !user.active || RETIRED_PASSWORDS.has(dto.password) || !ok) {
+      // Server-side only, without e-mail or password: the client always gets the same message.
+      console.warn('Staff login refused', {
+        reason: !user
+          ? 'unknown_email'
+          : !user.active
+            ? 'inactive_account'
+            : RETIRED_PASSWORDS.has(dto.password)
+              ? 'retired_password'
+              : !BCRYPT_HASH.test(user.passwordHash ?? '')
+                ? 'stored_password_is_not_a_bcrypt_hash'
+                : 'wrong_password',
+      });
       throw new UnauthorizedException('E-mail ou mot de passe incorrect');
     }
     return { token: this.signToken(user), user: this.toPublic(user) };

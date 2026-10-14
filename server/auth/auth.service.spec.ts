@@ -75,4 +75,14 @@ describe('admin account security', () => {
     const broken = new AuthService(repo as unknown as Repository<User>, new ConfigService({ JWT_SECRET: 'short' }));
     await expect(broken.userFromToken(token)).rejects.toThrow('JWT_SECRET');
   });
+  it('logs why a login was refused without exposing it to the client or logging credentials', async () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    user.passwordHash = 'plain-text-password';
+    await expect(service.login({ email: user.email, password: 'plain-text-password' })).rejects.toMatchObject({ status: 401, message: 'E-mail ou mot de passe incorrect' });
+    repo.findOne.mockResolvedValueOnce(null);
+    await expect(service.login({ email: 'nobody@example.com', password: 'secret-attempt' })).rejects.toMatchObject({ status: 401 });
+    expect(warn.mock.calls.map(call => call[1])).toEqual([{ reason: 'stored_password_is_not_a_bcrypt_hash' }, { reason: 'unknown_email' }]);
+    expect(JSON.stringify(warn.mock.calls)).not.toMatch(/secret-attempt|nobody@|plain-text/);
+    warn.mockRestore();
+  });
 });
