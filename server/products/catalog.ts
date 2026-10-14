@@ -18,12 +18,21 @@ export type CatalogProduct = {
 
 const shot = (file: string) => `/chaussures/${file}`;
 
-export const homepageCovers = [
+export const legacyHomepageCovers = [
   shot("hero-oxford.jpg"),
   shot("hero-navy.jpg"),
   shot("hero-mocassin.jpg"),
   shot("hero-bottine.jpg"),
   shot("hero-sandale.jpg"),
+];
+
+export const homepageCovers = [
+  shot("elvaro-mocassins-noirs.webp"),
+  shot("elvaro-bottines-chelsea-noires.webp"),
+  shot("elvaro-ballerines-marron.webp"),
+  shot("elvaro-bottes-hautes-noires.webp"),
+  shot("elvaro-bottines-marron-femme.webp"),
+  shot("elvaro-baskets-marron-homme.webp"),
 ];
 
 const catalogSeed: CatalogProduct[] = [
@@ -246,9 +255,9 @@ export const catalog = catalogSeed.map(withColorPhotos);
 export const categorySeed: { id: string; label: string; image: string }[] = [
   { id: "ville", label: "Ville", image: shot("derby-cognac.jpg") },
   { id: "ceremonie", label: "Cérémonie", image: shot("oxford-cognac.jpg") },
-  { id: "mocassins", label: "Mocassins", image: shot("mocassin-cognac.jpg") },
-  { id: "bottes", label: "Bottes", image: shot("bottine-cognac.jpg") },
-  { id: "femme", label: "Femme", image: shot("sandale-or.jpg") },
+  { id: "mocassins", label: "Mocassins", image: shot("elvaro-mocassins-noirs.webp") },
+  { id: "bottes", label: "Bottes", image: shot("elvaro-bottines-chelsea-noires.webp") },
+  { id: "femme", label: "Femme", image: shot("elvaro-ballerines-marron.webp") },
 ];
 
 export const legacyProductIds = [

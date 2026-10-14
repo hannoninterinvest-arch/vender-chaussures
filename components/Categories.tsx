@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useCatalog } from "@/lib/catalog";
 const GENDERS = [
-  { href: "/shop?gender=homme", label: "Homme", image: "/chaussures/hero-oxford.jpg" },
-  { href: "/shop?gender=femme", label: "Femme", image: "/chaussures/hero-sandale.jpg" },
+  { href: "/shop?gender=homme", label: "Homme", image: "/chaussures/elvaro-baskets-marron-homme.webp" },
+  { href: "/shop?gender=femme", label: "Femme", image: "/chaussures/elvaro-bottes-hautes-noires.webp" },
 ];
 
 export function Categories() {

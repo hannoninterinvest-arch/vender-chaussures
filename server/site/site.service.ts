@@ -1,28 +1,26 @@
 import { Repository } from "typeorm";
 import { UpdateSiteDto } from "./dto/update-site.dto";
 import { SiteSettings } from "./site-settings.entity";
-import { homepageCovers } from "../products/catalog";
+import { homepageCovers, legacyHomepageCovers } from "../products/catalog";
 
 const HOME_ID = "home";
 const DEFAULT_SUBTITLE =
   "L'élégance du cuir, pensée pour la ville et la cérémonie.";
 
+/** Migrer uniquement le carrousel par défaut, sans écraser les choix de l'administrateur. */
+function hasLegacyHomepageCovers(covers: string[] | undefined | null) {
+  return (
+    Array.isArray(covers) &&
+    covers.length === legacyHomepageCovers.length &&
+    covers.every((url, index) => url === legacyHomepageCovers[index])
+  );
+}
+
 export class SiteService {
   constructor(private readonly rows: Repository<SiteSettings>) {}
 
   async onModuleInit() {
-    const exists = await this.rows.findOne({ where: { id: HOME_ID } });
-    if (!exists) {
-      await this.rows.save(
-        this.rows.create({
-          id: HOME_ID,
-          heroKicker: "Collection",
-          heroTitle: "CUIR PREMIUM",
-          heroSubtitle: DEFAULT_SUBTITLE,
-          coverImages: homepageCovers,
-        }),
-      );
-    }
+    await this.ensure();
   }
 
   async getHome() {
@@ -47,7 +45,13 @@ export class SiteService {
 
   private async ensure() {
     const row = await this.rows.findOne({ where: { id: HOME_ID } });
-    if (row) return row;
+    if (row) {
+      if (hasLegacyHomepageCovers(row.coverImages)) {
+        row.coverImages = [...homepageCovers];
+        return this.rows.save(row);
+      }
+      return row;
+    }
     return this.rows.save(
       this.rows.create({
         id: HOME_ID,
