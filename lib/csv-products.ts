@@ -249,6 +249,6 @@ export function parseProductCsv(text: string): { products: CsvProduct[]; errors:
 }
 
 export const CSV_TEMPLATE = `nom;marque;prix;promo;achat;description;genre;categorie;nouveau;couleurs;pointures;images
-Oxford Noir;ELVARO;489;399;280;Richelieu cuir lustré;homme;ceremonie;oui;Noir:#141210@/chaussures/oxford-noir.jpg+/chaussures/oxford-noir-2.jpg+/chaussures/oxford-noir-3.jpg+/chaussures/oxford-noir-4.jpg|Cognac:#B5763A@/chaussures/oxford-cognac.jpg;40|41|42|43|44;/chaussures/oxford-noir.jpg|/chaussures/oxford-cognac.jpg
-Derby Cognac;ELVARO;459;;260;Derby ville en cuir;homme;ville;oui;Cognac:#8B5A2B@/chaussures/derby-cognac.jpg;40|41|42|43;/chaussures/derby-cognac.jpg|/chaussures/derby-tabac.jpg
+Oxford Noir;ELVARO;489;399;280;Richelieu cuir lustré;homme;ceremonie;oui;Noir:#141210@/chaussures/elvaro-mocassins-noirs.webp|Cognac:#B5763A@/chaussures/elvaro-baskets-marron-homme.webp;40|41|42|43|44;/chaussures/elvaro-mocassins-noirs.webp|/chaussures/elvaro-baskets-marron-homme.webp
+Derby Cognac;ELVARO;459;;260;Derby ville en cuir;homme;ville;oui;Cognac:#8B5A2B@/chaussures/elvaro-baskets-marron-homme.webp;40|41|42|43;/chaussures/elvaro-baskets-marron-homme.webp
 `;
