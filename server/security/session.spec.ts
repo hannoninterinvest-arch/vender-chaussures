@@ -16,6 +16,14 @@ describe('staff HTTP security', () => {
     expect((await call('staff/user', 'PATCH', { cookie: `${staffCookie()}=jwt`, origin: 'https://evil.example' })).status).toBe(403);
     expect(services).not.toHaveBeenCalled();
   });
+  it('accepts the configured public APP_URL origin when a proxy rewrites the request host', async () => {
+    process.env.APP_URL = 'https://boutique.example';
+    try {
+      const login = (origin: string) => dispatch(new Request('http://internal:3000/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json', origin }, body: JSON.stringify({ email: user.email, password: 'a-strong-password' }) }), ['auth', 'login']);
+      expect((await login('https://boutique.example')).status).toBe(200);
+      expect((await login('https://evil.example')).status).toBe(403);
+    } finally { delete process.env.APP_URL; }
+  });
   it('issues a production HttpOnly Secure host cookie without exposing a bearer token', async () => {
     const old = process.env.NODE_ENV;
     Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', configurable: true, writable: true });

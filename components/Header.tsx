@@ -79,6 +79,8 @@ export function Header() {
   }, []);
 
   useEffect(() => {
+    // Close the mobile menu and search panel after every navigation.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMenu(false);
     setOpen(false);
   }, [path]);

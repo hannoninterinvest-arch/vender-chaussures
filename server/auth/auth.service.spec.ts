@@ -54,4 +54,25 @@ describe('admin account security', () => {
     await expect(service.userFromToken(result.token)).resolves.toBe(user);
     expect(result.user).not.toHaveProperty('passwordHash');
   });
+  it('answers unknown, inactive and wrong-password logins identically and always checks a hash', async () => {
+    const message = 'E-mail ou mot de passe incorrect';
+    repo.findOne.mockResolvedValueOnce(null);
+    await expect(service.login({ email: 'nobody@example.com', password: 'whatever-password' })).rejects.toMatchObject({ status: 401, message });
+    user.active = false;
+    await expect(service.login({ email: user.email, password: 'old-password-strong' })).rejects.toMatchObject({ status: 401, message });
+    user.active = true;
+    await expect(service.login({ email: user.email, password: 'not-the-password' })).rejects.toMatchObject({ status: 401, message });
+    await expect(service.login({ email: ' ADMIN@Example.com ', password: 'old-password-strong' })).resolves.toHaveProperty('token');
+  });
+  it('does not turn a database failure into an expired session', async () => {
+    const token = service.signToken(user);
+    repo.findOne.mockRejectedValueOnce(new Error('connection terminated'));
+    await expect(service.userFromToken(token)).rejects.toThrow('connection terminated');
+    await expect(service.userFromToken('not-a-jwt')).rejects.toMatchObject({ status: 401 });
+  });
+  it('reports a missing JWT secret as a server fault instead of a logout', async () => {
+    const token = service.signToken(user);
+    const broken = new AuthService(repo as unknown as Repository<User>, new ConfigService({ JWT_SECRET: 'short' }));
+    await expect(broken.userFromToken(token)).rejects.toThrow('JWT_SECRET');
+  });
 });

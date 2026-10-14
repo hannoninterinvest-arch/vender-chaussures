@@ -18,6 +18,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
+    // The theme is set by an inline script before hydration; read it once on the client.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTheme(readTheme());
   }, []);
 

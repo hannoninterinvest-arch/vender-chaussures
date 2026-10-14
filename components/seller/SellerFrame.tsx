@@ -8,6 +8,8 @@ import {
   clearSellerSession,
   fetchStaffMe,
   sellerLogin,
+  SESSION_EXPIRED_EVENT,
+  StaffApiError,
   type StaffUser,
 } from "@/lib/seller";
 
@@ -43,8 +45,11 @@ export function SellerFrame({ children }: { children: React.ReactNode }) {
       try {
         const me = await fetchStaffMe();
         if (!cancelled) setUser(me);
-      } catch {
-        if (!cancelled) setUser(null);
+      } catch (err) {
+        if (cancelled) return;
+        setUser(null);
+        if (!(err instanceof StaffApiError) || err.status !== 401)
+          setError("Service momentanément indisponible. Réessaie dans un instant.");
       } finally {
         if (!cancelled) setReady(true);
       }
@@ -53,6 +58,15 @@ export function SellerFrame({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    function onExpired() {
+      setUser(null);
+      setError("Session expirée. Reconnecte-toi.");
+    }
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
   }, []);
 
   const links = useMemo(

@@ -23,8 +23,10 @@ export class RateLimits {
   }
   async check(req: Request, path: string) {
     if (path === 'health') return;
-    // Vercel overwrites X-Forwarded-For. Outside Vercel, share a bucket rather than trusting arbitrary headers.
-    const ip = process.env.VERCEL === '1' ? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown' : 'local';
+    // Vercel overwrites X-Forwarded-For. Elsewhere it is trusted only with TRUST_PROXY=true (a proxy that sets it),
+    // otherwise all clients share one bucket rather than trusting a spoofable header.
+    const trusted = process.env.VERCEL === '1' || process.env.TRUST_PROXY === 'true';
+    const ip = trusted ? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown' : 'local';
     await this.consume(`all:${ip}`, 180, 60_000);
     if (req.method === 'POST' && ['auth/login', 'auth/password'].includes(path)) {
       await this.consume(`login:${ip}`, 15, 900_000);

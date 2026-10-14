@@ -5,9 +5,19 @@ export function cookieToken(req: Request) {
   const cookie = req.headers.get('cookie')?.split(';').map(part => part.trim()).find(part => part.startsWith(`${staffCookie()}=`));
   return cookie ? cookie.slice(staffCookie().length + 1) : '';
 }
+function configuredOrigin() {
+  try {
+    return process.env.APP_URL ? new URL(process.env.APP_URL.trim()).origin : '';
+  } catch {
+    return '';
+  }
+}
+// Behind some reverse proxies req.url carries an internal host, so the public APP_URL is also accepted.
 export function verifyOrigin(req: Request) {
-  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) &&
-      (req.headers.get('origin') !== new URL(req.url).origin || req.headers.get('sec-fetch-site') === 'cross-site')) {
+  if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return;
+  const origin = req.headers.get('origin');
+  const allowed = [new URL(req.url).origin, configuredOrigin()].filter(Boolean);
+  if (!origin || !allowed.includes(origin) || req.headers.get('sec-fetch-site') === 'cross-site') {
     throw new ForbiddenException('Origine de requête refusée');
   }
 }

@@ -136,12 +136,23 @@ export type SellerProduct = {
 
 export type SellerCategory = { id: string; label: string; image: string };
 
-async function parseError(res: Response) {
+export const SESSION_EXPIRED_EVENT = "staff-session-expired";
+
+export class StaffApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+  }
+}
+
+async function parseError(res: Response): Promise<never> {
   const err = await res.json().catch(() => ({}));
   const message = Array.isArray(err.message)
     ? err.message.join(", ")
     : err.message || "Requête vendeur refusée";
-  throw new Error(message);
+  throw new StaffApiError(message, res.status);
 }
 
 export async function sellerRequest<T>(
@@ -155,6 +166,10 @@ export async function sellerRequest<T>(
       "Content-Type": "application/json",
     },
   });
+  if (res.status === 401 && typeof window !== "undefined") {
+    sessionStorage.removeItem(USER);
+    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+  }
   if (!res.ok) await parseError(res);
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;

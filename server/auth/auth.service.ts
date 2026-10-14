@@ -20,6 +20,8 @@ import { User } from './user.entity';
 
 const TOKEN_HOURS = 2;
 const RETIRED_PASSWORDS = new Set(['KicksAdmin123', 'Vendeur123']);
+// Compared when the account does not exist so response time does not reveal valid e-mails.
+const DECOY_HASH = '$2b$12$8ycWNJTH8ojkeuj6mc7R7.y2yhkQlhirZ5nWsvGOL10upirWc8TbG';
 
 export class AuthService {
   constructor(
@@ -74,6 +76,7 @@ export class AuthService {
     return { needed: false };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async setupFirstAdmin(_dto: SetupAdminDto) {
     throw new ForbiddenException('La création publique de comptes administrateur est désactivée.');
   }
@@ -104,27 +107,29 @@ export class AuthService {
   async login(dto: LoginDto) {
     const email = dto.email.trim().toLowerCase();
     const user = await this.users.findOne({ where: { email } });
-    if (!user || !user.active || RETIRED_PASSWORDS.has(dto.password)) {
-      throw new UnauthorizedException('E-mail ou mot de passe incorrect');
-    }
-    const ok = await compare(dto.password, user.passwordHash);
-    if (!ok) {
+    const ok = await compare(dto.password, user?.passwordHash ?? DECOY_HASH);
+    if (!user || !user.active || RETIRED_PASSWORDS.has(dto.password) || !ok) {
       throw new UnauthorizedException('E-mail ou mot de passe incorrect');
     }
     return { token: this.signToken(user), user: this.toPublic(user) };
   }
 
   async userFromToken(token: string) {
+    let payload: { sub?: unknown; credentials?: string };
     try {
-      const payload = verify(token, this.jwtSecret(), { algorithms: ['HS256'], issuer: 'elvaro-api', audience: 'elvaro-staff' }) as { sub: string; credentials?: string };
-      const user = await this.users.findOne({ where: { id: payload.sub } });
-      if (!user || !user.active || payload.credentials !== this.credentialVersion(user)) {
-        throw new UnauthorizedException('Session expirée');
-      }
-      return user;
-    } catch {
+      payload = verify(token, this.jwtSecret(), { algorithms: ['HS256'], issuer: 'elvaro-api', audience: 'elvaro-staff' }) as typeof payload;
+    } catch (error) {
+      // Only token problems end the session; a missing JWT_SECRET is a server fault.
+      if (error instanceof Error && /^JWT_SECRET/.test(error.message)) throw error;
       throw new UnauthorizedException('Session expirée');
     }
+    if (typeof payload.sub !== 'string') throw new UnauthorizedException('Session expirée');
+    // Database errors propagate as 500 so an outage does not look like an expired session.
+    const user = await this.users.findOne({ where: { id: payload.sub } });
+    if (!user || !user.active || payload.credentials !== this.credentialVersion(user)) {
+      throw new UnauthorizedException('Session expirée');
+    }
+    return user;
   }
 
   async changePassword(id: string, dto: ChangePasswordDto) {
