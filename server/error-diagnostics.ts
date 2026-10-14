@@ -76,6 +76,18 @@ function classify(error: unknown, depth = 0): string | undefined {
   }
 }
 
+// PostgreSQL names the absent column or table in the message. Only a strict
+// identifier is logged, never the rest of the message (which may echo SQL).
+function missingObject(error: unknown, depth = 0): string | undefined {
+  if (!error || typeof error !== "object" || depth > 4) return;
+  const value = error as { message?: unknown; driverError?: unknown; cause?: unknown };
+  if (typeof value.message === "string") {
+    const match = /^(column|relation) "?([A-Za-z0-9_.]{1,80})"? does not exist/.exec(value.message);
+    if (match) return `${match[1]} ${match[2]}`;
+  }
+  return missingObject(value.driverError, depth + 1) ?? missingObject(value.cause, depth + 1);
+}
+
 // Only log allowlisted diagnostics. Raw errors can contain SQL, customer data,
 // connection URLs and payment keys, so never serialize the original exception.
 export function reportServerError(
@@ -85,11 +97,13 @@ export function reportServerError(
 ) {
   const errorId = randomUUID();
   const code = classify(error) || "UNEXPECTED_SERVER_ERROR";
+  const missing = code === "42703" || code === "42P01" ? missingObject(error) : undefined;
   console.error("API request failed", {
     errorId,
     method,
     route,
     code,
+    ...(missing ? { missing } : {}),
     hint:
       hints[code] ||
       "Erreur non reconnue : reproduire en développement et examiner la configuration du service concerné.",

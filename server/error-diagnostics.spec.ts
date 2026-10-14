@@ -52,4 +52,21 @@ describe("safe server diagnostics", () => {
     expect(JSON.stringify(log.mock.calls)).not.toContain(secret);
     expect(log.mock.calls[1][1].code).toBe("UNEXPECTED_SERVER_ERROR");
   });
+
+  it("names the missing column or table without echoing the rest of the message", () => {
+    const log = jest.spyOn(console, "error").mockImplementation(() => {});
+    reportServerError(
+      { driverError: { code: "42703", message: 'column User.passwordHash does not exist' } },
+      "POST",
+      "auth/login",
+    );
+    expect(log.mock.calls[0][1]).toMatchObject({ code: "42703", missing: "column User.passwordHash" });
+    reportServerError(
+      { driverError: { code: "42P01", message: 'relation "users" does not exist at secret-value' } },
+      "POST",
+      "auth/login",
+    );
+    expect(log.mock.calls[1][1]).toMatchObject({ missing: "relation users" });
+    expect(JSON.stringify(log.mock.calls)).not.toContain("secret-value");
+  });
 });

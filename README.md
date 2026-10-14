@@ -27,6 +27,10 @@ Les API sont accessibles sous `/api` sur le même domaine que la boutique. Ne pl
 
 Utiliser **la même DATABASE_URL** que le backend précédent : les noms de tables/colonnes, relations et hachages bcrypt sont conservés. Il n'y a aucune synchronisation automatique du schéma à chaque requête, ni création de compte ou suppression de produits au démarrage. Les données existantes restent dans PostgreSQL. Garder le même `JWT_SECRET` aléatoire (au moins 32 octets). Cette mise à jour invalide les anciens jetons staff ; une nouvelle connexion est nécessaire.
 
+### Erreur `42703` (colonne manquante) ou `42P01` (table manquante)
+
+Le log Vercel indique maintenant `missing: "column …"` ou `missing: "relation …"`. Pour comparer la base aux entités sans rien modifier : `npm run db:check` (avec `DATABASE_URL` de la base concernée). Le script liste les colonnes absentes avec le `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` correspondant ; `npm run db:check -- --apply` ajoute uniquement les colonnes manquantes (jamais de suppression ni de modification de données). Une colonne présente sous un autre nom (par exemple `password_hash`) est signalée comme « inconnue du code » : la renommer à la main.
+
 ### Base neuve / initialisation explicite
 
 Depuis le dépôt local, renseigner les variables privées dans `.env.local`, dont `ADMIN_EMAIL` et un `ADMIN_PASSWORD` fort, puis :
