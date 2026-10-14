@@ -24,9 +24,9 @@ La déconnexion efface le cookie. Un jeton déjà volé reste valide jusqu'à ex
 
 ## Commandes et paiements
 
-La lecture publique et la reprise de paiement nécessitent `X-Order-Token`. Le checkout et les retours Flouci/Konnect transmettent le secret dans le fragment du lien de suivi, absent des requêtes HTTP de navigation et des en-têtes Referer. Le lien complet donne accès à la commande : le partager seulement avec son client.
+La lecture publique et la reprise de paiement nécessitent `X-Order-Token`. Le checkout et les retours Flouci transmettent le secret dans le fragment du lien de suivi, absent des requêtes HTTP de navigation et des en-têtes Referer. Le lien complet donne accès à la commande : le partager seulement avec son client.
 
-Les anciens liens contenant seulement l'identifiant ne donnent plus accès aux coordonnées. L'équipe peut obtenir le lien sécurisé des commandes, y compris anciennes, dans **Commandes**. Les routes de vérification et d'historique restent réservées au staff. La confirmation de paiement repose sur la vérification serveur du prestataire.
+Les anciens liens contenant seulement l'identifiant ne donnent plus accès aux coordonnées. L'équipe peut obtenir le lien sécurisé des commandes, y compris anciennes, dans **Commandes**. Les routes de vérification et d'historique restent réservées au staff. La confirmation de paiement repose sur la vérification serveur du prestataire ; le webhook Flouci doit en outre porter une signature `X-Flouci-Signature` valide et récente.
 
 ## Limites et médias
 

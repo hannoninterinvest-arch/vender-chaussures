@@ -1,9 +1,12 @@
+import { createHmac, timingSafeEqual } from "node:crypto";
 import {
   BadRequestException,
+  Logger,
   ServiceUnavailableException,
+  UnauthorizedException,
 } from "@/server/http";
 import { ConfigService } from "@/server/config";
-import { KonnectService } from "./konnect.service";
+import { appUrl } from "./app-url";
 
 type FlouciPayment = {
   status?: string;
@@ -11,11 +14,13 @@ type FlouciPayment = {
   developer_tracking_id?: string;
 };
 
+const API = "https://developers.flouci.com/api/v2";
+const WEBHOOK_TOLERANCE_SECONDS = 600;
+
 export class FlouciService {
-  constructor(
-    private readonly config: ConfigService,
-    private readonly konnect: KonnectService,
-  ) {}
+  private readonly log = new Logger(FlouciService.name);
+
+  constructor(private readonly config: ConfigService) {}
 
   configured() {
     return Boolean(
@@ -23,13 +28,22 @@ export class FlouciService {
     );
   }
 
-  async initPayment(input: { orderId: string; accessToken?: string; amountTnd: number }) {
+  frontendUrl() {
+    return appUrl(this.config);
+  }
+
+  async initPayment(input: {
+    orderId: string;
+    accessToken?: string;
+    amountTnd: number;
+  }) {
     if (!this.configured())
       throw new BadRequestException("Paiement Flouci indisponible.");
     const amount = Math.round(Number(input.amountTnd) * 1000);
     if (!Number.isSafeInteger(amount) || amount <= 0)
       throw new BadRequestException("Montant invalide");
-    const frontend = this.konnect.frontendUrl();
+    const frontend = this.frontendUrl();
+    const token = encodeURIComponent(input.accessToken ?? "");
     const data = await this.request("generate_payment", {
       method: "POST",
       body: JSON.stringify({
@@ -37,9 +51,9 @@ export class FlouciService {
         developer_tracking_id: input.orderId,
         accept_card: true,
         session_timeout_secs: 1800,
-        success_link: `${frontend}/commande/${input.orderId}?paid=1#token=${encodeURIComponent(input.accessToken ?? "")}`,
-        fail_link: `${frontend}/commande/${input.orderId}?paid=0#token=${encodeURIComponent(input.accessToken ?? "")}`,
-        webhook: `${this.konnect.backendUrl()}/api/payments/flouci/webhook`,
+        success_link: `${frontend}/commande/${input.orderId}?paid=1#token=${token}`,
+        fail_link: `${frontend}/commande/${input.orderId}?paid=0#token=${token}`,
+        webhook: `${frontend}/api/payments/flouci/webhook`,
         webhook_version: 1,
       }),
     });
@@ -49,15 +63,22 @@ export class FlouciService {
       typeof result.payment_id !== "string" ||
       typeof result.link !== "string"
     ) {
+      this.log.warn("generate_payment: réponse inattendue du prestataire");
       throw new ServiceUnavailableException(
         "Impossible d’ouvrir le paiement Flouci. Réessaie plus tard.",
       );
     }
-    const url = new URL(result.link);
+    let url: URL;
+    try {
+      url = new URL(result.link);
+    } catch {
+      url = new URL("http://invalid.invalid");
+    }
     if (
       url.protocol !== "https:" ||
       !(url.hostname === "flouci.com" || url.hostname.endsWith(".flouci.com"))
     ) {
+      this.log.warn("generate_payment: lien de paiement hors domaine flouci.com");
       throw new ServiceUnavailableException(
         "Lien de paiement Flouci invalide.",
       );
@@ -88,13 +109,44 @@ export class FlouciService {
     );
   }
 
+  // Flouci signs every webhook with HMAC-SHA256(private key, `${t}.${payload}`).
+  // For webhook_version 1 the payload is `payment_id=<id>&success=<True|False>`.
+  verifyWebhook(
+    params: { paymentId: string; success: string },
+    header: string | null,
+    now = Date.now(),
+  ) {
+    const secret = this.key("FLOUCI_SECRET_KEY");
+    if (!secret) throw new BadRequestException("Paiement Flouci indisponible.");
+    const parts = new Map(
+      (header ?? "")
+        .split(",")
+        .map((part) => part.trim().split("=", 2) as [string, string]),
+    );
+    const timestamp = parts.get("t") ?? "";
+    const received = parts.get("v1") ?? "";
+    const invalid = new UnauthorizedException("Signature Flouci invalide");
+    if (!/^\d{1,12}$/.test(timestamp) || !/^[a-f0-9]{64}$/i.test(received))
+      throw invalid;
+    if (Math.abs(now / 1000 - Number(timestamp)) > WEBHOOK_TOLERANCE_SECONDS)
+      throw invalid;
+    const expected = createHmac("sha256", secret)
+      .update(
+        `${timestamp}.payment_id=${params.paymentId}&success=${params.success}`,
+      )
+      .digest();
+    if (!timingSafeEqual(expected, Buffer.from(received, "hex"))) throw invalid;
+  }
+
   private key(name: string) {
     return (this.config.get<string>(name) ?? "").trim();
   }
 
   private async request(path: string, init: RequestInit) {
+    const operation = path.split("/")[0];
+    let res: Response;
     try {
-      const res = await fetch(`https://developers.flouci.com/api/v2/${path}`, {
+      res = await fetch(`${API}/${path}`, {
         ...init,
         headers: {
           "Content-Type": "application/json",
@@ -102,12 +154,33 @@ export class FlouciService {
         },
         signal: AbortSignal.timeout(15000),
       });
-      if (!res.ok) throw new Error("Flouci API unavailable");
-      return await res.json();
-    } catch {
-      throw new ServiceUnavailableException(
-        "Flouci est temporairement indisponible. Réessaie plus tard.",
-      );
+    } catch (error) {
+      const timeout = error instanceof Error && error.name === "TimeoutError";
+      this.log.warn(`${operation}: ${timeout ? "délai dépassé" : "réseau indisponible"}`);
+      throw this.unavailable();
     }
+    const body = await res.json().catch(() => undefined);
+    if (!res.ok) {
+      const message = body?.result?.message ?? body?.message;
+      this.log.warn(
+        `${operation}: HTTP ${res.status}${typeof message === "string" ? ` (${message.slice(0, 120)})` : ""}${
+          res.status === 401 || res.status === 403
+            ? " — vérifier FLOUCI_PUBLIC_KEY / FLOUCI_SECRET_KEY (test ou production)"
+            : ""
+        }`,
+      );
+      throw this.unavailable();
+    }
+    if (body === undefined) {
+      this.log.warn(`${operation}: réponse non JSON`);
+      throw this.unavailable();
+    }
+    return body;
+  }
+
+  private unavailable() {
+    return new ServiceUnavailableException(
+      "Flouci est temporairement indisponible. Réessaie plus tard.",
+    );
   }
 }

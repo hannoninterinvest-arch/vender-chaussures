@@ -4,10 +4,9 @@ import "reflect-metadata";
 import { dispatch, readDto } from "./router";
 import { services } from "./services";
 import { CreateOrderDto } from "./orders/dto/create-order.dto";
-import { sign } from "jsonwebtoken";
 import { hash } from "bcryptjs";
 import { DataType, newDb } from "pg-mem";
-import { randomUUID } from "node:crypto";
+import { createHmac, randomUUID } from "node:crypto";
 import { entities } from "./entities";
 import { createServices } from "./services";
 import { User } from "./auth/user.entity";
@@ -99,6 +98,8 @@ describe("Next.js API migration", () => {
   let app: ReturnType<typeof createServices>;
   beforeAll(async () => {
     process.env.JWT_SECRET = "integration-test-secret-at-least-32-bytes";
+    process.env.FLOUCI_PUBLIC_KEY = "flouci-public-for-tests";
+    process.env.FLOUCI_SECRET_KEY = "flouci-secret-for-tests";
     await db.initialize();
     await ensureCommerceStore(db);
     app = createServices(db);
@@ -150,6 +151,8 @@ describe("Next.js API migration", () => {
   afterAll(async () => {
     if (db.isInitialized) await db.destroy();
     delete process.env.JWT_SECRET;
+    delete process.env.FLOUCI_PUBLIC_KEY;
+    delete process.env.FLOUCI_SECRET_KEY;
   });
 
   it("serves products from the existing PostgreSQL table shape without cost data", async () => {
@@ -236,16 +239,36 @@ describe("Next.js API migration", () => {
     const confirm = jest
       .spyOn(app.orders, "confirmFlouci")
       .mockResolvedValue({ ok: false, paid: false, orderId: "" });
-    const response = await dispatch(
-      new Request(
-        "https://shop.example/api/payments/flouci/webhook?payment_id=ref&paid=1",
-      ),
-      ["payments", "flouci", "webhook"],
-    );
+    const signed = (t: number, success = "True") =>
+      `t=${t},v1=${createHmac("sha256", "flouci-secret-for-tests")
+        .update(`${t}.payment_id=ref&success=${success}`)
+        .digest("hex")}`;
+    const call = (signature?: string, success = "True") =>
+      dispatch(
+        new Request(
+          `https://shop.example/api/payments/flouci/webhook?payment_id=ref&success=${success}`,
+          { headers: signature ? { "X-Flouci-Signature": signature } : {} },
+        ),
+        ["payments", "flouci", "webhook"],
+      );
+    const now = Math.floor(Date.now() / 1000);
+    expect((await call()).status).toBe(401);
+    expect((await call(signed(now), "False")).status).toBe(401);
+    expect((await call(signed(now - 3600))).status).toBe(401);
+    expect(confirm).not.toHaveBeenCalled();
+    const response = await call(signed(now));
     expect(response.status).toBe(200);
     expect(confirm).toHaveBeenCalledWith("ref");
     expect((await response.json()).paid).toBe(false);
     confirm.mockRestore();
+  });
+
+  it("exposes only Flouci as an online payment method", async () => {
+    const response = await request("payments/config");
+    expect(await response.json()).toEqual({ flouci: true });
+    expect(
+      (await request("payments/konnect/webhook?payment_ref=x")).status,
+    ).toBe(404);
   });
 
   it("disables public first-admin setup in production", async () => {

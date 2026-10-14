@@ -20,7 +20,7 @@ Les API sont accessibles sous `/api` sur le même domaine que la boutique. Ne pl
 1. Importer `hannoninterinvest-arch/vender-chaussures`, branche `main`.
 2. Framework **Next.js**, Root Directory **racine du dépôt** (laisser vide), installation `npm ci`, build `npm run build`.
 3. Ajouter les variables de `.env.example` dans **Settings → Environment Variables**. Les variables indispensables sont `DATABASE_URL` (URL PostgreSQL poolée Neon), `JWT_SECRET` et `APP_URL` (URL HTTPS publique de la boutique, sans `/api`).
-4. Ajouter les trois clés Cloudinary et les deux noms de presets pour les médias. Ajouter les deux clés Flouci pour activer Flouci. Konnect est facultatif.
+4. Ajouter les trois clés Cloudinary et les deux noms de presets pour les médias. Ajouter les deux clés Flouci (`FLOUCI_PUBLIC_KEY`, `FLOUCI_SECRET_KEY`) pour activer le paiement en ligne : Flouci est le seul prestataire, Konnect a été retiré.
 5. Déployer. Les appels API restent sur le domaine du site. Les URL de retour et webhooks de paiement sont construits avec `APP_URL`.
 
 ### Base existante
@@ -55,7 +55,8 @@ Cette commande configure `kicks_images_signed` et `kicks_models_signed` (ou les 
 - Poids réel estimé : **1,5 kg par paire, emballage compris**, règle partagée par le panier et le serveur.
 - Les prix des produits, promotions, quantités et livraison sont recalculés côté serveur. Un total devenu obsolète est refusé avant création du paiement.
 - Flouci reçoit le total, livraison incluse, en millimes. Un retour `?paid=1` ne valide aucun paiement : l'API authentifiée du prestataire vérifie statut, montant et commande.
-- Les webhooks sont `/api/payments/flouci/webhook` et `/api/payments/konnect/webhook` sur `APP_URL`.
+- Le webhook est `/api/payments/flouci/webhook` sur `APP_URL` (HTTPS obligatoire en production). Sa signature `X-Flouci-Signature` (HMAC-SHA256 avec `FLOUCI_SECRET_KEY`) est vérifiée avant toute action, puis le paiement est revérifié auprès de l'API Flouci. Les échecs Flouci (clés refusées, délai, réseau) sont journalisés sans secret.
+- Les anciennes commandes Konnect (`payment = online`) restent lisibles mais ne peuvent plus être relancées ni vérifiées automatiquement : les traiter manuellement.
 - Une commande impayée ne peut pas être marquée en livraison/livrée. Le paiement à la livraison est limité à la Tunisie.
 - Les accès administrateur/vendeur sont vérifiés sur le serveur, et les comptes désactivés sont refusés.
 - Les nouvelles commandes utilisent des identifiants aléatoires UUID. Les anciennes commandes conservent leurs identifiants.
@@ -76,7 +77,7 @@ Chaque pays peut avoir ses propres base, poids inclus, supplément, tranche d'ar
 |---|---|
 | Paiement en cours | Commande en ligne enregistrée, montant non encore vérifié. Un échec d'ouverture du lien conserve la commande et permet une relance. |
 | À appeler | Paiement à la livraison : la commande n'est pas confirmée. |
-| Confirmée | Paiement en ligne vérifié par Flouci/Konnect, ou client COD ayant accepté lors de l'appel (attestation du membre staff obligatoire). |
+| Confirmée | Paiement en ligne vérifié par Flouci, ou client COD ayant accepté lors de l'appel (attestation du membre staff obligatoire). |
 | En livraison | Passage possible uniquement après confirmation. |
 | Livrée | Livraison effective ; pour COD, attestation de l'encaissement réel obligatoire. |
 | Retournée | Retour après expédition/livraison ; motif obligatoire, exclue des bénéfices. |
@@ -103,6 +104,6 @@ npm test
 npm run build
 ```
 
-Les tests couvrent les paiements Flouci/Konnect, les frais de livraison et les routes Next.js avec une base PostgreSQL simulée (pg-mem). Aucun paiement réel n'est exécuté par ces tests.
+Les tests couvrent les paiements Flouci (dont la signature des webhooks), les frais de livraison et les routes Next.js avec une base PostgreSQL simulée (pg-mem). Aucun paiement réel n'est exécuté par ces tests.
 
 Références : [Next.js Route Handlers](https://nextjs.org/docs/app/api-reference/file-conventions/route), [limites Vercel Functions](https://vercel.com/docs/functions/limitations), [envoi signé Cloudinary](https://cloudinary.com/documentation/upload_images).

@@ -68,20 +68,27 @@ export default function OrderPage({
 
   const shouldPoll = Boolean(
     order &&
-    order.payment !== "cod" &&
+    order.payment === "flouci" &&
     order.paymentStatus === "pending" &&
     !["annulee", "retournee"].includes(order.status || ""),
   );
   useEffect(() => {
     if (!shouldPoll) return;
     let cancelled = false;
+    // Each poll makes the server verify with Flouci, which asks integrators not to ping repeatedly.
+    // The payment session lasts 30 minutes, so polling stops after that.
+    const startedAt = Date.now();
     const timer = setInterval(() => {
+      if (Date.now() - startedAt > 30 * 60 * 1000) {
+        clearInterval(timer);
+        return;
+      }
       fetchOrder(id)
         .then((row) => {
           if (!cancelled) setOrder(row);
         })
         .catch(() => {});
-    }, 8000);
+    }, 15000);
     return () => {
       cancelled = true;
       clearInterval(timer);
@@ -204,7 +211,7 @@ export default function OrderPage({
       </div>
 
       <div className="mt-8 flex flex-wrap gap-3">
-        {online &&
+        {order.payment === "flouci" &&
           !paid &&
           !["annulee", "retournee", "livree"].includes(order.status || "") && (
             <button
@@ -215,7 +222,7 @@ export default function OrderPage({
             >
               {paying
                 ? "Ouverture…"
-                : `Payer avec ${order.payment === "flouci" ? "Flouci" : "Konnect"}`}
+                : "Payer avec Flouci"}
             </button>
           )}
         <Link

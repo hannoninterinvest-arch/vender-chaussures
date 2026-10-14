@@ -32,7 +32,6 @@ export default function CheckoutPage() {
   const { selectedCountry, formatPrice, isLocal } = useLocale();
   const [paymentChoice, setPayment] = useState<PaymentMethod>("cod");
   const [flouciReady, setFlouciReady] = useState(false);
-  const [onlineReady, setOnlineReady] = useState(false);
   const [gouvernorat, setGouvernorat] = useState<Gouvernorat>("Tunis");
   const [carrier, setCarrier] = useState<ShippingCarrier>("LA_POSTE");
   const [busy, setBusy] = useState(false);
@@ -42,12 +41,8 @@ export default function CheckoutPage() {
     error: string;
     estimated?: boolean;
   } | null>(null);
-  const payment =
-    !isLocal && paymentChoice === "cod"
-      ? flouciReady
-        ? "flouci"
-        : "online"
-      : paymentChoice;
+  const payment: PaymentMethod =
+    !isLocal && paymentChoice === "cod" ? "flouci" : paymentChoice;
   const weightKg = useMemo(
     () => cartWeightKg(lines.reduce((sum, line) => sum + line.qty, 0)),
     [lines],
@@ -62,13 +57,11 @@ export default function CheckoutPage() {
     fetchPaymentsConfig()
       .then((cfg) => {
         if (cancelled) return;
-        setOnlineReady(Boolean(cfg.online));
         setFlouciReady(Boolean(cfg.flouci));
         if (cfg.flouci) setPayment("flouci");
-        else if (cfg.online) setPayment("online");
       })
       .catch(() => {
-        if (!cancelled) setOnlineReady(false);
+        if (!cancelled) setFlouciReady(false);
       });
     return () => {
       cancelled = true;
@@ -108,10 +101,7 @@ export default function CheckoutPage() {
       toast("Le paiement à la livraison n’est disponible qu’en Tunisie.");
       return;
     }
-    if (
-      (payment === "online" && !onlineReady) ||
-      (payment === "flouci" && !flouciReady)
-    ) {
+    if (payment === "flouci" && !flouciReady) {
       toast("Paiement en ligne indisponible pour le moment.");
       return;
     }
@@ -272,9 +262,7 @@ export default function CheckoutPage() {
           <div className="space-y-2">
             {paymentMethods.map((m) => {
               const codBlocked = m.id === "cod" && !isLocal;
-              const onlineBlocked =
-                (m.id === "online" && !onlineReady) ||
-                (m.id === "flouci" && !flouciReady);
+              const onlineBlocked = m.id === "flouci" && !flouciReady;
               const disabled = codBlocked || onlineBlocked;
               return (
                 <label
@@ -311,7 +299,7 @@ export default function CheckoutPage() {
               );
             })}
           </div>
-          {!isLocal && !onlineReady && !flouciReady && (
+          {!isLocal && !flouciReady && (
             <p className="text-sm text-[var(--promo)]">
               Le paiement en ligne est temporairement indisponible pour cette
               destination.
@@ -377,7 +365,6 @@ export default function CheckoutPage() {
             disabled={
               busy ||
               fee == null ||
-              (payment === "online" && !onlineReady) ||
               (payment === "flouci" && !flouciReady)
             }
             className="gold-btn mt-6 h-12 w-full rounded-sm text-xs uppercase disabled:opacity-60"

@@ -71,8 +71,8 @@ export async function fetchSite() {
 
 export async function fetchPaymentsConfig() {
   const res = await fetch(apiUrl("/payments/config"), { cache: "no-store" });
-  if (!res.ok) return { online: false };
-  return res.json() as Promise<{ online: boolean; flouci?: boolean }>;
+  if (!res.ok) return { flouci: false };
+  return res.json() as Promise<{ flouci: boolean }>;
 }
 
 export async function fetchOrder(id: string) {

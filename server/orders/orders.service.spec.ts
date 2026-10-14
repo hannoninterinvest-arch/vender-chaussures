@@ -1,7 +1,6 @@
 import { OrderAccessService } from "./order-access.service";
 import type { EntityManager } from "typeorm";
 import { OrdersService } from "./orders.service";
-import { KonnectService } from "../payments/konnect.service";
 import { FlouciService } from "../payments/flouci.service";
 import { ConfigService } from "@/server/config";
 
@@ -13,8 +12,7 @@ describe("OrdersService payments and delivery", () => {
       FLOUCI_PUBLIC_KEY: "public",
       FLOUCI_SECRET_KEY: "secret",
     });
-    const konnect = new KonnectService(config);
-    const flouci = new FlouciService(config, konnect);
+    const flouci = new FlouciService(config);
     const orders = {
       create: jest.fn((x) => x),
       save: jest.fn(async (x) => x),
@@ -53,8 +51,7 @@ describe("OrdersService payments and delivery", () => {
       repository as unknown as ConstructorParameters<typeof OrdersService>[0],
       items as unknown as ConstructorParameters<typeof OrdersService>[1],
       products as unknown as ConstructorParameters<typeof OrdersService>[2],
-      konnect,
-      shipping as unknown as ConstructorParameters<typeof OrdersService>[4],
+      shipping as unknown as ConstructorParameters<typeof OrdersService>[3],
       flouci,
       undefined,
       new OrderAccessService(config),
@@ -215,5 +212,59 @@ describe("OrdersService payments and delivery", () => {
       orderId: "order",
     });
     expect(verify).not.toHaveBeenCalled();
+  });
+
+  it("keeps the order readable when Flouci is unavailable during verification", async () => {
+    const { service, orders, flouci } = setup();
+    const order = {
+      id: "order",
+      payment: "flouci",
+      paymentStatus: "pending",
+      status: "paiement_en_cours",
+      total: 107.5,
+      paymentRef: "ref",
+      items: [],
+    };
+    orders.findOne.mockResolvedValue(order);
+    jest
+      .spyOn(flouci, "getPayment")
+      .mockRejectedValue(new Error("Flouci indisponible"));
+    await expect(service.findOne("order")).resolves.toMatchObject({
+      id: "order",
+      paymentStatus: "pending",
+    });
+  });
+
+  it("marks the order payment as failed and logs when the payment session cannot be opened", async () => {
+    const { service, orders, flouci } = setup();
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    jest.spyOn(flouci, "initPayment").mockRejectedValue(new Error("HTTP 401"));
+    const order = await service.create(dto);
+    expect(order.paymentStatus).toBe("failed");
+    expect(orders.update).toHaveBeenCalledWith(
+      { id: order.id, paymentStatus: "pending" },
+      { paymentStatus: "failed" },
+    );
+    expect(warn).toHaveBeenCalledWith(
+      "Flouci: ouverture du paiement impossible",
+      expect.objectContaining({ orderId: order.id }),
+    );
+    warn.mockRestore();
+  });
+
+  it("rejects the retired Konnect payment type at order creation and for retries", async () => {
+    const { service, orders } = setup();
+    await expect(
+      service.create({ ...dto, payment: "online" as never }),
+    ).rejects.toThrow();
+    orders.findOne.mockResolvedValue({
+      id: "legacy",
+      payment: "online",
+      paymentStatus: "pending",
+      status: "paiement_en_cours",
+    });
+    await expect(service.retryPayment("legacy")).rejects.toThrow(
+      "n’est plus disponible",
+    );
   });
 });

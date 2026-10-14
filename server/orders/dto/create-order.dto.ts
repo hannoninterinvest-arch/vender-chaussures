@@ -16,7 +16,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-const PAYMENTS = ['cod', 'online', 'flouci'] as const;
+const PAYMENTS = ['cod', 'flouci'] as const;
 
 export class CreateOrderItemDto {
   @IsString()

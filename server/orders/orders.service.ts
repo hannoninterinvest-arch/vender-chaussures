@@ -17,7 +17,6 @@ import type { UpdateOrderStatusDto } from "./dto/update-order-status.dto";
 import { Repository, type EntityManager } from "typeorm";
 import { FlouciService } from "../payments/flouci.service";
 import { roundMoney } from "../shipping/shipping-quote";
-import { KonnectService } from "../payments/konnect.service";
 import { sellingPrice } from "../products/pricing";
 import { ProductsService } from "../products/products.service";
 import { PAIR_WEIGHT_KG, isTunisia } from "../shipping/shipping-rates.config";
@@ -32,7 +31,6 @@ export class OrdersService {
     private readonly orders: Repository<Order>,
     private readonly items: Repository<OrderItem>,
     private readonly products: ProductsService,
-    private readonly konnect: KonnectService,
     private readonly shipping: ShippingService,
     private readonly flouci: FlouciService,
     private readonly store?: CommerceStore,
@@ -40,10 +38,13 @@ export class OrdersService {
   ) {}
 
   frontendUrl() {
-    return this.konnect.frontendUrl();
+    return this.flouci.frontendUrl();
   }
 
   async create(dto: CreateOrderDto) {
+    if (dto.payment !== "cod" && dto.payment !== "flouci") {
+      throw new BadRequestException("Moyen de paiement non pris en charge.");
+    }
     const lines: OrderItem[] = [];
     let subtotal = 0;
 
@@ -97,8 +98,7 @@ export class OrdersService {
       );
     }
     const online = dto.payment !== "cod";
-    const gateway = dto.payment === "flouci" ? this.flouci : this.konnect;
-    if (online && !gateway.configured()) {
+    if (online && !this.flouci.configured()) {
       throw new BadRequestException(
         "Ce moyen de paiement est indisponible. Choisis un autre moyen de paiement.",
       );
@@ -150,12 +150,10 @@ export class OrdersService {
     if (!online) return saved;
 
     try {
-      const payment = await gateway.initPayment({
+      const payment = await this.flouci.initPayment({
         orderId: saved.id,
         accessToken: this.access.token(saved.id),
         amountTnd: Number(saved.total),
-        customerName: saved.customerName,
-        phone: saved.phone,
       });
       saved.paymentRef = payment.paymentRef;
       saved.payUrl = payment.payUrl;
@@ -164,7 +162,11 @@ export class OrdersService {
         { paymentRef: saved.paymentRef, payUrl: saved.payUrl },
       );
       return saved;
-    } catch {
+    } catch (error) {
+      console.warn("Flouci: ouverture du paiement impossible", {
+        orderId: saved.id,
+        reason: error instanceof Error ? error.message : "inconnue",
+      });
       await this.orders.update(
         { id: saved.id, paymentStatus: "pending" },
         { paymentStatus: "failed" },
@@ -179,6 +181,11 @@ export class OrdersService {
     if (!order) throw new NotFoundException("Commande introuvable");
     if (order.payment === "cod") {
       throw new BadRequestException("Cette commande se règle à la livraison");
+    }
+    if (order.payment !== "flouci") {
+      throw new BadRequestException(
+        "Ce moyen de paiement n’est plus disponible. Contacte la boutique pour régler cette commande.",
+      );
     }
     order = await this.syncPayment(order);
     if (order.paymentStatus === "paid") {
@@ -203,13 +210,10 @@ export class OrdersService {
         );
       if (current.paymentStatus === "pending" && current.payUrl)
         return (await repo.findOne({ where: { id } })) ?? current;
-      const gateway = current.payment === "flouci" ? this.flouci : this.konnect;
-      const payment = await gateway.initPayment({
+      const payment = await this.flouci.initPayment({
         orderId: current.id,
         accessToken: this.access.token(current.id),
         amountTnd: Number(current.total),
-        customerName: current.customerName,
-        phone: current.phone,
       });
       await repo.update(
         { id: current.id },
@@ -238,30 +242,6 @@ export class OrdersService {
     });
   }
 
-  async confirmKonnect(paymentRef: string) {
-    if (!paymentRef) return { ok: false, paid: false, orderId: "" };
-    const order = await this.orders.findOne({
-      where: { paymentRef, payment: "online" },
-    });
-    if (!order) return { ok: false, paid: false, orderId: "" };
-    if (order.paymentStatus === "paid")
-      return { ok: true, paid: true, orderId: order.id };
-    const payment = await this.konnect.getPayment(paymentRef);
-
-    if (this.konnect.isPaid(payment, order.id, Number(order.total))) {
-      const paid = await this.markVerifiedPaid(order, paymentRef);
-      return { ok: true, paid, orderId: order.id };
-    }
-    if (this.konnect.isFailed(payment)) {
-      await this.orders.update(
-        { id: order.id, paymentRef, paymentStatus: "pending" },
-        { paymentStatus: "failed" },
-      );
-      return { ok: true, paid: false, orderId: order.id };
-    }
-    return { ok: true, paid: false, orderId: order.id };
-  }
-
   async confirmFlouci(paymentRef: string) {
     if (!paymentRef) return { ok: false, paid: false, orderId: "" };
     const order = await this.orders.findOne({
@@ -286,17 +266,15 @@ export class OrdersService {
 
   async syncPayment(order: Order) {
     if (
-      order.payment === "cod" ||
+      order.payment !== "flouci" ||
       order.paymentStatus === "paid" ||
       !order.paymentRef
     ) {
       return order;
     }
-    const result =
-      order.payment === "flouci"
-        ? await this.confirmFlouci(order.paymentRef)
-        : await this.confirmKonnect(order.paymentRef);
-    if (!result.ok) return order;
+    // A provider outage must not make the order page unreadable.
+    const result = await this.confirmFlouci(order.paymentRef).catch(() => null);
+    if (!result?.ok) return order;
     const fresh = await this.orders.findOne({ where: { id: order.id } });
     return fresh ?? order;
   }

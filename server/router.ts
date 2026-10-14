@@ -219,41 +219,19 @@ export const routes: Route[] = [
     method: "GET",
     path: "payments/config",
     access: "public",
-    handle: (c) => ({
-      online: c.app.konnect.configured(),
-      flouci: c.app.flouci.configured(),
-    }),
+    handle: (c) => ({ flouci: c.app.flouci.configured() }),
   },
   {
     method: "GET",
     path: "payments/flouci/webhook",
     access: "public",
-    handle: (c) => c.app.orders.confirmFlouci(c.query.get("payment_id") || ""),
-  },
-  {
-    method: "GET",
-    path: "payments/konnect/webhook",
-    access: "public",
-    handle: (c) =>
-      c.app.orders.confirmKonnect(
-        c.query.get("payment_ref") || c.query.get("paymentRef") || "",
-      ),
-  },
-  {
-    method: "POST",
-    path: "payments/konnect/webhook",
-    access: "public",
-    handle: async (c) => {
-      const body = await c.req.json().catch(() => ({}));
-      const ref =
-        c.query.get("payment_ref") ||
-        c.query.get("paymentRef") ||
-        body.paymentRef ||
-        body.payment_ref ||
-        "";
-      if (typeof ref !== "string")
-        throw new BadRequestException("Référence invalide");
-      return c.app.orders.confirmKonnect(ref);
+    handle: (c) => {
+      const paymentId = c.query.get("payment_id") || "";
+      c.app.flouci.verifyWebhook(
+        { paymentId, success: c.query.get("success") || "" },
+        c.req.headers.get("x-flouci-signature"),
+      );
+      return c.app.orders.confirmFlouci(paymentId);
     },
   },
   {

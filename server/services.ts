@@ -20,7 +20,6 @@ import { SiteSettings } from "./site/site-settings.entity";
 import { SiteService } from "./site/site.service";
 import { WholesaleRequest } from "./wholesale/wholesale-request.entity";
 import { WholesaleService } from "./wholesale/wholesale.service";
-import { KonnectService } from "./payments/konnect.service";
 import { FlouciService } from "./payments/flouci.service";
 import { CloudinaryService } from "./seller/cloudinary.service";
 import { CurrencyService } from "./currency/currency.service";
@@ -37,8 +36,7 @@ export function createServices(db: DataSource) {
     db.getRepository(ShippingRate),
     countryRates,
   );
-  const konnect = new KonnectService(config);
-  const flouci = new FlouciService(config, konnect);
+  const flouci = new FlouciService(config);
   return {
     rateLimits: new RateLimits(db),
     orderAccess: new OrderAccessService(config),
@@ -46,13 +44,11 @@ export function createServices(db: DataSource) {
     products,
     shipping,
     countryRates,
-    konnect,
     flouci,
     orders: new OrdersService(
       db.getRepository(Order),
       db.getRepository(OrderItem),
       products,
-      konnect,
       shipping,
       flouci,
       store,

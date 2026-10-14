@@ -36,7 +36,7 @@ export function deliveryFee(gouvernorat: Gouvernorat) {
   return 15;
 }
 
-export type PaymentMethod = "cod" | "online" | "flouci";
+export type PaymentMethod = "cod" | "flouci";
 
 export const paymentMethods: {
   id: PaymentMethod;
@@ -49,11 +49,6 @@ export const paymentMethods: {
     hint: "Paiement sécurisé par Flouci : wallet ou carte bancaire.",
   },
   {
-    id: "online",
-    label: "Paiement en ligne",
-    hint: "Carte bancaire, e-DINAR / D17, wallet Konnect — tu es redirigé vers Konnect pour payer tout de suite.",
-  },
-  {
     id: "cod",
     label: "Paiement à la livraison",
     hint: "Espèces au livreur — uniquement si la destination est la Tunisie. On confirme par téléphone avant l’envoi.",
@@ -62,6 +57,7 @@ export const paymentMethods: {
 
 export function paymentLabel(id: string) {
   if (id === "flouci") return "Flouci";
+  if (id === "online") return "Paiement en ligne (ancien)";
   if (id === "d17") return "D17 (La Poste)";
   return paymentMethods.find((m) => m.id === id)?.label ?? id;
 }
