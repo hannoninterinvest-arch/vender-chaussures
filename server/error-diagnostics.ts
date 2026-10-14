@@ -53,6 +53,11 @@ function classify(error: unknown, depth = 0): string | undefined {
   };
   if (typeof value.message === "string" && configErrors[value.message])
     return configErrors[value.message];
+  if (
+    typeof value.message === "string" &&
+    /^JWT_SECRET (est obligatoire|doit contenir)/.test(value.message)
+  )
+    return "JWT_SECRET_MISSING";
   if (typeof value.code === "string" && hints[value.code]) return value.code;
   if (
     typeof value.message === "string" &&

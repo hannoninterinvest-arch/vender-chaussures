@@ -16,6 +16,10 @@ describe("safe server diagnostics", () => {
       new Error("JWT_SECRET est obligatoire en production"),
       "JWT_SECRET_MISSING",
     ],
+    [
+      new Error("JWT_SECRET doit contenir au moins 32 octets"),
+      "JWT_SECRET_MISSING",
+    ],
     [{ driverError: { code: "42P01" } }, "42P01"],
     [{ cause: { code: "28P01" } }, "28P01"],
     [new AggregateError([{ code: "ECONNREFUSED" }]), "ECONNREFUSED"],
