@@ -205,9 +205,9 @@ export const fallbackProducts: Product[] = fallbackCatalog.map(withColorImages);
 export const categories: ShopCategory[] = [
   { slug: "ville", label: "Ville", image: shot("derby-cognac.jpg") },
   { slug: "ceremonie", label: "Cérémonie", image: shot("oxford-cognac.jpg") },
-  { slug: "mocassins", label: "Mocassins", image: shot("mocassin-cognac.jpg") },
-  { slug: "bottes", label: "Bottes", image: shot("bottine-cognac.jpg") },
-  { slug: "femme", label: "Femme", image: shot("sandale-or.jpg") },
+  { slug: "mocassins", label: "Mocassins", image: shot("elvaro-mocassins-noirs.webp") },
+  { slug: "bottes", label: "Bottes", image: shot("elvaro-bottines-chelsea-noires.webp") },
+  { slug: "femme", label: "Femme", image: shot("elvaro-ballerines-marron.webp") },
 ];
 
 export function relatedProducts(list: Product[], id: string, limit = 4) {
