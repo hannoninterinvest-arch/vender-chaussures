@@ -85,4 +85,13 @@ describe('admin account security', () => {
     expect(JSON.stringify(warn.mock.calls)).not.toMatch(/secret-attempt|nobody@|plain-text/);
     warn.mockRestore();
   });
+  it('rejects accounts of other applications sharing the users table', async () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    user.role = 'investor' as User['role'];
+    const token = service.signToken(user);
+    await expect(service.login({ email: user.email, password: 'old-password-strong' })).rejects.toMatchObject({ status: 401 });
+    await expect(service.userFromToken(token)).rejects.toMatchObject({ status: 401 });
+    expect(warn).toHaveBeenCalledWith('Staff login refused', { reason: 'not_a_staff_account' });
+    warn.mockRestore();
+  });
 });

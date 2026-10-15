@@ -62,4 +62,24 @@ describe("legacy users table with a `password` column", () => {
     expect(rows.every((row) => row.password.startsWith("$2"))).toBe(true);
     await expect(auth.login({ email: "admin@example.com", password: "another-strong-password" })).resolves.toHaveProperty("token");
   });
+
+  it("matches mixed-case e-mails, ignores other applications' accounts and never edits them", async () => {
+    const auth = new AuthService(db.getRepository(User), config);
+    await db.query(
+      'INSERT INTO "users" ("id","email","name","password","role","active") VALUES ($1,$2,$3,$4,$5,$6)',
+      ["mixed", "Boss@Example.COM", "Boss", await hash("mixed-case-password", 4), "admin", true],
+    );
+    await db.query(
+      'INSERT INTO "users" ("id","email","name","password","role","active") VALUES ($1,$2,$3,$4,$5,$6)',
+      ["investor", "investor@example.com", "Investor", await hash("investor-password-1", 4), "investor", true],
+    );
+    await expect(auth.login({ email: "boss@example.com", password: "mixed-case-password" })).resolves.toHaveProperty("token");
+    await expect(auth.login({ email: "investor@example.com", password: "investor-password-1" })).rejects.toMatchObject({ status: 401 });
+    expect((await auth.listStaff()).map((row) => row.id)).not.toContain("investor");
+    const actor = { id: "mixed", email: "boss@example.com", name: "Boss", role: "admin" as const };
+    await expect(auth.removeStaff("investor", actor)).rejects.toMatchObject({ status: 400 });
+    await expect(auth.updateStaff("investor", { active: false }, actor)).rejects.toMatchObject({ status: 400 });
+    await expect(auth.createStaff({ email: "INVESTOR@example.com", name: "X", password: "some-long-password", role: "vendeur" })).rejects.toMatchObject({ status: 409 });
+    expect(await db.query('SELECT 1 FROM "users" WHERE "id" = $1', ["investor"])).toHaveLength(1);
+  });
 });

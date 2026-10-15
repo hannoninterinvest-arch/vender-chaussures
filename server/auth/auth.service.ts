@@ -8,7 +8,7 @@ import { ConfigService } from '@/server/config';
 import { compare, hash } from 'bcryptjs';
 import { createHash, randomUUID } from 'crypto';
 import { sign, verify } from 'jsonwebtoken';
-import { Repository } from 'typeorm';
+import { ILike, In, Repository } from 'typeorm';
 import type { AuthUser } from './auth.types';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateStaffDto } from './dto/create-staff.dto';
@@ -19,6 +19,10 @@ import type { StaffRole } from './user.entity';
 import { User } from './user.entity';
 
 const TOKEN_HOURS = 2;
+// The users table can be shared with another application (e.g. investor accounts):
+// only these roles may use the shop back office.
+const STAFF_ROLES: StaffRole[] = ['admin', 'vendeur'];
+const LIKE_SPECIALS = /[\\%_]/g;
 const RETIRED_PASSWORDS = new Set(['KicksAdmin123', 'Vendeur123']);
 // Compared when the account does not exist so response time does not reveal valid e-mails.
 const BCRYPT_HASH = /^\$2[aby]\$\d{2}\$.{53}$/;
@@ -31,15 +35,15 @@ export class AuthService {
   ) {}
 
   async onModuleInit() {
-    const count = await this.users.count();
+    const count = await this.users.count({ where: { role: In(STAFF_ROLES) } });
     if (count > 0) {
       if (this.config.get<string>('ADMIN_RESET_PASSWORD') === 'true') {
         const email = this.config.get<string>('ADMIN_EMAIL')?.trim().toLowerCase();
         const password = this.config.get<string>('ADMIN_PASSWORD');
         if (!email || !password) throw new Error('Réinitialisation admin : ADMIN_EMAIL et ADMIN_PASSWORD requis.');
         this.validatePassword(password);
-        const admin = await this.users.findOne({ where: { email, role: 'admin', active: true } });
-        if (!admin) throw new Error('Administrateur actif introuvable pour la réinitialisation.');
+        const admin = await this.findByEmail(email);
+        if (!admin || admin.role !== 'admin' || !admin.active) throw new Error('Administrateur actif introuvable pour la réinitialisation.');
         admin.passwordHash = await hash(password, 12);
         await this.users.save(admin);
         console.warn('Mot de passe admin réinitialisé. Retire ADMIN_RESET_PASSWORD et ADMIN_PASSWORD après ce démarrage.');
@@ -107,16 +111,18 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const email = dto.email.trim().toLowerCase();
-    const user = await this.users.findOne({ where: { email } });
+    const user = await this.findByEmail(email);
     const ok = await compare(dto.password, user?.passwordHash ?? DECOY_HASH);
-    if (!user || !user.active || RETIRED_PASSWORDS.has(dto.password) || !ok) {
+    if (!user || !user.active || !STAFF_ROLES.includes(user.role) || RETIRED_PASSWORDS.has(dto.password) || !ok) {
       // Server-side only, without e-mail or password: the client always gets the same message.
       console.warn('Staff login refused', {
         reason: !user
           ? 'unknown_email'
           : !user.active
             ? 'inactive_account'
-            : RETIRED_PASSWORDS.has(dto.password)
+            : !STAFF_ROLES.includes(user.role)
+              ? 'not_a_staff_account'
+              : RETIRED_PASSWORDS.has(dto.password)
               ? 'retired_password'
               : !BCRYPT_HASH.test(user.passwordHash ?? '')
                 ? 'stored_password_is_not_a_bcrypt_hash'
@@ -139,7 +145,7 @@ export class AuthService {
     if (typeof payload.sub !== 'string') throw new UnauthorizedException('Session expirée');
     // Database errors propagate as 500 so an outage does not look like an expired session.
     const user = await this.users.findOne({ where: { id: payload.sub } });
-    if (!user || !user.active || payload.credentials !== this.credentialVersion(user)) {
+    if (!user || !user.active || !STAFF_ROLES.includes(user.role) || payload.credentials !== this.credentialVersion(user)) {
       throw new UnauthorizedException('Session expirée');
     }
     return user;
@@ -158,7 +164,7 @@ export class AuthService {
   }
 
   listStaff() {
-    return this.users.find({ order: { createdAt: 'ASC' } }).then((rows) =>
+    return this.users.find({ where: { role: In(STAFF_ROLES) }, order: { createdAt: 'ASC' } }).then((rows) =>
       rows.map((u) => ({ ...this.toPublic(u), active: u.active, createdAt: u.createdAt })),
     );
   }
@@ -168,7 +174,7 @@ export class AuthService {
   }
 
   async updateStaff(id: string, dto: UpdateStaffDto, actor: AuthUser) {
-    const user = await this.users.findOne({ where: { id } });
+    const user = await this.users.findOne({ where: { id, role: In(STAFF_ROLES) } });
     if (!user) throw new BadRequestException('Compte introuvable');
 
     if (dto.role && dto.role !== 'admin' && user.role === 'admin') {
@@ -195,7 +201,7 @@ export class AuthService {
     if (actor.id === id) {
       throw new BadRequestException('Tu ne peux pas supprimer ton propre compte');
     }
-    const user = await this.users.findOne({ where: { id } });
+    const user = await this.users.findOne({ where: { id, role: In(STAFF_ROLES) } });
     if (!user) throw new BadRequestException('Compte introuvable');
     if (user.role === 'admin') await this.ensureAnotherAdmin(id);
     await this.users.remove(user);
@@ -208,6 +214,11 @@ export class AuthService {
     if (remaining.length < 1) {
       throw new BadRequestException('Il doit rester au moins un administrateur actif');
     }
+  }
+
+  // Case-insensitive: accounts created by another application may keep mixed-case e-mails.
+  private findByEmail(email: string) {
+    return this.users.findOne({ where: { email: ILike(email.replace(LIKE_SPECIALS, '\\$&')) } });
   }
 
   private credentialVersion(user: User) {
@@ -223,7 +234,7 @@ export class AuthService {
   private async createUser(email: string, name: string, password: string, role: StaffRole) {
     this.validatePassword(password);
     const normalized = email.trim().toLowerCase();
-    const exists = await this.users.findOne({ where: { email: normalized } });
+    const exists = await this.findByEmail(normalized);
     if (exists) throw new ConflictException('Cet e-mail est déjà utilisé');
     const user = this.users.create({
       id: randomUUID(),

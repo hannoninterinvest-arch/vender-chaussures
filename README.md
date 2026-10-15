@@ -31,6 +31,10 @@ Utiliser **la même DATABASE_URL** que le backend précédent : les noms de tabl
 
 Le log Vercel indique maintenant `missing: "column …"` ou `missing: "relation …"`. Pour comparer la base aux entités sans rien modifier : `npm run db:check` (avec `DATABASE_URL` de la base concernée). Le script liste les colonnes absentes avec le `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` correspondant ; `npm run db:check -- --apply` ajoute uniquement les colonnes manquantes (jamais de suppression ni de modification de données). Une colonne présente sous un autre nom est signalée comme « inconnue du code ». Cas particulier géré par l'application : si `users` contient `password` mais pas `passwordHash`, le hash bcrypt est lu et écrit dans `password`, sans modifier la base.
 
+### Base partagée avec une autre application
+
+Si la table `users` est partagée (comptes `investor`, colonnes `firstName`, `status`…), seuls les comptes de rôle `admin` ou `vendeur` peuvent se connecter à l'espace équipe, apparaître dans **Équipe**, être modifiés ou supprimés. Les e-mails sont comparés sans tenir compte de la casse. Attention : un compte `admin` actif de l'autre application est aussi administrateur de la boutique ; garder des e-mails distincts pour séparer les accès.
+
 ### Base neuve / initialisation explicite
 
 Depuis le dépôt local, renseigner les variables privées dans `.env.local`, dont `ADMIN_EMAIL` et un `ADMIN_PASSWORD` fort, puis :
