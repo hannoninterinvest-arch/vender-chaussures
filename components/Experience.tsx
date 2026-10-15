@@ -110,7 +110,7 @@ export function WhatsAppFab() {
       rel="noreferrer"
       aria-label="Écrire sur WhatsApp"
       className={`wa-fab fixed left-5 z-40 grid h-12 w-12 place-items-center rounded-full bg-[#C9A45C] text-[#14110C] transition-transform hover:scale-105 ${
-        path.startsWith("/products") ? "bottom-24 lg:bottom-5" : "bottom-5"
+        path.startsWith("/products") || path.startsWith("/cart") ? "bottom-24 lg:bottom-5" : "bottom-5"
       }`}
     >
       <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>

@@ -127,15 +127,15 @@ export function ShopClient() {
   return (
     <div>
       <section className="shop-hero">
-        <div className="relative mx-auto max-w-[1280px] px-4 py-12 md:px-6 md:py-16">
+        <div className="relative mx-auto max-w-[1280px] px-4 py-7 md:px-6 md:py-16">
           <p className="text-[11px] font-semibold tracking-[0.36em] uppercase text-[#C5A059]">Boutique</p>
-          <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-[0.14em] uppercase text-[var(--fg)] md:text-6xl">
+          <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl tracking-[0.12em] uppercase text-[var(--fg)] md:text-6xl">
             {title}
           </h1>
-          <p className="mt-4 max-w-xl text-sm leading-relaxed text-[var(--muted)]">
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-[var(--muted)] md:mt-4">
             Cuir premium, allure de ville et de cérémonie. Choisis ta paire — commande sans compte.
           </p>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
+          <div className="mt-6 hidden flex-wrap items-center gap-3 md:flex">
             <span className="rounded-sm border border-[#C5A059]/50 bg-[#C5A059]/12 px-3 py-1.5 text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">
               {pairLabel}
             </span>
@@ -212,7 +212,7 @@ export function ShopClient() {
             </div>
           </aside>
 
-          <div className="grid flex-1 grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid flex-1 grid-cols-2 gap-x-3 gap-y-6 sm:gap-7 lg:grid-cols-3">
             {filtered.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}

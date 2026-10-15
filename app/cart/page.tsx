@@ -11,7 +11,7 @@ export default function CartPage() {
   const { formatPrice } = useCurrency();
 
   return (
-    <div className="mx-auto max-w-[1280px] px-4 py-10 md:px-6">
+    <div className="mx-auto max-w-[1280px] px-4 py-10 pb-32 md:px-6 lg:pb-10">
       <CheckoutSteps step={1} />
       <div className="store-panel mb-8 px-5 py-4">
         <p className="font-bold tracking-wide">Commande sans compte</p>
@@ -129,6 +129,22 @@ export default function CartPage() {
           <p className="mt-3 text-center text-xs text-[var(--muted)]">Aucun login requis</p>
         </aside>
       </div>
+
+      {lines.length > 0 && (
+        <div className="mobile-bar fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line)] bg-[var(--panel)]/95 px-3 pt-3 backdrop-blur-md lg:hidden">
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-[var(--muted)]">
+                Total · {count} article{count > 1 ? "s" : ""}
+              </p>
+              <p className="text-lg font-bold text-[#C5A059]">{formatPrice(subtotal)}</p>
+            </div>
+            <Link href="/checkout" className="gold-btn flex h-12 items-center rounded-sm px-8 text-xs uppercase">
+              Commander
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { fetchSite } from "@/lib/api";
 import { defaultSite, type SiteHome } from "@/lib/site";
@@ -37,12 +37,24 @@ export function Hero() {
     return () => window.clearInterval(timer);
   }, [photos.length]);
 
+  const touchStart = useRef<number | null>(null);
   const current = photos[index] || "";
   const prev = () => setIndex((n) => (n - 1 + photos.length) % photos.length);
   const next = () => setIndex((n) => (n + 1) % photos.length);
 
   return (
-    <section className="hero-stage">
+    <section
+      className="hero-stage"
+      onTouchStart={(e) => {
+        touchStart.current = e.touches[0].clientX;
+      }}
+      onTouchEnd={(e) => {
+        if (touchStart.current === null || photos.length < 2) return;
+        const delta = e.changedTouches[0].clientX - touchStart.current;
+        touchStart.current = null;
+        if (Math.abs(delta) > 40) (delta < 0 ? next : prev)();
+      }}
+    >
       {current ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img

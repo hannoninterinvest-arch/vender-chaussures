@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useRef, useState } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { colorImage, galleryForColor } from "@/lib/product-media";
@@ -33,6 +33,7 @@ export default function ProductPage({
   const [photo, setPhoto] = useState(0);
   const [sizeHint, setSizeHint] = useState(false);
   const [view3d, setView3d] = useState(true);
+  const touchStart = useRef<number | null>(null);
   const selectedColor = color ?? product?.colors[0]?.name ?? "";
   const modelSrc = useExistingGlb(product, selectedColor);
 
@@ -61,6 +62,14 @@ export default function ProductPage({
   function selectColor(name: string) {
     setColor(name);
     setPhoto(0);
+  }
+
+  function swipe(endX: number) {
+    if (touchStart.current === null || gallery.length < 2) return;
+    const delta = endX - touchStart.current;
+    touchStart.current = null;
+    if (Math.abs(delta) < 40) return;
+    setPhoto((n) => (n + (delta < 0 ? 1 : -1) + gallery.length) % gallery.length);
   }
 
   function add() {
@@ -93,12 +102,21 @@ export default function ProductPage({
               useVariants={!ownColorModel}
             />
           ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={mainPhoto}
-              alt={product.name}
-              className="aspect-square w-full object-cover"
-            />
+            <div
+              className="relative touch-pan-y"
+              onTouchStart={(e) => {
+                touchStart.current = e.touches[0].clientX;
+              }}
+              onTouchEnd={(e) => swipe(e.changedTouches[0].clientX)}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={mainPhoto} alt={product.name} className="aspect-square w-full object-cover" />
+              {gallery.length > 1 ? (
+                <span className="gallery-count lg:hidden">
+                  {photo + 1} / {gallery.length}
+                </span>
+              ) : null}
+            </div>
           )}
           {thumbCount > 1 ? (
             <div
@@ -153,7 +171,29 @@ export default function ProductPage({
               Tu économises {formatPrice(product.oldPrice - product.price)} sur cette paire.
             </p>
           ) : null}
-          <p className="mt-1 text-sm text-[var(--muted)]">Livraison calculée au checkout · Échange 7 jours</p>
+          <p className="mt-1 text-sm text-[var(--muted)]">Livraison calculée au checkout</p>
+          <div className="trust-chips">
+            <span className="trust-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="2.5" y="6" width="19" height="12" rx="2" />
+                <circle cx="12" cy="12" r="2.5" />
+              </svg>
+              Paiement à la livraison
+            </span>
+            <span className="trust-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M3 12a9 9 0 0 1 15.5-6.2L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.2L3 16M3 21v-5h5" />
+              </svg>
+              Échange 7 jours
+            </span>
+            <span className="trust-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 3 4 6v6c0 4.5 3.2 7.7 8 9 4.8-1.3 8-4.5 8-9V6l-8-3Z" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+              Commande sans compte
+            </span>
+          </div>
 
           <div className="mt-8">
             <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#C5A059]">
@@ -257,22 +297,41 @@ export default function ProductPage({
         <h2 className="mb-6 font-[family-name:var(--font-display)] text-3xl tracking-[0.12em] uppercase">
           Tu pourrais aussi aimer
         </h2>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-6 lg:grid-cols-4 lg:gap-6">
           {relatedProducts(products, product.id).map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
         </div>
       </section>
 
-      <div className="store-panel fixed inset-x-3 bottom-3 z-40 bg-[var(--panel)]/95 p-3 backdrop-blur-md lg:hidden">
+      <div className="mobile-bar fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line)] bg-[var(--panel)]/95 px-3 pt-3 backdrop-blur-md lg:hidden">
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs text-[var(--muted)]">{product.name}</p>
             <Price product={product} />
           </div>
-          <button type="button" onClick={add} className="gold-btn h-11 shrink-0 rounded-sm px-5 text-[11px] uppercase">
-            Ajouter
+          <button
+            type="button"
+            onClick={add}
+            className="h-11 shrink-0 rounded-sm border border-[var(--gold)] px-4 text-[11px] font-bold tracking-[0.08em] uppercase text-[var(--gold)]"
+          >
+            {size ? "Ajouter" : "Pointure ?"}
           </button>
+          <Link
+            href="/checkout"
+            onClick={(e) => {
+              if (!size) {
+                e.preventDefault();
+                setSizeHint(true);
+                toast("Choisis une pointure.");
+                return;
+              }
+              cart.add({ ...snapshot, size, qty });
+            }}
+            className="gold-btn flex h-11 shrink-0 items-center rounded-sm px-4 text-[11px] uppercase"
+          >
+            Commander
+          </Link>
         </div>
       </div>
     </div>
