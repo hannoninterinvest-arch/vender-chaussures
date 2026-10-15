@@ -34,6 +34,20 @@ describe("safe server diagnostics", () => {
     expect(errorId).toMatch(/^[0-9a-f-]{36}$/);
   });
 
+  it("names the violated constraint and table, never the offending values", () => {
+    const log = jest.spyOn(console, "error").mockImplementation(() => {});
+    reportServerError(
+      { driverError: { code: "23503", constraint: "FK_investments_user", table: "investment_requests", detail: 'Key (id)=(secret-id) is still referenced' } },
+      "DELETE",
+      "staff/:id",
+    );
+    expect(log).toHaveBeenCalledWith(
+      "API request failed",
+      expect.objectContaining({ code: "23503", constraint: "FK_investments_user", table: "investment_requests" }),
+    );
+    expect(JSON.stringify(log.mock.calls)).not.toContain("secret-id");
+  });
+
   it("never logs secrets, SQL, or arbitrary messages even in nested exceptions", () => {
     const log = jest.spyOn(console, "error").mockImplementation(() => {});
     const secret = "private-test-value-do-not-log";

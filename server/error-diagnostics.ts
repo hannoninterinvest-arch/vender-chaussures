@@ -18,6 +18,11 @@ const hints: Record<string, string> = {
     "Table PostgreSQL manquante : vérifier la base ciblée et exécuter npm run db:init sur une base neuve.",
   "42703":
     "Colonne PostgreSQL manquante : le schéma de la base ne correspond pas au code déployé.",
+  "23503":
+    "Contrainte de clé étrangère PostgreSQL : une autre table de la base partagée référence cette ligne.",
+  "23505": "Contrainte d'unicité PostgreSQL violée : la valeur existe déjà.",
+  "23502":
+    "Colonne PostgreSQL obligatoire non renseignée : lui donner une valeur par défaut ou la renseigner dans le code.",
   "42501":
     "Permissions PostgreSQL insuffisantes : vérifier les droits du rôle sur les tables et le schéma.",
   "53300": "Trop de connexions PostgreSQL : utiliser la connexion Neon pooler.",
@@ -88,6 +93,17 @@ function missingObject(error: unknown, depth = 0): string | undefined {
   return missingObject(value.driverError, depth + 1) ?? missingObject(value.cause, depth + 1);
 }
 
+// Constraint and table names are schema identifiers, not data; values are never read.
+function constraintInfo(error: unknown, depth = 0): { constraint?: string; table?: string } | undefined {
+  if (!error || typeof error !== "object" || depth > 4) return;
+  const value = error as { constraint?: unknown; table?: unknown; driverError?: unknown; cause?: unknown };
+  const identifier = /^[A-Za-z0-9_.]{1,80}$/;
+  const constraint = typeof value.constraint === "string" && identifier.test(value.constraint) ? value.constraint : undefined;
+  const table = typeof value.table === "string" && identifier.test(value.table) ? value.table : undefined;
+  if (constraint || table) return { constraint, table };
+  return constraintInfo(value.driverError, depth + 1) ?? constraintInfo(value.cause, depth + 1);
+}
+
 // Only log allowlisted diagnostics. Raw errors can contain SQL, customer data,
 // connection URLs and payment keys, so never serialize the original exception.
 export function reportServerError(
@@ -104,6 +120,7 @@ export function reportServerError(
     route,
     code,
     ...(missing ? { missing } : {}),
+    ...(/^23\d{3}$/.test(code) ? constraintInfo(error) : {}),
     hint:
       hints[code] ||
       "Erreur non reconnue : reproduire en développement et examiner la configuration du service concerné.",
