@@ -1,4 +1,4 @@
-import { AuthService } from './auth.service';
+import { AuthService, hashFormat } from './auth.service';
 import { ConfigService } from '@/server/config';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
@@ -81,7 +81,7 @@ describe('admin account security', () => {
     await expect(service.login({ email: user.email, password: 'plain-text-password' })).rejects.toMatchObject({ status: 401, message: 'E-mail ou mot de passe incorrect' });
     repo.findOne.mockResolvedValueOnce(null);
     await expect(service.login({ email: 'nobody@example.com', password: 'secret-attempt' })).rejects.toMatchObject({ status: 401 });
-    expect(warn.mock.calls.map(call => call[1])).toEqual([{ reason: 'stored_password_is_not_a_bcrypt_hash' }, { reason: 'unknown_email' }]);
+    expect(warn.mock.calls.map(call => call[1])).toEqual([{ reason: 'stored_password_is_not_a_bcrypt_hash:unrecognized_or_plain_text_length_19' }, { reason: 'unknown_email' }]);
     expect(JSON.stringify(warn.mock.calls)).not.toMatch(/secret-attempt|nobody@|plain-text/);
     warn.mockRestore();
   });
@@ -93,5 +93,14 @@ describe('admin account security', () => {
     await expect(service.userFromToken(token)).rejects.toMatchObject({ status: 401 });
     expect(warn).toHaveBeenCalledWith('Staff login refused', { reason: 'not_a_staff_account' });
     warn.mockRestore();
+  });
+  it('names the stored hash format without revealing it', () => {
+    expect(hashFormat('')).toBe('empty');
+    expect(hashFormat('$2y$10$' + 'a'.repeat(53))).toBe('bcrypt');
+    expect(hashFormat('$argon2id$v=19$m=65536,t=3,p=4$abc$def')).toBe('argon2');
+    expect(hashFormat('scrypt$16384$8$1$salt$hash')).toBe('scrypt');
+    expect(hashFormat('pbkdf2_sha256$600000$salt$hash')).toBe('pbkdf2');
+    expect(hashFormat('a'.repeat(64))).toBe('hex_64_sha256_like');
+    expect(hashFormat('hunter2')).toBe('unrecognized_or_plain_text_length_7');
   });
 });

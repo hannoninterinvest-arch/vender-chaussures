@@ -28,6 +28,20 @@ const staffRole = (user: Pick<User, 'role'>): StaffRole | null => {
   return STAFF_ROLES.find((allowed) => allowed === role) ?? null;
 };
 const storedHash = (user: Pick<User, 'passwordHash'>) => String(user.passwordHash ?? '').trim();
+// Names the storage format only (never the value) so a wrong algorithm can be diagnosed from logs.
+export function hashFormat(hash: string) {
+  const value = hash.trim();
+  if (!value) return 'empty';
+  if (BCRYPT_HASH.test(value)) return 'bcrypt';
+  if (/^\$2[aby]\$/.test(value)) return 'bcrypt_truncated_or_corrupted';
+  if (/^\$argon2(id|i|d)\$/.test(value)) return 'argon2';
+  if (/^\$?scrypt/i.test(value)) return 'scrypt';
+  if (/^\$?pbkdf2|^pbkdf2/i.test(value)) return 'pbkdf2';
+  if (/^[a-f0-9]{32}$/i.test(value)) return 'hex_32_md5_like';
+  if (/^[a-f0-9]{64}$/i.test(value)) return 'hex_64_sha256_like';
+  if (/^[a-f0-9]{128}$/i.test(value)) return 'hex_128_sha512_like';
+  return `unrecognized_or_plain_text_length_${value.length}`;
+}
 const LIKE_SPECIALS = /[\\%_]/g;
 const RETIRED_PASSWORDS = new Set(['KicksAdmin123', 'Vendeur123']);
 // Compared when the account does not exist so response time does not reveal valid e-mails.
@@ -131,7 +145,7 @@ export class AuthService {
               : RETIRED_PASSWORDS.has(dto.password)
               ? 'retired_password'
               : !BCRYPT_HASH.test(storedHash(user))
-                ? 'stored_password_is_not_a_bcrypt_hash'
+                ? `stored_password_is_not_a_bcrypt_hash:${hashFormat(storedHash(user))}`
                 : 'wrong_password',
       });
       throw new UnauthorizedException('E-mail ou mot de passe incorrect');

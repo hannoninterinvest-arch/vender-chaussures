@@ -60,6 +60,7 @@ const BCRYPT = /^\$2[aby]\$\d{2}\$.{53}$/;
 // Read-only audit of staff accounts; never prints password material.
 export async function auditUsers(db: DataSource): Promise<UserAudit[]> {
   const { User } = await import("./auth/user.entity");
+  const { hashFormat } = await import("./auth/auth.service");
   const rows = await db.getRepository(User).find({ order: { createdAt: "ASC" } });
   const seen = new Map<string, number>();
   for (const row of rows) {
@@ -74,7 +75,7 @@ export async function auditUsers(db: DataSource): Promise<UserAudit[]> {
     else if (role !== canonical) problems.push(`rôle « ${role} » à normaliser en « ${canonical} » (accepté par l'application)`);
     if (!row.active) problems.push("compte inactif");
     const hash = String(row.passwordHash ?? "");
-    if (!BCRYPT.test(hash.trim())) problems.push("mot de passe absent ou non haché en bcrypt : réinitialiser avec npm run db:init");
+    if (!BCRYPT.test(hash.trim())) problems.push(`mot de passe stocké au format « ${hashFormat(hash)} », pas en bcrypt : réinitialiser avec npm run db:init ou le SQL de dépannage`);
     else if (hash !== hash.trim()) problems.push("hash avec espaces parasites (toléré par l'application)");
     const email = String(row.email ?? "");
     if (email !== email.trim()) problems.push("e-mail avec espaces : la connexion ne le retrouvera pas");
