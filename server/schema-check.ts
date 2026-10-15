@@ -52,3 +52,36 @@ export async function schemaGaps(db: DataSource): Promise<SchemaGap[]> {
   }
   return gaps;
 }
+
+export type UserAudit = { email: string; role: string; active: boolean; problems: string[] };
+
+const BCRYPT = /^\$2[aby]\$\d{2}\$.{53}$/;
+
+// Read-only audit of staff accounts; never prints password material.
+export async function auditUsers(db: DataSource): Promise<UserAudit[]> {
+  const { User } = await import("./auth/user.entity");
+  const rows = await db.getRepository(User).find({ order: { createdAt: "ASC" } });
+  const seen = new Map<string, number>();
+  for (const row of rows) {
+    const key = String(row.email ?? "").trim().toLowerCase();
+    seen.set(key, (seen.get(key) ?? 0) + 1);
+  }
+  const audits = rows.map((row) => {
+    const problems: string[] = [];
+    const role = String(row.role ?? "");
+    const canonical = role.trim().toLowerCase();
+    if (!["admin", "vendeur"].includes(canonical)) problems.push(`rôle « ${role} » inconnu : la connexion sera refusée (attendu admin ou vendeur)`);
+    else if (role !== canonical) problems.push(`rôle « ${role} » à normaliser en « ${canonical} » (accepté par l'application)`);
+    if (!row.active) problems.push("compte inactif");
+    const hash = String(row.passwordHash ?? "");
+    if (!BCRYPT.test(hash.trim())) problems.push("mot de passe absent ou non haché en bcrypt : réinitialiser avec npm run db:init");
+    else if (hash !== hash.trim()) problems.push("hash avec espaces parasites (toléré par l'application)");
+    const email = String(row.email ?? "");
+    if (email !== email.trim()) problems.push("e-mail avec espaces : la connexion ne le retrouvera pas");
+    if ((seen.get(email.trim().toLowerCase()) ?? 0) > 1) problems.push("e-mail en double (hors casse)");
+    return { email, role, active: Boolean(row.active), problems };
+  });
+  if (!audits.some((a) => ["admin"].includes(a.role.trim().toLowerCase()) && a.active && !a.problems.some((p) => p.includes("inconnu"))))
+    audits.push({ email: "(aucun)", role: "-", active: false, problems: ["aucun administrateur actif"] });
+  return audits;
+}

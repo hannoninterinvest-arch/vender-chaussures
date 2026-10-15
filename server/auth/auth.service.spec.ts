@@ -8,10 +8,10 @@ const secret = 'security-tests-only-secret-at-least-32-bytes';
 describe('admin account security', () => {
   let user: User;
   let service: AuthService;
-  let repo: { count: jest.Mock; findOne: jest.Mock; save: jest.Mock; create: jest.Mock };
+  let repo: { count: jest.Mock; find: jest.Mock; findOne: jest.Mock; save: jest.Mock; create: jest.Mock };
   beforeEach(async () => {
     user = { id: 'admin-id', email: 'admin@example.com', name: 'Admin', role: 'admin', active: true, passwordHash: await hash('old-password-strong', 4) } as User;
-    repo = { count: jest.fn().mockResolvedValue(0), findOne: jest.fn().mockImplementation(() => Promise.resolve(user)), save: jest.fn().mockImplementation(u => Promise.resolve(u)), create: jest.fn() };
+    repo = { count: jest.fn().mockResolvedValue(0), find: jest.fn().mockImplementation(() => Promise.resolve([user])), findOne: jest.fn().mockImplementation(() => Promise.resolve(user)), save: jest.fn().mockImplementation(u => Promise.resolve(u)), create: jest.fn() };
     service = new AuthService(repo as unknown as Repository<User>, new ConfigService({ JWT_SECRET: secret, NODE_ENV: 'production' }));
   });
   it('blocks public bootstrap and never creates default accounts', async () => {

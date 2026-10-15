@@ -33,7 +33,9 @@ Le log Vercel indique maintenant `missing: "column …"` ou `missing: "relation 
 
 ### Base partagée avec une autre application
 
-Si la table `users` est partagée (comptes `investor`, colonnes `firstName`, `status`…), seuls les comptes de rôle `admin` ou `vendeur` peuvent se connecter à l'espace équipe, apparaître dans **Équipe**, être modifiés ou supprimés. Les e-mails sont comparés sans tenir compte de la casse. Attention : un compte `admin` actif de l'autre application est aussi administrateur de la boutique ; garder des e-mails distincts pour séparer les accès.
+`npm run db:check` affiche aussi l'état de chaque compte équipe (rôle, actif, hash bcrypt valide, e-mail en double) sans jamais afficher de mot de passe. L'application tolère un rôle écrit « Admin » ou « vendeur » (casse/espaces) et un hash avec espaces parasites.
+
+Si la table `users` est partagée avec une autre application (colonnes `firstName`, `status`…), seuls les comptes de rôle `admin` ou `vendeur` peuvent se connecter à l'espace équipe, apparaître dans **Équipe**, être modifiés ou supprimés. Les e-mails sont comparés sans tenir compte de la casse. Attention : un compte `admin` actif de l'autre application est aussi administrateur de la boutique ; garder des e-mails distincts pour séparer les accès.
 
 ### Base neuve / initialisation explicite
 

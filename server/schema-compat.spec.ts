@@ -82,4 +82,24 @@ describe("legacy users table with a `password` column", () => {
     await expect(auth.createStaff({ email: "INVESTOR@example.com", name: "X", password: "some-long-password", role: "vendeur" })).rejects.toMatchObject({ status: 409 });
     expect(await db.query('SELECT 1 FROM "users" WHERE "id" = $1', ["investor"])).toHaveLength(1);
   });
+
+  it("tolerates role case/spacing and padded hashes, and audits the accounts without leaking hashes", async () => {
+    const auth = new AuthService(db.getRepository(User), config);
+    const bcrypt = await hash("padded-hash-password", 4);
+    await db.query(
+      'INSERT INTO "users" ("id","email","name","password","role","active") VALUES ($1,$2,$3,$4,$5,$6)',
+      ["padded", "padded@example.com", "Padded", `${bcrypt}  `, "Vendeur ", true],
+    );
+    const session = await auth.login({ email: "padded@example.com", password: "padded-hash-password" });
+    expect(session.user.role).toBe("vendeur");
+    await expect(auth.userFromToken(session.token)).resolves.toMatchObject({ id: "padded" });
+    expect((await auth.listStaff()).find((row) => row.id === "padded")?.role).toBe("vendeur");
+    const { auditUsers } = await import("./schema-check");
+    const audit = await auditUsers(db);
+    const padded = audit.find((row) => row.email === "padded@example.com");
+    expect(padded?.problems.join(" ")).toContain("à normaliser");
+    expect(padded?.problems.join(" ")).toContain("espaces parasites");
+    expect(audit.find((row) => row.email === "investor@example.com")?.problems.join(" ")).toContain("inconnu");
+    expect(JSON.stringify(audit)).not.toContain("$2");
+  });
 });

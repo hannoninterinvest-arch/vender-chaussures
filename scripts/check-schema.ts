@@ -5,13 +5,17 @@ loadEnvConfig(process.cwd());
 //         npm run db:check -- --apply (ajoute les colonnes manquantes)
 async function check() {
   const { createDatabase } = await import("../server/database");
-  const { schemaGaps } = await import("../server/schema-check");
+  const { schemaGaps, auditUsers } = await import("../server/schema-check");
   const { adaptLegacyUsersSchema } = await import("../server/schema-compat");
   const apply = process.argv.includes("--apply");
   const db = await createDatabase().initialize();
   try {
     await adaptLegacyUsersSchema(db);
     const gaps = await schemaGaps(db);
+    console.log("Comptes équipe (table users) :");
+    for (const account of await auditUsers(db))
+      console.log(`  ${account.email} [${account.role}${account.active ? "" : ", inactif"}] ${account.problems.length ? "→ " + account.problems.join(" ; ") : "OK"}`);
+    console.log("");
     if (!gaps.length) {
       console.log("Schéma conforme : toutes les colonnes attendues existent.");
       return;
@@ -24,6 +28,11 @@ async function check() {
       }
       if (gap.unknown.length)
         console.log(`Colonnes inconnues du code dans ${gap.table} : ${gap.unknown.join(", ")}`);
+    }
+    const hasMissing = gaps.some((gap) => gap.tableMissing || gap.missing.length);
+    if (!hasMissing) {
+      console.log("\nAucune colonne manquante (les colonnes inconnues du code sont ignorées par l'application).");
+      return;
     }
     if (!apply) {
       console.log("\nAucune modification faite. Relancer avec --apply pour ajouter les colonnes manquantes.");

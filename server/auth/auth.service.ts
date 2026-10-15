@@ -8,7 +8,7 @@ import { ConfigService } from '@/server/config';
 import { compare, hash } from 'bcryptjs';
 import { createHash, randomUUID } from 'crypto';
 import { sign, verify } from 'jsonwebtoken';
-import { ILike, In, Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import type { AuthUser } from './auth.types';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateStaffDto } from './dto/create-staff.dto';
@@ -22,6 +22,12 @@ const TOKEN_HOURS = 2;
 // The users table can be shared with another application (e.g. investor accounts):
 // only these roles may use the shop back office.
 const STAFF_ROLES: StaffRole[] = ['admin', 'vendeur'];
+// Existing rows may differ in case or carry stray spaces ("Admin", "vendeur ").
+const staffRole = (user: Pick<User, 'role'>): StaffRole | null => {
+  const role = String(user.role ?? '').trim().toLowerCase();
+  return STAFF_ROLES.find((allowed) => allowed === role) ?? null;
+};
+const storedHash = (user: Pick<User, 'passwordHash'>) => String(user.passwordHash ?? '').trim();
 const LIKE_SPECIALS = /[\\%_]/g;
 const RETIRED_PASSWORDS = new Set(['KicksAdmin123', 'Vendeur123']);
 // Compared when the account does not exist so response time does not reveal valid e-mails.
@@ -35,7 +41,7 @@ export class AuthService {
   ) {}
 
   async onModuleInit() {
-    const count = await this.users.count({ where: { role: In(STAFF_ROLES) } });
+    const count = (await this.users.find()).filter((row) => staffRole(row)).length;
     if (count > 0) {
       if (this.config.get<string>('ADMIN_RESET_PASSWORD') === 'true') {
         const email = this.config.get<string>('ADMIN_EMAIL')?.trim().toLowerCase();
@@ -43,7 +49,7 @@ export class AuthService {
         if (!email || !password) throw new Error('Réinitialisation admin : ADMIN_EMAIL et ADMIN_PASSWORD requis.');
         this.validatePassword(password);
         const admin = await this.findByEmail(email);
-        if (!admin || admin.role !== 'admin' || !admin.active) throw new Error('Administrateur actif introuvable pour la réinitialisation.');
+        if (!admin || staffRole(admin) !== 'admin' || !admin.active) throw new Error('Administrateur actif introuvable pour la réinitialisation.');
         admin.passwordHash = await hash(password, 12);
         await this.users.save(admin);
         console.warn('Mot de passe admin réinitialisé. Retire ADMIN_RESET_PASSWORD et ADMIN_PASSWORD après ce démarrage.');
@@ -97,13 +103,13 @@ export class AuthService {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: user.role,
+      role: staffRole(user) ?? user.role,
     };
   }
 
   signToken(user: User) {
     return sign(
-      { sub: user.id, email: user.email, role: user.role, credentials: this.credentialVersion(user) },
+      { sub: user.id, email: user.email, role: staffRole(user) ?? user.role, credentials: this.credentialVersion(user) },
       this.jwtSecret(),
       { expiresIn: `${TOKEN_HOURS}h`, algorithm: 'HS256', issuer: 'elvaro-api', audience: 'elvaro-staff' },
     );
@@ -112,19 +118,19 @@ export class AuthService {
   async login(dto: LoginDto) {
     const email = dto.email.trim().toLowerCase();
     const user = await this.findByEmail(email);
-    const ok = await compare(dto.password, user?.passwordHash ?? DECOY_HASH);
-    if (!user || !user.active || !STAFF_ROLES.includes(user.role) || RETIRED_PASSWORDS.has(dto.password) || !ok) {
+    const ok = await compare(dto.password, user ? storedHash(user) : DECOY_HASH);
+    if (!user || !user.active || !staffRole(user) || RETIRED_PASSWORDS.has(dto.password) || !ok) {
       // Server-side only, without e-mail or password: the client always gets the same message.
       console.warn('Staff login refused', {
         reason: !user
           ? 'unknown_email'
           : !user.active
             ? 'inactive_account'
-            : !STAFF_ROLES.includes(user.role)
+            : !staffRole(user)
               ? 'not_a_staff_account'
               : RETIRED_PASSWORDS.has(dto.password)
               ? 'retired_password'
-              : !BCRYPT_HASH.test(user.passwordHash ?? '')
+              : !BCRYPT_HASH.test(storedHash(user))
                 ? 'stored_password_is_not_a_bcrypt_hash'
                 : 'wrong_password',
       });
@@ -145,7 +151,7 @@ export class AuthService {
     if (typeof payload.sub !== 'string') throw new UnauthorizedException('Session expirée');
     // Database errors propagate as 500 so an outage does not look like an expired session.
     const user = await this.users.findOne({ where: { id: payload.sub } });
-    if (!user || !user.active || !STAFF_ROLES.includes(user.role) || payload.credentials !== this.credentialVersion(user)) {
+    if (!user || !user.active || !staffRole(user) || payload.credentials !== this.credentialVersion(user)) {
       throw new UnauthorizedException('Session expirée');
     }
     return user;
@@ -153,7 +159,7 @@ export class AuthService {
 
   async changePassword(id: string, dto: ChangePasswordDto) {
     const user = await this.users.findOne({ where: { id } });
-    if (!user || !user.active || !(await compare(dto.currentPassword, user.passwordHash))) {
+    if (!user || !user.active || !(await compare(dto.currentPassword, storedHash(user)))) {
       throw new UnauthorizedException('Mot de passe actuel incorrect');
     }
     this.validatePassword(dto.newPassword);
@@ -164,8 +170,8 @@ export class AuthService {
   }
 
   listStaff() {
-    return this.users.find({ where: { role: In(STAFF_ROLES) }, order: { createdAt: 'ASC' } }).then((rows) =>
-      rows.map((u) => ({ ...this.toPublic(u), active: u.active, createdAt: u.createdAt })),
+    return this.users.find({ order: { createdAt: 'ASC' } }).then((rows) =>
+      rows.filter((u) => staffRole(u)).map((u) => ({ ...this.toPublic(u), active: u.active, createdAt: u.createdAt })),
     );
   }
 
@@ -174,13 +180,13 @@ export class AuthService {
   }
 
   async updateStaff(id: string, dto: UpdateStaffDto, actor: AuthUser) {
-    const user = await this.users.findOne({ where: { id, role: In(STAFF_ROLES) } });
+    const user = await this.staffById(id);
     if (!user) throw new BadRequestException('Compte introuvable');
 
-    if (dto.role && dto.role !== 'admin' && user.role === 'admin') {
+    if (dto.role && dto.role !== 'admin' && staffRole(user) === 'admin') {
       await this.ensureAnotherAdmin(id);
     }
-    if (dto.active === false && user.role === 'admin') {
+    if (dto.active === false && staffRole(user) === 'admin') {
       await this.ensureAnotherAdmin(id);
     }
     if (actor.id === id && dto.active === false) {
@@ -201,19 +207,24 @@ export class AuthService {
     if (actor.id === id) {
       throw new BadRequestException('Tu ne peux pas supprimer ton propre compte');
     }
-    const user = await this.users.findOne({ where: { id, role: In(STAFF_ROLES) } });
+    const user = await this.staffById(id);
     if (!user) throw new BadRequestException('Compte introuvable');
-    if (user.role === 'admin') await this.ensureAnotherAdmin(id);
+    if (staffRole(user) === 'admin') await this.ensureAnotherAdmin(id);
     await this.users.remove(user);
     return { ok: true };
   }
 
   private async ensureAnotherAdmin(exceptId: string) {
-    const admins = await this.users.find({ where: { role: 'admin', active: true } });
+    const admins = (await this.users.find()).filter((row) => staffRole(row) === 'admin' && row.active);
     const remaining = admins.filter((admin) => admin.id !== exceptId);
     if (remaining.length < 1) {
       throw new BadRequestException('Il doit rester au moins un administrateur actif');
     }
+  }
+
+  private async staffById(id: string) {
+    const user = await this.users.findOne({ where: { id } });
+    return user && staffRole(user) ? user : null;
   }
 
   // Case-insensitive: accounts created by another application may keep mixed-case e-mails.
