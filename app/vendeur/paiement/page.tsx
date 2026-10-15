@@ -83,69 +83,82 @@ export default function PaymentTestPage() {
     }
   }
 
+  const tone = status?.paid ? "ok" : status?.failed ? "bad" : "warn";
   return (
-    <div className="grid gap-8 lg:grid-cols-2">
-      <section className="space-y-4 rounded-[4px] border border-[#C5A059]/35 bg-white p-6">
-        <h1 className="font-[family-name:var(--font-display)] text-2xl tracking-[0.08em] uppercase">Configuration Flouci</h1>
-        <p className="text-sm text-[#666]">Contrôle sans appel au prestataire. Les clés ne sont jamais affichées.</p>
-        {!diagnostic && <p className="text-sm text-[#666]">Analyse…</p>}
+    <div>
+      <header className="bo-pagehead">
+        <div>
+          <p className="bo-eyebrow">Administration</p>
+          <h1 className="bo-title">Paiement Flouci</h1>
+          <p className="bo-sub">
+            Vérifie la configuration, puis ouvre un paiement de test de 1 TND pour valider les clés, le retour sur le site et la lecture du
+            résultat.
+          </p>
+        </div>
         {diagnostic && (
-          <>
-            <p className={`font-bold ${diagnostic.ready ? "text-green-700" : "text-red-600"}`}>
-              {diagnostic.ready ? "Configuration complète" : "Configuration incomplète"}
+          <span className={`bo-badge ${diagnostic.ready ? "bo-badge-ok" : "bo-badge-bad"}`}>
+            {diagnostic.ready ? "Configuration complète" : "Configuration incomplète"}
+          </span>
+        )}
+      </header>
+
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+        <section className="bo-card overflow-hidden">
+          <div className="bo-card-pad border-b border-[#e7dfcd]">
+            <h2>1 · Configuration</h2>
+            <p className="mt-1 text-xs text-[#9a917f]">Contrôle local, sans appel au prestataire. Les clés ne sont jamais affichées.</p>
+          </div>
+          {!diagnostic && <p className="bo-card-pad text-sm text-[#6f675a]">Analyse en cours…</p>}
+          {diagnostic?.checks.map((item) => (
+            <div key={item.id} className="bo-check">
+              <span className={`bo-dot ${item.ok ? "bo-dot-ok" : "bo-dot-bad"}`}>{item.ok ? "✓" : "!"}</span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">{item.label}</p>
+                <p className="mt-0.5 break-words text-sm text-[#6f675a]">{item.detail}</p>
+              </div>
+            </div>
+          ))}
+        </section>
+
+        <section className="bo-card bo-card-pad space-y-4">
+          <div>
+            <h2>2 · Paiement de test</h2>
+            <p className="mt-1 text-sm leading-relaxed text-[#6f675a]">
+              Ouvre une vraie session Flouci de 1 TND, sans créer de commande. Si tu paies, ce montant est réellement débité.
             </p>
-            <ul className="space-y-2">
-              {diagnostic.checks.map((item) => (
-                <li key={item.id} className="rounded border border-[#E5E5E5] p-3 text-sm">
-                  <p className="font-medium">
-                    <span className={item.ok ? "text-green-700" : "text-red-600"}>{item.ok ? "OK" : "À corriger"}</span> · {item.label}
-                  </p>
-                  <p className="mt-1 break-all text-[#666]">{item.detail}</p>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </section>
-
-      <section className="space-y-4 rounded-[4px] border border-[#C5A059]/35 bg-white p-6">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl tracking-[0.08em] uppercase">Paiement de test</h2>
-        <p className="text-sm text-[#666]">
-          Ouvre une vraie session Flouci de 1 TND, sans créer de commande. Elle valide les clés, la redirection de retour et la
-          lecture du résultat. Si tu paies, ce montant est réellement débité.
-        </p>
-        <button
-          type="button"
-          onClick={() => void start()}
-          disabled={busy !== "" || diagnostic?.ready === false}
-          className="gold-btn rounded-sm px-5 py-3 text-xs uppercase disabled:opacity-60"
-        >
-          {busy === "start" ? "Ouverture…" : "Lancer un paiement de test"}
-        </button>
-        {diagnostic?.ready === false && <p className="text-sm text-red-600">Corrige d’abord la configuration.</p>}
-
-        {test && (
-          <div className="space-y-3 rounded border border-[#E5E5E5] p-3 text-sm">
-            <p className="text-green-700">La session Flouci s’est ouverte : les clés sont acceptées.</p>
-            <a href={test.payUrl} className="gold-btn inline-block rounded-sm px-4 py-2 text-xs uppercase" rel="noopener noreferrer">
-              Ouvrir la page de paiement
-            </a>
-            <button type="button" className="ml-3 underline" disabled={busy !== ""} onClick={() => void check(test.paymentRef)}>
-              Vérifier le résultat
-            </button>
           </div>
-        )}
-
-        {status && (
-          <div
-            role="status"
-            className={`rounded border p-3 text-sm ${status.paid ? "border-green-600 text-green-700" : status.failed ? "border-red-600 text-red-600" : "border-[#C5A059]"}`}
+          <button
+            type="button"
+            onClick={() => void start()}
+            disabled={busy !== "" || diagnostic?.ready === false}
+            className="bo-btn bo-btn-primary w-full py-3"
           >
-            <p className="font-bold">{STATUS_TEXT[status.status] ?? `Statut Flouci : ${status.status}`}</p>
-            <p>Montant : {status.amountTnd.toFixed(3)} TND</p>
-          </div>
-        )}
-      </section>
+            {busy === "start" ? "Ouverture…" : "Lancer un paiement de test"}
+          </button>
+          {diagnostic?.ready === false && <p className="text-sm text-[#b3261e]">Corrige d’abord la configuration.</p>}
+
+          {test && (
+            <div className="space-y-3 rounded-xl border border-[#e7dfcd] bg-[#fffaf0] p-4 text-sm">
+              <p className="font-semibold text-[#1f7a4d]">Session ouverte : les clés sont acceptées par Flouci.</p>
+              <div className="flex flex-wrap gap-2">
+                <a href={test.payUrl} className="bo-btn bo-btn-primary" rel="noopener noreferrer">
+                  Ouvrir la page de paiement
+                </a>
+                <button type="button" className="bo-btn" disabled={busy !== ""} onClick={() => void check(test.paymentRef)}>
+                  Vérifier le résultat
+                </button>
+              </div>
+            </div>
+          )}
+
+          {status && (
+            <div role="status" className={`bo-alert bo-alert-${tone}`}>
+              <p className="font-bold">{STATUS_TEXT[status.status] ?? `Statut Flouci : ${status.status}`}</p>
+              <p className="mt-1">Montant : {status.amountTnd.toFixed(3)} TND</p>
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

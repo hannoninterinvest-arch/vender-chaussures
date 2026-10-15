@@ -40,7 +40,7 @@ export default function SellerHomePage() {
 
   if (error) return <p className="text-red-600">{error}</p>;
   if (!stats)
-    return <p className="text-sm text-[#666]">Chargement du tableau…</p>;
+    return <p className="text-sm text-[#6f675a]">Chargement du tableau…</p>;
 
   const cards = [
     {
@@ -87,133 +87,96 @@ export default function SellerHomePage() {
 
   return (
     <div>
-      <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-[0.1em] uppercase">
-        Tableau de bord
-      </h1>
-      <p className="mt-1 text-sm text-[#666]">
-        Vue d’ensemble des ventes livrées. Seules les commandes livrées et
-        réellement payées comptent dans les bénéfices. Les photos de la page de
-        garde se choisissent dans{" "}
-        <Link href="/vendeur/vitrine" className="font-bold text-[#C5A059]">
-          Page d’accueil
-        </Link>
-        .
-      </p>
+      <header className="bo-pagehead">
+        <div>
+          <p className="bo-eyebrow">Vue d’ensemble</p>
+          <h1 className="bo-title">Tableau de bord</h1>
+          <p className="bo-sub">
+            Seules les commandes livrées et réellement payées comptent dans les bénéfices. Les photos de la page de garde se
+            choisissent dans{" "}
+            <Link href="/vendeur/vitrine" className="font-semibold text-[#b48a2f] underline-offset-2 hover:underline">
+              Page d’accueil
+            </Link>
+            .
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/vendeur/produits" className="bo-btn bo-btn-primary">
+            Ajouter un produit
+          </Link>
+          <Link href="/vendeur/commandes" className="bo-btn">
+            Voir les commandes
+          </Link>
+        </div>
+      </header>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {cards.map((c) => (
-          <div
-            key={c.label}
-            className="rounded-[4px] border border-[#C5A059]/35 bg-white p-5"
-          >
-            <p className="text-sm text-[#666]">{c.label}</p>
-            <p className="mt-2 text-3xl font-black text-[#C5A059]">{c.value}</p>
-            <p className="mt-1 text-xs text-[#888]">{c.hint}</p>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {cards.map((c, index) => (
+          <div key={c.label} className={`bo-card bo-kpi ${index < 2 ? "is-hero" : ""}`}>
+            <p className="bo-kpi-label">{c.label}</p>
+            <p className="bo-kpi-value">{c.value}</p>
+            <p className="bo-kpi-hint">{c.hint}</p>
           </div>
         ))}
       </div>
 
       {wholesale && wholesale.total > 0 && (
-        <div className="mt-6 rounded-[4px] border border-[#C5A059]/35 bg-white p-6">
+        <div className="bo-card bo-card-pad mt-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-bold">Demandes de grossistes</h2>
-              <p className="mt-1 text-sm text-[#666]">
+              <h2>Demandes de grossistes</h2>
+              <p className="mt-1 text-sm text-[#6f675a]">
                 {wholesale.nouveau > 0
                   ? `${wholesale.nouveau} grossiste${wholesale.nouveau > 1 ? "s" : ""} à rappeler`
                   : "Aucun rappel en attente"}
-                {wholesale.enCours > 0
-                  ? ` · ${wholesale.enCours} en négociation`
-                  : ""}
-                {wholesale.conclu > 0
-                  ? ` · ${wholesale.conclu} conclu(es)`
-                  : ""}
+                {wholesale.enCours > 0 ? ` · ${wholesale.enCours} en négociation` : ""}
+                {wholesale.conclu > 0 ? ` · ${wholesale.conclu} conclu(es)` : ""}
               </p>
             </div>
-            <Link
-              href="/vendeur/grossistes"
-              className="gold-btn rounded-sm px-4 py-3 text-xs uppercase"
-            >
+            <Link href="/vendeur/grossistes" className="bo-btn bo-btn-primary">
               Voir les {wholesale.total} demande{wholesale.total > 1 ? "s" : ""}
             </Link>
           </div>
         </div>
       )}
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <div className="rounded-[4px] border border-[#C5A059]/35 bg-white p-6">
-          <h2 className="text-lg font-bold">Meilleur produit</h2>
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <div className="bo-card bo-card-pad">
+          <h2>Meilleur produit</h2>
           {stats.bestProduct ? (
             <div className="mt-4 flex gap-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={stats.bestProduct.image}
-                alt=""
-                className="h-24 w-24 rounded-2xl object-cover bg-[#EEE]"
-              />
+              <img src={stats.bestProduct.image} alt="" className="h-24 w-24 rounded-xl bg-[#eee] object-cover" />
               <div>
-                <p className="text-xl font-black">{stats.bestProduct.name}</p>
-                <p className="mt-1 text-sm text-[#666]">
-                  {stats.bestProduct.qty} paires vendues (livrées)
-                </p>
-                <p className="mt-2 font-bold text-[#C5A059]">
-                  {formatTnd(stats.bestProduct.profit)} de bénéfice
-                </p>
+                <p className="text-xl font-bold">{stats.bestProduct.name}</p>
+                <p className="mt-1 text-sm text-[#6f675a]">{stats.bestProduct.qty} paires vendues (livrées)</p>
+                <p className="mt-2 font-semibold text-[#b48a2f]">{formatTnd(stats.bestProduct.profit)} de bénéfice</p>
               </div>
             </div>
           ) : (
-            <p className="mt-4 text-sm text-[#666]">
-              Aucune vente livrée pour le moment. Dès qu’une commande est
-              marquée livrée, le top produit apparaît ici.
+            <p className="mt-4 text-sm leading-relaxed text-[#6f675a]">
+              Aucune vente livrée pour le moment. Dès qu’une commande est marquée livrée, le top produit apparaît ici.
             </p>
           )}
         </div>
 
-        <div className="rounded-[4px] border border-[#C5A059]/35 bg-white p-6">
-          <h2 className="text-lg font-bold">Top ventes</h2>
+        <div className="bo-card bo-card-pad">
+          <h2>Top ventes</h2>
           <ul className="mt-4 space-y-3">
             {stats.topProducts.map((p, i) => (
-              <li
-                key={p.productId}
-                className="flex items-center justify-between gap-3"
-              >
+              <li key={p.productId} className="flex items-center justify-between gap-3">
                 <span className="flex items-center gap-3">
-                  <span className="grid h-7 w-7 place-items-center rounded-full bg-[#F5F5F5] text-xs font-bold">
-                    {i + 1}
-                  </span>
+                  <span className="grid h-7 w-7 place-items-center rounded-full bg-[#f3e8c8] text-xs font-bold text-[#7a5a14]">{i + 1}</span>
                   <span className="font-medium">{p.name}</span>
                 </span>
-                <span className="text-sm text-[#666]">
+                <span className="text-sm text-[#6f675a]">
                   {p.qty} u. · {formatTnd(p.revenue)}
                 </span>
               </li>
             ))}
-            {stats.topProducts.length === 0 && (
-              <li className="text-sm text-[#666]">Pas encore de classement.</li>
-            )}
+            {stats.topProducts.length === 0 && <li className="text-sm text-[#6f675a]">Pas encore de classement.</li>}
           </ul>
         </div>
-      </div>
-
-      <div className="mt-8 flex flex-wrap gap-3">
-        <Link
-          href="/vendeur/produits"
-          className="gold-btn rounded-sm px-4 py-3 text-xs uppercase"
-        >
-          Ajouter un produit
-        </Link>
-        <Link
-          href="/vendeur/commandes"
-          className="rounded-sm border border-[#C5A059]/50 bg-white px-4 py-3 text-sm font-bold"
-        >
-          Voir les commandes
-        </Link>
-        <Link
-          href="/vendeur/grossistes"
-          className="rounded-sm border border-[#C5A059]/50 bg-white px-4 py-3 text-sm font-bold"
-        >
-          Demandes de gros
-        </Link>
       </div>
     </div>
   );
