@@ -215,20 +215,23 @@ export class AuthService {
       throw new BadRequestException('Tu ne peux pas désactiver ton propre compte');
     }
 
+    const changes: Partial<Pick<User, 'email' | 'name' | 'role' | 'active' | 'passwordHash'>> = {};
     if (dto.email) {
       const email = dto.email.trim().toLowerCase();
       const taken = await this.findByEmail(email);
       if (taken && taken.id !== id) throw new ConflictException('Cet e-mail est déjà utilisé');
-      user.email = email;
+      changes.email = email;
     }
-    if (dto.name) user.name = dto.name.trim();
-    if (dto.role) user.role = dto.role;
-    if (dto.active !== undefined) user.active = dto.active;
+    if (dto.name) changes.name = dto.name.trim();
+    if (dto.role) changes.role = dto.role;
+    if (dto.active !== undefined) changes.active = dto.active;
     if (dto.password) {
       this.validatePassword(dto.password);
-      user.passwordHash = await hash(dto.password, 12);
+      changes.passwordHash = await hash(dto.password, 12);
     }
-    return this.toPublic(await this.persist(user));
+    // A single UPDATE statement: no read-modify-write transaction on a table shared with another app.
+    if (Object.keys(changes).length) await this.run(() => this.users.update({ id }, changes));
+    return this.toPublic(Object.assign(user, changes));
   }
 
   async removeStaff(id: string, actor: AuthUser) {
@@ -238,14 +241,7 @@ export class AuthService {
     const user = await this.staffById(id);
     if (!user) throw new BadRequestException('Compte introuvable');
     if (staffRole(user) === 'admin') await this.ensureAnotherAdmin(id);
-    try {
-      await this.users.remove(user);
-    } catch (error) {
-      if (pgError(error)?.code === '23503') {
-        throw new ConflictException('Ce compte est référencé par d’autres données de la base : désactive-le au lieu de le supprimer.');
-      }
-      throw error;
-    }
+    await this.run(() => this.users.delete({ id }));
     return { ok: true };
   }
 
@@ -294,12 +290,15 @@ export class AuthService {
   }
 
   // The users table may be shared with another application whose constraints the shop does not know.
-  private async persist(user: User) {
+  private async run<T>(operation: () => Promise<T>) {
     try {
-      return await this.users.save(user);
+      return await operation();
     } catch (error) {
       const failure = pgError(error);
       if (failure?.code === '23505') throw new ConflictException('Cet e-mail est déjà utilisé');
+      if (failure?.code === '23503') {
+        throw new ConflictException('Ce compte est référencé par d’autres données de la base : désactive-le au lieu de le supprimer.');
+      }
       if (failure?.code === '23502') {
         throw new BadRequestException(
           `La table users exige la colonne « ${failure.column ?? 'inconnue'} », que la boutique ne renseigne pas : ajoute-lui une valeur par défaut (voir npm run db:check).`,
@@ -307,5 +306,9 @@ export class AuthService {
       }
       throw error;
     }
+  }
+
+  private persist(user: User) {
+    return this.run(() => this.users.save(user));
   }
 }

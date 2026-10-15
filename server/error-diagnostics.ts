@@ -93,15 +93,28 @@ function missingObject(error: unknown, depth = 0): string | undefined {
   return missingObject(value.driverError, depth + 1) ?? missingObject(value.cause, depth + 1);
 }
 
-// Constraint and table names are schema identifiers, not data; values are never read.
-function constraintInfo(error: unknown, depth = 0): { constraint?: string; table?: string } | undefined {
-  if (!error || typeof error !== "object" || depth > 4) return;
-  const value = error as { constraint?: unknown; table?: unknown; driverError?: unknown; cause?: unknown };
+// Structural identifiers only (error class, SQLSTATE, schema object names): never messages or values.
+function details(error: unknown): Record<string, string> {
   const identifier = /^[A-Za-z0-9_.]{1,80}$/;
-  const constraint = typeof value.constraint === "string" && identifier.test(value.constraint) ? value.constraint : undefined;
-  const table = typeof value.table === "string" && identifier.test(value.table) ? value.table : undefined;
-  if (constraint || table) return { constraint, table };
-  return constraintInfo(value.driverError, depth + 1) ?? constraintInfo(value.cause, depth + 1);
+  const found: Record<string, string> = {};
+  const read = (value: unknown, depth: number) => {
+    if (!value || typeof value !== "object" || depth > 4) return;
+    const row = value as Record<string, unknown>;
+    const take = (key: string, as: string, pattern: RegExp) => {
+      const item = row[key];
+      if (!(as in found) && typeof item === "string" && pattern.test(item)) found[as] = item;
+    };
+    take("name", depth === 0 ? "errorName" : "driverErrorName", identifier);
+    take("code", "sqlState", /^[0-9A-Z]{5}$/);
+    take("routine", "routine", identifier);
+    take("constraint", "constraint", identifier);
+    take("table", "table", identifier);
+    take("column", "column", identifier);
+    read(row.driverError, depth + 1);
+    read(row.cause, depth + 1);
+  };
+  read(error, 0);
+  return found;
 }
 
 // Only log allowlisted diagnostics. Raw errors can contain SQL, customer data,
@@ -120,7 +133,7 @@ export function reportServerError(
     route,
     code,
     ...(missing ? { missing } : {}),
-    ...(/^23\d{3}$/.test(code) ? constraintInfo(error) : {}),
+    ...(code === "UNEXPECTED_SERVER_ERROR" || /^23\d{3}$/.test(code) ? details(error) : {}),
     hint:
       hints[code] ||
       "Erreur non reconnue : reproduire en développement et examiner la configuration du service concerné.",

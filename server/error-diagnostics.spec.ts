@@ -48,6 +48,22 @@ describe("safe server diagnostics", () => {
     expect(JSON.stringify(log.mock.calls)).not.toContain("secret-id");
   });
 
+  it("identifies an unclassified database failure by structural fields only", () => {
+    const log = jest.spyOn(console, "error").mockImplementation(() => {});
+    class QueryFailedError extends Error {}
+    const error = new QueryFailedError("failed with secret-value");
+    error.name = "QueryFailedError";
+    Object.assign(error, { driverError: { code: "P0001", routine: "exec_stmt_raise", message: "secret-value" } });
+    reportServerError(error, "PATCH", "staff/:id");
+    expect(log.mock.calls[0][1]).toMatchObject({
+      code: "UNEXPECTED_SERVER_ERROR",
+      errorName: "QueryFailedError",
+      sqlState: "P0001",
+      routine: "exec_stmt_raise",
+    });
+    expect(JSON.stringify(log.mock.calls)).not.toContain("secret-value");
+  });
+
   it("never logs secrets, SQL, or arbitrary messages even in nested exceptions", () => {
     const log = jest.spyOn(console, "error").mockImplementation(() => {});
     const secret = "private-test-value-do-not-log";
