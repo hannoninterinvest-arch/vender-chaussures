@@ -66,6 +66,7 @@ Cette commande configure `kicks_images_signed` et `kicks_models_signed` (ou les 
 - Les prix des produits, promotions, quantités et livraison sont recalculés côté serveur. Un total devenu obsolète est refusé avant création du paiement.
 - Flouci reçoit le total, livraison incluse, en millimes. Un retour `?paid=1` ne valide aucun paiement : l'API authentifiée du prestataire vérifie statut, montant et commande.
 - Le webhook est `/api/payments/flouci/webhook` sur `APP_URL` (HTTPS obligatoire en production). Sa signature `X-Flouci-Signature` (HMAC-SHA256 avec `FLOUCI_SECRET_KEY`) est vérifiée avant toute action, puis le paiement est revérifié auprès de l'API Flouci. Les échecs Flouci (clés refusées, délai, réseau) sont journalisés sans secret.
+- **Équipe → Modifier** (admin) : ajouter, modifier (nom, e-mail, rôle, mot de passe), désactiver et supprimer les comptes. **Paiement** (admin) : audit de la configuration Flouci puis paiement de test de 1 DT, sans commande, pour vérifier clés, retour et lecture du résultat.
 - Les anciennes commandes Konnect (`payment = online`) restent lisibles mais ne peuvent plus être relancées ni vérifiées automatiquement : les traiter manuellement.
 - Une commande impayée ne peut pas être marquée en livraison/livrée. Le paiement à la livraison est limité à la Tunisie.
 - Les accès administrateur/vendeur sont vérifiés sur le serveur, et les comptes désactivés sont refusés.

@@ -86,3 +86,15 @@ export async function auditUsers(db: DataSource): Promise<UserAudit[]> {
     audits.push({ email: "(aucun)", role: "-", active: false, problems: ["aucun administrateur actif"] });
   return audits;
 }
+
+// Columns of the shared users table that the shop does not fill and that have
+// no default: inserting an account from the admin screen would fail on them.
+export async function userInsertBlockers(db: DataSource): Promise<string[]> {
+  const meta = db.entityMetadatas.find((entity) => entity.tableName === "users");
+  if (!meta) return [];
+  const known = new Set(meta.columns.map((column) => column.databaseName));
+  const rows: { column_name: string }[] = await db.query(
+    "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'users' AND is_nullable = 'NO' AND column_default IS NULL AND is_identity = 'NO' AND is_generated = 'NEVER'",
+  );
+  return rows.map((row) => row.column_name).filter((name) => !known.has(name) && name !== "password");
+}

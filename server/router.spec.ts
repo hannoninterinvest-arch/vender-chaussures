@@ -195,6 +195,49 @@ describe("Next.js API migration", () => {
     ).toBe(200);
   });
 
+  it("restricts staff management and payment tests to administrators", async () => {
+    for (const [path, method] of [
+      ["staff", "GET"],
+      ["admin/payments/diagnostic", "GET"],
+      ["admin/payments/test", "POST"],
+      ["admin/payments/test/ref", "GET"],
+    ] as const) {
+      expect((await request(path, method)).status).toBe(401);
+      expect((await request(path, method, undefined, sellerToken)).status).toBe(403);
+    }
+    const diagnostic = await request("admin/payments/diagnostic", "GET", undefined, adminToken);
+    expect(diagnostic.status).toBe(200);
+    expect(JSON.stringify(await diagnostic.json())).not.toContain("flouci-secret-for-tests");
+  });
+
+  it("lets the administrator add, edit and delete accounts", async () => {
+    const created = await request(
+      "staff",
+      "POST",
+      { name: "Nouveau", email: "New@Example.com", password: "a-strong-password", role: "vendeur" },
+      adminToken,
+    );
+    expect(created.status).toBe(200);
+    const { id } = await created.json();
+    expect(
+      (await request("staff", "POST", { name: "Doublon", email: "new@example.com", password: "a-strong-password", role: "vendeur" }, adminToken)).status,
+    ).toBe(409);
+    const edited = await request(
+      `staff/${id}`,
+      "PATCH",
+      { name: "Renommé", email: "renamed@example.com", role: "admin", password: "another-strong-password" },
+      adminToken,
+    );
+    expect(edited.status).toBe(200);
+    expect(await edited.json()).toMatchObject({ name: "Renommé", email: "renamed@example.com", role: "admin" });
+    expect(
+      (await request("auth/login", "POST", { email: "renamed@example.com", password: "another-strong-password" })).status,
+    ).toBe(200);
+    expect((await request(`staff/${id}`, "PATCH", { email: "seller@example.com" }, adminToken)).status).toBe(409);
+    expect((await request(`staff/${id}`, "DELETE", undefined, adminToken)).status).toBe(200);
+    expect((await request(`staff/${id}`, "DELETE", undefined, adminToken)).status).toBe(400);
+  });
+
   it("creates a COD order with server prices, current delivery, persisted items and opaque ID", async () => {
     const dto = {
       customerName: "Test Client",

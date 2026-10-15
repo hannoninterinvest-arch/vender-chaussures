@@ -5,7 +5,7 @@ loadEnvConfig(process.cwd());
 //         npm run db:check -- --apply (ajoute les colonnes manquantes)
 async function check() {
   const { createDatabase } = await import("../server/database");
-  const { schemaGaps, auditUsers } = await import("../server/schema-check");
+  const { schemaGaps, auditUsers, userInsertBlockers } = await import("../server/schema-check");
   const { adaptLegacyUsersSchema } = await import("../server/schema-compat");
   const apply = process.argv.includes("--apply");
   const db = await createDatabase().initialize();
@@ -15,6 +15,11 @@ async function check() {
     console.log("Comptes équipe (table users) :");
     for (const account of await auditUsers(db))
       console.log(`  ${account.email} [${account.role}${account.active ? "" : ", inactif"}] ${account.problems.length ? "→ " + account.problems.join(" ; ") : "OK"}`);
+    const blockers = await userInsertBlockers(db);
+    if (blockers.length) {
+      console.log(`\nCréation de comptes impossible depuis l'admin : colonnes obligatoires sans valeur par défaut dans users : ${blockers.join(", ")}`);
+      for (const name of blockers) console.log(`  ALTER TABLE "users" ALTER COLUMN "${name}" DROP NOT NULL;  -- ou ajouter un DEFAULT`);
+    }
     console.log("");
     if (!gaps.length) {
       console.log("Schéma conforme : toutes les colonnes attendues existent.");

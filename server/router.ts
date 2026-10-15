@@ -236,6 +236,24 @@ export const routes: Route[] = [
   },
   {
     method: "GET",
+    path: "admin/payments/diagnostic",
+    access: "admin",
+    handle: (c) => c.app.flouci.diagnose(),
+  },
+  {
+    method: "POST",
+    path: "admin/payments/test",
+    access: "admin",
+    handle: (c) => c.app.flouci.createTestPayment(),
+  },
+  {
+    method: "GET",
+    path: "admin/payments/test/:id",
+    access: "admin",
+    handle: (c) => c.app.flouci.checkTestPayment(c.id),
+  },
+  {
+    method: "GET",
     path: "site",
     access: "public",
     handle: (c) => c.app.site.getHome(),

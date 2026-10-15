@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import {
   BadRequestException,
   Logger,
@@ -13,6 +13,9 @@ type FlouciPayment = {
   amount?: number;
   developer_tracking_id?: string;
 };
+
+export type PaymentCheck = { id: string; label: string; ok: boolean; detail: string };
+export type PaymentDiagnostic = { ready: boolean; checks: PaymentCheck[] };
 
 const API = "https://developers.flouci.com/api/v2";
 const WEBHOOK_TOLERANCE_SECONDS = 600;
@@ -36,6 +39,7 @@ export class FlouciService {
     orderId: string;
     accessToken?: string;
     amountTnd: number;
+    returnPath?: string;
   }) {
     if (!this.configured())
       throw new BadRequestException("Paiement Flouci indisponible.");
@@ -51,8 +55,12 @@ export class FlouciService {
         developer_tracking_id: input.orderId,
         accept_card: true,
         session_timeout_secs: 1800,
-        success_link: `${frontend}/commande/${input.orderId}?paid=1#token=${token}`,
-        fail_link: `${frontend}/commande/${input.orderId}?paid=0#token=${token}`,
+        success_link: input.returnPath
+          ? `${frontend}${input.returnPath}?paid=1`
+          : `${frontend}/commande/${input.orderId}?paid=1#token=${token}`,
+        fail_link: input.returnPath
+          ? `${frontend}${input.returnPath}?paid=0`
+          : `${frontend}/commande/${input.orderId}?paid=0#token=${token}`,
         webhook: `${frontend}/api/payments/flouci/webhook`,
         webhook_version: 1,
       }),
@@ -136,6 +144,102 @@ export class FlouciService {
       )
       .digest();
     if (!timingSafeEqual(expected, Buffer.from(received, "hex"))) throw invalid;
+  }
+
+  // Read-only configuration audit for the admin. Never returns key values.
+  diagnose(now = Date.now()): PaymentDiagnostic {
+    const checks: PaymentCheck[] = [];
+    const add = (id: string, label: string, ok: boolean, detail: string) =>
+      checks.push({ id, label, ok, detail });
+    const publicKey = this.key("FLOUCI_PUBLIC_KEY");
+    const secretKey = this.key("FLOUCI_SECRET_KEY");
+    add(
+      "public_key",
+      "Clé publique Flouci",
+      Boolean(publicKey),
+      publicKey ? "FLOUCI_PUBLIC_KEY est définie." : "FLOUCI_PUBLIC_KEY est absente : la définir dans Vercel puis redéployer.",
+    );
+    add(
+      "secret_key",
+      "Clé privée Flouci",
+      Boolean(secretKey),
+      secretKey ? "FLOUCI_SECRET_KEY est définie." : "FLOUCI_SECRET_KEY est absente : la définir dans Vercel puis redéployer.",
+    );
+    let frontend = "";
+    try {
+      frontend = this.frontendUrl();
+      const https = frontend.startsWith("https://");
+      add(
+        "app_url",
+        "Adresse publique du site (APP_URL)",
+        https,
+        https
+          ? `Les retours de paiement pointent vers ${frontend}.`
+          : `APP_URL vaut ${frontend} : Flouci ne peut pas rappeler une adresse non HTTPS, la définir en HTTPS.`,
+      );
+    } catch (error) {
+      add("app_url", "Adresse publique du site (APP_URL)", false, error instanceof Error ? error.message : "APP_URL invalide.");
+    }
+    if (frontend) {
+      add("webhook", "Adresse du webhook", frontend.startsWith("https://"), `${frontend}/api/payments/flouci/webhook`);
+    }
+    if (secretKey) {
+      const t = String(Math.floor(now / 1000));
+      const header = `t=${t},v1=${createHmac("sha256", secretKey)
+        .update(`${t}.payment_id=test&success=True`)
+        .digest("hex")}`;
+      let accepted = false;
+      let rejected = false;
+      try {
+        this.verifyWebhook({ paymentId: "test", success: "True" }, header, now);
+        accepted = true;
+      } catch {
+        accepted = false;
+      }
+      try {
+        this.verifyWebhook({ paymentId: "test", success: "False" }, header, now);
+      } catch (error) {
+        rejected = error instanceof UnauthorizedException;
+      }
+      const signatureOk = accepted && rejected;
+      add(
+        "signature",
+        "Vérification de signature du webhook",
+        signatureOk,
+        signatureOk
+          ? "Une signature valide est acceptée et une signature falsifiée est refusée."
+          : "La vérification de signature ne se comporte pas comme prévu.",
+      );
+    }
+    return { ready: checks.every((check) => check.ok), checks };
+  }
+
+  // Opens a real 1 TND Flouci session that is not tied to any order, so the
+  // admin can validate keys, redirects and the provider end to end.
+  async createTestPayment() {
+    const { paymentRef, payUrl } = await this.initPayment({
+      orderId: `test-${randomUUID()}`,
+      amountTnd: 1,
+      returnPath: "/vendeur/paiement",
+    });
+    return { paymentRef, payUrl, amountTnd: 1 };
+  }
+
+  async checkTestPayment(paymentRef: string) {
+    if (!this.configured()) throw new BadRequestException("Paiement Flouci indisponible.");
+    if (!/^[A-Za-z0-9_-]{3,100}$/.test(paymentRef)) throw new BadRequestException("Référence de paiement invalide");
+    const payment = await this.getPayment(paymentRef);
+    if (!payment) throw new BadRequestException("Paiement introuvable chez Flouci.");
+    if (!String(payment.developer_tracking_id ?? "").startsWith("test-")) {
+      throw new BadRequestException("Ce paiement n’est pas un paiement de test.");
+    }
+    return {
+      paymentRef,
+      status: String(payment.status ?? "UNKNOWN"),
+      paid: payment.status === "SUCCESS",
+      failed: this.isFailed(payment),
+      amountTnd: Number(payment.amount) / 1000,
+    };
   }
 
   private key(name: string) {

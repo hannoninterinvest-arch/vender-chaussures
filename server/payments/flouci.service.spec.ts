@@ -176,4 +176,69 @@ describe("FlouciService", () => {
       );
     });
   });
+  describe("admin payment test", () => {
+    const configured = (extra: Record<string, string> = {}) =>
+      new FlouciService(
+        new ConfigService({
+          FLOUCI_PUBLIC_KEY: "pub-value",
+          FLOUCI_SECRET_KEY: "secret-value",
+          APP_URL: "https://shop.example",
+          ...extra,
+        }),
+      );
+
+    it("reports a complete configuration without exposing keys", () => {
+      const report = configured().diagnose();
+      expect(report.ready).toBe(true);
+      expect(report.checks.map((check) => check.id)).toEqual([
+        "public_key",
+        "secret_key",
+        "app_url",
+        "webhook",
+        "signature",
+      ]);
+      expect(JSON.stringify(report)).not.toContain("pub-value");
+      expect(JSON.stringify(report)).not.toContain("secret-value");
+    });
+
+    it("flags missing keys and a non-HTTPS callback URL", () => {
+      const report = new FlouciService(
+        new ConfigService({ APP_URL: "http://shop.example" }),
+      ).diagnose();
+      expect(report.ready).toBe(false);
+      const failed = report.checks.filter((check) => !check.ok).map((check) => check.id);
+      expect(failed).toEqual(["public_key", "secret_key", "app_url", "webhook"]);
+    });
+
+    it("opens a 1 TND session unrelated to any order and returning to the admin page", async () => {
+      const mock = jest.spyOn(global, "fetch").mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            result: { success: true, payment_id: "ref", link: "https://checkout.flouci.com/shop/ref" },
+          }),
+        ),
+      );
+      expect(await configured().createTestPayment()).toEqual({
+        paymentRef: "ref",
+        payUrl: "https://checkout.flouci.com/shop/ref",
+        amountTnd: 1,
+      });
+      expect(JSON.parse(mock.mock.calls[0][1]?.body as string)).toMatchObject({
+        amount: "1000",
+        developer_tracking_id: expect.stringMatching(/^test-/),
+        success_link: "https://shop.example/vendeur/paiement?paid=1",
+        fail_link: "https://shop.example/vendeur/paiement?paid=0",
+      });
+    });
+
+    it("reads only test payments back from Flouci", async () => {
+      const verify = (result: object) =>
+        jest.spyOn(global, "fetch").mockResolvedValueOnce(new Response(JSON.stringify({ success: true, result })));
+      verify({ status: "SUCCESS", amount: 1000, developer_tracking_id: "test-1" });
+      expect(await configured().checkTestPayment("ref")).toMatchObject({ status: "SUCCESS", paid: true, amountTnd: 1 });
+      verify({ status: "SUCCESS", amount: 107500, developer_tracking_id: "KCK-1" });
+      await expect(configured().checkTestPayment("ref")).rejects.toThrow("pas un paiement de test");
+      await expect(configured().checkTestPayment("../etc")).rejects.toThrow("invalide");
+    });
+  });
 });

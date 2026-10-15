@@ -1,7 +1,11 @@
-import { IsBoolean, IsIn, IsOptional, IsString, MinLength, MaxLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsIn, IsOptional, IsString, MinLength, MaxLength } from 'class-validator';
 import type { StaffRole } from '../user.entity';
 
 export class UpdateStaffDto {
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
   @IsOptional()
   @IsString()
   @MinLength(2)

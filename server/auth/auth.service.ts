@@ -43,6 +43,14 @@ export function hashFormat(hash: string) {
   return `unrecognized_or_plain_text_length_${value.length}`;
 }
 const LIKE_SPECIALS = /[\\%_]/g;
+const pgError = (error: unknown, depth = 0): { code?: string; column?: string } | undefined => {
+  if (!error || typeof error !== 'object' || depth > 4) return;
+  const value = error as { code?: unknown; column?: unknown; driverError?: unknown; cause?: unknown };
+  if (typeof value.code === 'string' && /^\d{5}$/.test(value.code)) {
+    return { code: value.code, column: typeof value.column === 'string' && /^[A-Za-z0-9_]{1,63}$/.test(value.column) ? value.column : undefined };
+  }
+  return pgError(value.driverError, depth + 1) ?? pgError(value.cause, depth + 1);
+};
 const RETIRED_PASSWORDS = new Set(['KicksAdmin123', 'Vendeur123']);
 // Compared when the account does not exist so response time does not reveal valid e-mails.
 const BCRYPT_HASH = /^\$2[aby]\$\d{2}\$.{53}$/;
@@ -207,6 +215,12 @@ export class AuthService {
       throw new BadRequestException('Tu ne peux pas désactiver ton propre compte');
     }
 
+    if (dto.email) {
+      const email = dto.email.trim().toLowerCase();
+      const taken = await this.findByEmail(email);
+      if (taken && taken.id !== id) throw new ConflictException('Cet e-mail est déjà utilisé');
+      user.email = email;
+    }
     if (dto.name) user.name = dto.name.trim();
     if (dto.role) user.role = dto.role;
     if (dto.active !== undefined) user.active = dto.active;
@@ -214,7 +228,7 @@ export class AuthService {
       this.validatePassword(dto.password);
       user.passwordHash = await hash(dto.password, 12);
     }
-    return this.toPublic(await this.users.save(user));
+    return this.toPublic(await this.persist(user));
   }
 
   async removeStaff(id: string, actor: AuthUser) {
@@ -224,7 +238,14 @@ export class AuthService {
     const user = await this.staffById(id);
     if (!user) throw new BadRequestException('Compte introuvable');
     if (staffRole(user) === 'admin') await this.ensureAnotherAdmin(id);
-    await this.users.remove(user);
+    try {
+      await this.users.remove(user);
+    } catch (error) {
+      if (pgError(error)?.code === '23503') {
+        throw new ConflictException('Ce compte est référencé par d’autres données de la base : désactive-le au lieu de le supprimer.');
+      }
+      throw error;
+    }
     return { ok: true };
   }
 
@@ -269,6 +290,22 @@ export class AuthService {
       role,
       active: true,
     });
-    return this.toPublic(await this.users.save(user));
+    return this.toPublic(await this.persist(user));
+  }
+
+  // The users table may be shared with another application whose constraints the shop does not know.
+  private async persist(user: User) {
+    try {
+      return await this.users.save(user);
+    } catch (error) {
+      const failure = pgError(error);
+      if (failure?.code === '23505') throw new ConflictException('Cet e-mail est déjà utilisé');
+      if (failure?.code === '23502') {
+        throw new BadRequestException(
+          `La table users exige la colonne « ${failure.column ?? 'inconnue'} », que la boutique ne renseigne pas : ajoute-lui une valeur par défaut (voir npm run db:check).`,
+        );
+      }
+      throw error;
+    }
   }
 }
