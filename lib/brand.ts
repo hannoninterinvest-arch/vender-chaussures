@@ -3,8 +3,8 @@ export const brand = {
   byline: "par STE SCAROSSO",
   legalName: "STE SCAROSSO",
   // Compléter selon l'extrait RNE, sans inventer de références.
-  legalForm: "À compléter selon l'extrait RNE",
-  registrationNumber: "À compléter selon le RNE / matricule fiscal",
+  legalForm: "SUARL",
+  registrationNumber: "1420690J",
   slogan: "Cuir premium, fabrication tunisienne",
   activity: "Vente de chaussures",
   email: "scarossoscarosso@gmail.com",
