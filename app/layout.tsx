@@ -17,9 +17,9 @@ const body = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "ELVARO by AIR GO SHOES — Cuir premium",
+  title: "ELVARO — Boutique officielle | STE SCAROSSO",
   description:
-    "Chaussures haut de gamme fabriquées en Tunisie. Commande sans compte, paiement à la livraison.",
+    "Chaussures ELVARO par STE SCAROSSO. Livraison et service client en Tunisie et à l’international.",
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {

@@ -97,9 +97,14 @@ export function Footer() {
         </div>
       </div>
       <div className="footer-legal">
-        <p>
-          © {new Date().getFullYear()} {brand.name} {brand.byline} — Tunisie
-        </p>
+        <p>© {new Date().getFullYear()} {brand.name} — Société exploitante : {brand.legalName} — Tunisie</p>
+        <nav aria-label="Informations légales et service client" className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs">
+          <Link href="/mentions-legales">Mentions légales</Link>
+          <Link href="/cgv">CGV</Link>
+          <Link href="/politique-confidentialite">Confidentialité</Link>
+          <Link href="/livraison-retours">Livraison et retours</Link>
+          <Link href="/contact">Contact</Link>
+        </nav>
       </div>
     </footer>
   );

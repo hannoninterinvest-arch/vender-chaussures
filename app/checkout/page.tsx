@@ -360,6 +360,12 @@ export default function CheckoutPage() {
               </span>
             </div>
           </div>
+          <label className="mt-5 flex items-start gap-3 text-xs leading-6 text-[var(--muted)]">
+            <input name="acceptTerms" type="checkbox" required className="mt-1.5 accent-[#C5A059]" />
+            <span>J’ai lu et j’accepte les <Link href="/cgv" target="_blank" rel="noopener noreferrer" className="underline">conditions générales de vente</Link>.
+              Je peux consulter les <Link href="/livraison-retours" target="_blank" rel="noopener noreferrer" className="underline">conditions de livraison et de retour</Link> et la <Link href="/politique-confidentialite" target="_blank" rel="noopener noreferrer" className="underline">politique de confidentialité</Link> avant de commander.
+            </span>
+          </label>
           <button
             type="submit"
             disabled={
