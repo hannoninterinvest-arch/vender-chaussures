@@ -169,6 +169,31 @@ describe("Next.js API migration", () => {
     expect((await response.json())[0]).toMatchObject({ id: "shoe", cost: 50 });
   });
 
+  it("creates a product from the seller form payload", async () => {
+    const response = await request(
+      "seller/products",
+      "POST",
+      {
+        name: "Derby noir",
+        brand: "ELVARO",
+        price: 150,
+        promoPrice: 0,
+        cost: 60,
+        description: "Cuir",
+        gender: "homme",
+        category: "shoes",
+        isNew: true,
+        featured: false,
+        colors: [{ name: "Noir", hex: "#1A1612", image: "https://res.cloudinary.com/a.jpg" }],
+        sizes: [40, 41],
+        images: ["https://res.cloudinary.com/a.jpg"],
+      },
+      sellerToken,
+    );
+    expect(await response.clone().json()).toMatchObject({ id: "derby-noir" });
+    expect(response.status).toBe(200);
+  });
+
   it("authenticates existing password hashes and rejects wrong passwords", async () => {
     expect(
       (
