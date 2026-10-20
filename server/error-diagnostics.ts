@@ -117,6 +117,26 @@ function details(error: unknown): Record<string, string> {
   return found;
 }
 
+const SAFE_TYPE_ERROR =
+  /^(Cannot (read|set) properties of (undefined|null) \((reading|setting) '[A-Za-z0-9_$]{1,60}'\)|[A-Za-z0-9_$.\[\]]{1,80} is not (a function|iterable|a constructor)|Cannot convert undefined or null to object)$/;
+
+// A TypeError is a code defect, not a data problem: its message only names
+// identifiers, and the first stack frames point at the failing line. Any other
+// message is dropped because it could echo request data.
+function codeDefect(error: unknown): Record<string, unknown> {
+  if (!(error instanceof TypeError)) return {};
+  const found: Record<string, unknown> = {};
+  if (SAFE_TYPE_ERROR.test(error.message)) found.reason = error.message;
+  const frames = String(error.stack || "")
+    .split("\n")
+    .map((line) => /^\s+at (?:([A-Za-z0-9_$.<>\[\] ]{1,80}) \()?(?:[^()]*[\\/])?([A-Za-z0-9_.\-\[\]]{1,80}:\d+:\d+)\)?$/.exec(line))
+    .filter((match): match is RegExpExecArray => Boolean(match))
+    .slice(0, 4)
+    .map((match) => `${match[1] ?? "<anonymous>"} ${match[2]}`);
+  if (frames.length) found.frames = frames;
+  return found;
+}
+
 // Only log allowlisted diagnostics. Raw errors can contain SQL, customer data,
 // connection URLs and payment keys, so never serialize the original exception.
 export function reportServerError(
@@ -134,6 +154,7 @@ export function reportServerError(
     code,
     ...(missing ? { missing } : {}),
     ...(code === "UNEXPECTED_SERVER_ERROR" || /^23\d{3}$/.test(code) ? details(error) : {}),
+    ...(code === "UNEXPECTED_SERVER_ERROR" ? codeDefect(error) : {}),
     hint:
       hints[code] ||
       "Erreur non reconnue : reproduire en développement et examiner la configuration du service concerné.",

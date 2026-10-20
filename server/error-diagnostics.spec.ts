@@ -64,6 +64,27 @@ describe("safe server diagnostics", () => {
     expect(JSON.stringify(log.mock.calls)).not.toContain("secret-value");
   });
 
+  it("locates a TypeError by its identifiers and stack frames without echoing data", () => {
+    const log = jest.spyOn(console, "error").mockImplementation(() => {});
+    const secret = "private-test-value-do-not-log";
+    const build = (value?: { trim(): string }) => value!.trim();
+    let error: unknown;
+    try {
+      build(undefined);
+    } catch (caught) {
+      error = caught;
+    }
+    reportServerError(error, "POST", "seller/products");
+    expect(log.mock.calls[0][1]).toMatchObject({
+      errorName: "TypeError",
+      reason: "Cannot read properties of undefined (reading 'trim')",
+    });
+    expect(log.mock.calls[0][1].frames[0]).toContain("error-diagnostics.spec.ts");
+    reportServerError(new TypeError(`Invalid input ${secret}`), "POST", "seller/products");
+    expect(log.mock.calls[1][1]).not.toHaveProperty("reason");
+    expect(JSON.stringify(log.mock.calls[1])).not.toContain(secret);
+  });
+
   it("never logs secrets, SQL, or arbitrary messages even in nested exceptions", () => {
     const log = jest.spyOn(console, "error").mockImplementation(() => {});
     const secret = "private-test-value-do-not-log";
