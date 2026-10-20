@@ -4,7 +4,7 @@ import { DataSource } from "typeorm";
 import pg from "pg";
 import { ensureCommerceStore } from "./commerce-store";
 import { entities } from "./entities";
-import { adaptLegacyUsersSchema } from "./schema-compat";
+import { adaptLegacyUsersSchema, ensureProductColumns } from "./schema-compat";
 
 // Reuse one small connection pool per warm Vercel instance. Use Neon's pooled URL.
 const state = globalThis as typeof globalThis & {
@@ -42,6 +42,7 @@ export function database() {
       .then(async (db) => {
         try {
           await adaptLegacyUsersSchema(db);
+          await ensureProductColumns(db);
           await ensureCommerceStore(db);
           await ensureRateLimits(db);
           return db;

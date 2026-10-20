@@ -6,7 +6,10 @@ import { entities } from "./entities";
 import { User } from "./auth/user.entity";
 import { AuthService } from "./auth/auth.service";
 import { ConfigService } from "./config";
-import { adaptLegacyUsersSchema } from "./schema-compat";
+import { adaptLegacyUsersSchema, ensureProductColumns } from "./schema-compat";
+import { ProductsService } from "./products/products.service";
+import { Product } from "./products/product.entity";
+import { Category } from "./products/category.entity";
 
 function memoryDataSource() {
   const memory = newDb({ autoCreateForeignKeyIndices: true });
@@ -101,5 +104,28 @@ describe("legacy users table with a `password` column", () => {
     expect(padded?.problems.join(" ")).toContain("espaces parasites");
     expect(audit.find((row) => row.email === "investor@example.com")?.problems.join(" ")).toContain("inconnu");
     expect(JSON.stringify(audit)).not.toContain("$2");
+  });
+});
+
+describe("catalogue created before cost, promoPrice and model existed", () => {
+  const db = memoryDataSource();
+  beforeAll(async () => {
+    await db.initialize();
+    for (const column of ["cost", "promoPrice", "model"])
+      await db.query(`ALTER TABLE "products" DROP COLUMN "${column}"`);
+    await db.query(
+      `INSERT INTO "products" ("id","name","brand","price","description","gender","category","colors","sizes","images") VALUES ('old','Ancien','ELVARO',120,'d','homme','bottines','[]','[40]','[]')`,
+    );
+  });
+  afterAll(() => db.destroy());
+
+  it("fails to list products until the missing columns are added", async () => {
+    const service = new ProductsService(db.getRepository(Product), db.getRepository(Category));
+    await expect(service.findAllSeller()).rejects.toThrow();
+    expect((await ensureProductColumns(db)).sort()).toEqual(["cost", "model", "promoPrice"]);
+    await expect(service.findAllSeller()).resolves.toEqual([
+      expect.objectContaining({ id: "old", price: 120, promoPrice: 0, cost: 0, model: "" }),
+    ]);
+    expect(await ensureProductColumns(db)).toEqual([]);
   });
 });

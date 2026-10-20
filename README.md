@@ -31,6 +31,8 @@ Utiliser **la même DATABASE_URL** que le backend précédent : les noms de tabl
 
 Le log Vercel indique maintenant `missing: "column …"` ou `missing: "relation …"`. Pour comparer la base aux entités sans rien modifier : `npm run db:check` (avec `DATABASE_URL` de la base concernée). Le script liste les colonnes absentes avec le `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` correspondant ; `npm run db:check -- --apply` ajoute uniquement les colonnes manquantes (jamais de suppression ni de modification de données). Une colonne présente sous un autre nom est signalée comme « inconnue du code ». Cas particulier géré par l'application : si `users` contient `password` mais pas `passwordHash`, le hash bcrypt est lu et écrit dans `password`, sans modifier la base.
 
+Au démarrage, l'application ajoute elle-même les colonnes absentes de la table `products` (`cost`, `promoPrice`, `model`…) avec leur valeur par défaut, afin que `/api/seller/products` et `/api/products` ne répondent plus 500 sur un catalogue créé avant ces colonnes. Rien n'est supprimé ni modifié. Si le rôle PostgreSQL n'a pas le droit `ALTER TABLE`, un avertissement `products schema` est journalisé : lancer alors `npm run db:check -- --apply` avec un rôle autorisé.
+
 ### Base partagée avec une autre application
 
 `npm run db:check` affiche aussi l'état de chaque compte équipe (rôle, actif, hash bcrypt valide, e-mail en double) sans jamais afficher de mot de passe. L'application tolère un rôle écrit « Admin » ou « vendeur » (casse/espaces) et un hash avec espaces parasites.

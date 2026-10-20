@@ -1,5 +1,6 @@
 import type { DataSource } from "typeorm";
 import { User } from "./auth/user.entity";
+import { schemaGaps } from "./schema-check";
 
 // Some deployments reuse a `users` table whose bcrypt hash is stored in a
 // `password` column instead of `passwordHash`. Map the property to whichever
@@ -17,4 +18,27 @@ export async function adaptLegacyUsersSchema(db: DataSource) {
   column.databaseName = "password";
   column.databasePath = "password";
   column.databaseNameWithoutPrefixes = "password";
+}
+
+// A catalogue created before `cost`, `promoPrice` or `model` existed makes every
+// product query fail with 42703 (missing column). Add only the absent product
+// columns, with their default, so the catalogue keeps working; nothing is
+// dropped, renamed or rewritten.
+export async function ensureProductColumns(db: DataSource) {
+  const gap = (await schemaGaps(db)).find((item) => item.table === "products");
+  if (!gap || gap.tableMissing) return [];
+  const added: string[] = [];
+  for (const column of gap.missing) {
+    try {
+      await db.query(column.sql);
+      added.push(column.column);
+    } catch (error) {
+      console.warn(
+        "products schema",
+        `colonne ${column.column} non ajoutée :`,
+        error instanceof Error ? error.message : error,
+      );
+    }
+  }
+  return added;
 }
