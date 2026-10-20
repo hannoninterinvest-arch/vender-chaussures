@@ -163,6 +163,12 @@ describe("Next.js API migration", () => {
     expect(product.cost).toBeUndefined();
   });
 
+  it("lists seller products", async () => {
+    const response = await request("seller/products", "GET", undefined, sellerToken);
+    expect(response.status).toBe(200);
+    expect((await response.json())[0]).toMatchObject({ id: "shoe", cost: 50 });
+  });
+
   it("authenticates existing password hashes and rejects wrong passwords", async () => {
     expect(
       (
