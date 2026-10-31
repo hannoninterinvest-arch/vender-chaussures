@@ -12,7 +12,8 @@ import {
   type PaymentMethod,
 } from "@/lib/tunisia";
 import { orderPath } from "@/lib/order-access";
-import { createOrder, fetchPaymentsConfig } from "@/lib/api";
+import { createOrder } from "@/lib/api";
+import { ONLINE_PAYMENTS_ENABLED } from "@/lib/payment-availability";
 import {
   calculateShipping,
   cartWeightKg,
@@ -31,7 +32,7 @@ export default function CheckoutPage() {
   const { lines, subtotal, clear } = useCart();
   const { selectedCountry, formatPrice, isLocal } = useLocale();
   const [paymentChoice, setPayment] = useState<PaymentMethod>("cod");
-  const [flouciReady, setFlouciReady] = useState(false);
+  const flouciReady = ONLINE_PAYMENTS_ENABLED;
   const [gouvernorat, setGouvernorat] = useState<Gouvernorat>("Tunis");
   const [carrier, setCarrier] = useState<ShippingCarrier>("LA_POSTE");
   const [busy, setBusy] = useState(false);
@@ -41,8 +42,7 @@ export default function CheckoutPage() {
     error: string;
     estimated?: boolean;
   } | null>(null);
-  const payment: PaymentMethod =
-    !isLocal && paymentChoice === "cod" ? "flouci" : paymentChoice;
+  const payment: PaymentMethod = paymentChoice;
   const weightKg = useMemo(
     () => cartWeightKg(lines.reduce((sum, line) => sum + line.qty, 0)),
     [lines],
@@ -51,22 +51,6 @@ export default function CheckoutPage() {
   const fee = quote?.key === quoteKey ? quote.price : null;
   const quoteError = quote?.key === quoteKey ? quote.error : "";
   const total = subtotal + (fee ?? 0);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchPaymentsConfig()
-      .then((cfg) => {
-        if (cancelled) return;
-        setFlouciReady(Boolean(cfg.flouci));
-        if (cfg.flouci) setPayment("flouci");
-      })
-      .catch(() => {
-        if (!cancelled) setFlouciReady(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     if (lines.length === 0) return;
@@ -93,6 +77,10 @@ export default function CheckoutPage() {
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (lines.length === 0 || busy) return;
+    if (!isLocal) {
+      toast("Les commandes internationales sont temporairement suspendues jusqu’à l’activation du paiement en ligne.");
+      return;
+    }
     if (fee == null || quoteError) {
       toast("Attends le calcul des frais de livraison avant de confirmer.");
       return;
@@ -260,7 +248,7 @@ export default function CheckoutPage() {
             Paiement
           </h2>
           <div className="space-y-2">
-            {paymentMethods.map((m) => {
+            {paymentMethods.filter((m) => ONLINE_PAYMENTS_ENABLED || m.id === "cod").map((m) => {
               const codBlocked = m.id === "cod" && !isLocal;
               const onlineBlocked = m.id === "flouci" && !flouciReady;
               const disabled = codBlocked || onlineBlocked;
@@ -301,8 +289,8 @@ export default function CheckoutPage() {
           </div>
           {!isLocal && !flouciReady && (
             <p className="text-sm text-[var(--promo)]">
-              Le paiement en ligne est temporairement indisponible pour cette
-              destination.
+              Les commandes internationales sont temporairement suspendues.
+              Contactez ELVARO pour toute demande hors Tunisie.
             </p>
           )}
         </div>
@@ -370,6 +358,7 @@ export default function CheckoutPage() {
             type="submit"
             disabled={
               busy ||
+              !isLocal ||
               fee == null ||
               (payment === "flouci" && !flouciReady)
             }

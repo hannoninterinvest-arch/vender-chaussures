@@ -44,7 +44,7 @@ export function ThemeToggle() {
 export function TrustBar() {
   const items = [
     { title: "Sans compte", text: "Commande en 2 minutes" },
-    { title: "Paiement livré", text: "Espèces, Flouci ou D17" },
+    { title: "Paiement à la livraison", text: "Espèces au livreur en Tunisie" },
     { title: "Échange 7 jours", text: "Si non portées" },
     { title: "WhatsApp", text: brand.phone, href: whatsappHref() },
   ];

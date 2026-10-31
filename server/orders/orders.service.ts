@@ -1,4 +1,5 @@
 import { OrderAccessService } from "./order-access.service";
+import { ONLINE_PAYMENTS_ENABLED } from "@/lib/payment-availability";
 import { ConfigService } from "../config";
 import { randomUUID } from "node:crypto";
 import {
@@ -44,6 +45,9 @@ export class OrdersService {
   async create(dto: CreateOrderDto) {
     if (dto.payment !== "cod" && dto.payment !== "flouci") {
       throw new BadRequestException("Moyen de paiement non pris en charge.");
+    }
+    if (dto.payment === "flouci" && !ONLINE_PAYMENTS_ENABLED) {
+      throw new BadRequestException("Le paiement en ligne est temporairement désactivé. Seul le paiement à la livraison en Tunisie est disponible.");
     }
     const lines: OrderItem[] = [];
     let subtotal = 0;
@@ -177,6 +181,9 @@ export class OrdersService {
   }
 
   async retryPayment(id: string) {
+    if (!ONLINE_PAYMENTS_ENABLED) {
+      throw new BadRequestException("Le paiement en ligne est temporairement désactivé.");
+    }
     let order = await this.orders.findOne({ where: { id } });
     if (!order) throw new NotFoundException("Commande introuvable");
     if (order.payment === "cod") {

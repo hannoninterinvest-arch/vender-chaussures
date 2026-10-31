@@ -16,10 +16,27 @@ const body = Montserrat({
   weight: ["400", "500", "600", "700"],
 });
 
+const socialTitle = "ELVARO COLLECTION +";
+const socialDescription =
+  "Découvrez ELVARO COLLECTION + : chaussures premium pour femme et homme, créations élégantes et savoir-faire tunisien.";
+
 export const metadata: Metadata = {
-  title: "ELVARO — Boutique officielle | STE SCAROSSO",
-  description:
-    "Chaussures ELVARO par STE SCAROSSO. Livraison et service client en Tunisie et à l’international.",
+  metadataBase: new URL("https://elvaroco.com"),
+  title: socialTitle,
+  description: socialDescription,
+  applicationName: "ELVARO COLLECTION +",
+  openGraph: {
+    title: socialTitle,
+    description: socialDescription,
+    siteName: "ELVARO COLLECTION +",
+    locale: "fr_TN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: socialTitle,
+    description: socialDescription,
+  },
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {

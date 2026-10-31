@@ -2,6 +2,9 @@ import { OrderAccessService } from "./order-access.service";
 import type { EntityManager } from "typeorm";
 import { OrdersService } from "./orders.service";
 import { FlouciService } from "../payments/flouci.service";
+
+// Ces tests historiques vérifient le workflow Flouci activé indépendamment de la pause en production.
+jest.mock("@/lib/payment-availability", () => ({ ONLINE_PAYMENTS_ENABLED: true }));
 import { ConfigService } from "@/server/config";
 
 // Exercise order totals and gateway handling without writing to a live database.

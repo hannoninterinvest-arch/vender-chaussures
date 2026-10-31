@@ -306,9 +306,9 @@ describe("Next.js API migration", () => {
     confirm.mockRestore();
   });
 
-  it("exposes only Flouci as an online payment method", async () => {
+  it("disables online payment until production activation", async () => {
     const response = await request("payments/config");
-    expect(await response.json()).toEqual({ flouci: true });
+    expect(await response.json()).toEqual({ flouci: false });
     expect(
       (await request("payments/konnect/webhook?payment_ref=x")).status,
     ).toBe(404);

@@ -1,5 +1,6 @@
 "use client";
 import { ORDER_LABELS } from "@/lib/order-workflow";
+import { ONLINE_PAYMENTS_ENABLED } from "@/lib/payment-availability";
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
@@ -211,7 +212,8 @@ export default function OrderPage({
       </div>
 
       <div className="mt-8 flex flex-wrap gap-3">
-        {order.payment === "flouci" &&
+        {ONLINE_PAYMENTS_ENABLED &&
+          order.payment === "flouci" &&
           !paid &&
           !["annulee", "retournee", "livree"].includes(order.status || "") && (
             <button

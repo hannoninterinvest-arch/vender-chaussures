@@ -27,6 +27,7 @@ import { UpdateProductDto } from "./products/dto/update-product.dto";
 import { ImportProductsDto } from "./products/dto/import-products.dto";
 import { CreateCategoryDto } from "./products/dto/create-category.dto";
 import { CreateOrderDto } from "./orders/dto/create-order.dto";
+import { ONLINE_PAYMENTS_ENABLED } from "@/lib/payment-availability";
 import { UpdateOrderStatusDto } from "./orders/dto/update-order-status.dto";
 import { CalculateShippingDto } from "./shipping/dto/calculate-shipping.dto";
 import { CreateShippingRateDto } from "./shipping/dto/create-shipping-rate.dto";
@@ -219,7 +220,7 @@ export const routes: Route[] = [
     method: "GET",
     path: "payments/config",
     access: "public",
-    handle: (c) => ({ flouci: c.app.flouci.configured() }),
+    handle: (c) => ({ flouci: ONLINE_PAYMENTS_ENABLED && c.app.flouci.configured() }),
   },
   {
     method: "GET",

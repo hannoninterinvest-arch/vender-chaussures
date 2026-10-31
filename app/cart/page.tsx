@@ -17,7 +17,8 @@ export default function CartPage() {
         <p className="font-bold tracking-wide">Commande sans compte</p>
         <p className="text-sm text-[var(--muted)]">
           Pas d’inscription. Nom, téléphone et adresse suffisent. Paiement à la
-          livraison en Tunisie, carte en ligne pour l’international.
+          livraison en Tunisie. Les commandes internationales sont
+          temporairement suspendues.
         </p>
       </div>
 
