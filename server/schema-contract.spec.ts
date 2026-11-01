@@ -32,3 +32,12 @@ describe("production schema contract", () => {
     },
   );
 });
+
+describe("entity class names", () => {
+  it("match their schema names so minified bundles keep working", async () => {
+    const { entities } = await import("./entities");
+    for (const schema of entities) {
+      expect((schema.options.target as { name: string }).name).toBe(schema.options.name);
+    }
+  });
+});
