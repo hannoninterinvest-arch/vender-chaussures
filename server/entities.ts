@@ -7,6 +7,18 @@ import { ShippingRate } from "./shipping/shipping-rate.entity";
 import { Category } from "./products/category.entity";
 import { Product } from "./products/product.entity";
 import { SiteSettings } from "./site/site-settings.entity";
+// Keep TypeORM entity names stable in minified production bundles.
+const named = <T extends abstract new (...args: never[]) => object>(target: T, name: string) =>
+  Object.defineProperty(target, "name", { value: name, configurable: true }) as T;
+named(User, "User");
+named(WholesaleRequest, "WholesaleRequest");
+named(Order, "Order");
+named(OrderItem, "OrderItem");
+named(ShippingRate, "ShippingRate");
+named(Category, "Category");
+named(Product, "Product");
+named(SiteSettings, "SiteSettings");
+
 export const entities = [
   new EntitySchema<User>({
     name: "User",
