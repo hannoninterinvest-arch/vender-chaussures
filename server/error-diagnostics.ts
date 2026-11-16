@@ -126,12 +126,26 @@ export function reportServerError(
 ) {
   const errorId = randomUUID();
   const code = classify(error) || "UNEXPECTED_SERVER_ERROR";
+  // Log only generated code coordinates, never raw exception messages or stack text.
+  const frames = error instanceof Error && typeof error.stack === "string"
+    ? error.stack.split("\n").slice(1, 9).flatMap((line) => {
+        const match = /(?:^|[ (])((?:\/var\/task\/|\/workspace\/)?[A-Za-z0-9_./-]+\.(?:js|mjs|cjs|ts)):(\d{1,7}):(\d{1,7})\)?$/.exec(line.trim());
+        return match ? [`${match[1]}:${match[2]}:${match[3]}`] : [];
+      })
+    : [];
+  const typeErrorKind = error instanceof TypeError
+    ? /is not a function/.test(error.message) ? "NOT_A_FUNCTION"
+      : /Cannot read properties of (undefined|null)/.test(error.message) ? "NULLISH_PROPERTY"
+      : /is not iterable/.test(error.message) ? "NOT_ITERABLE"
+      : "OTHER_TYPE_ERROR"
+    : undefined;
   const missing = code === "42703" || code === "42P01" ? missingObject(error) : undefined;
   console.error("API request failed", {
     errorId,
     method,
     route,
     code,
+    ...(typeErrorKind ? { typeErrorKind, frames } : {}),
     ...(missing ? { missing } : {}),
     ...(code === "UNEXPECTED_SERVER_ERROR" || /^23\d{3}$/.test(code) ? details(error) : {}),
     hint:
